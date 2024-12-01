@@ -30,58 +30,63 @@
   </template>
   
   <script>
-  import { ref } from 'vue';
-  import { useRouter } from 'vue-router';
+import { ref } from 'vue';
+import { useRouter } from 'vue-router';
+// pinia
+import { useUserStore } from '@/stores/userStore';
 
-  export default {    
-    name: 'Login',
-    setup() {
-      const router = useRouter();
+export default {    
+  name: 'Login',
+  setup() {
+    const router = useRouter();
+    const userStore = useUserStore(); // 在这里获取 store 实例
 
-      const username = ref('');
-      const password = ref('');
-      const errors = ref({
-        username: '',
-        password: '',
-      });
-  
-      const handleLogin = () => {
-        // 重置错误信息
-        errors.value.username = '';
-        errors.value.password = '';
-  
-        // 校验用户名
-        if (!username.value) {
-          errors.value.username = '用户名不能为空';
-        }
-  
-        // 校验密码
-        if (!password.value) {
-          errors.value.password = '密码不能为空';
-        }
-  
-        // 如果没有错误，提交表单
-        if (!errors.value.username && !errors.value.password) {
-          alert(`登录成功！用户名: ${username.value}`);
-          // 在实际应用中，可以在这里调用后端的 API 进行验证
-        }
-      };
+    const username = ref('');
+    const password = ref('');
+    const errors = ref({
+      username: '',
+      password: '',
+    });
 
-      const toDashboard = () => {
-          router.push('/dashboard');
+    const handleLogin = () => {
+      // 重置错误信息
+      errors.value.username = '';
+      errors.value.password = '';
+
+      // 校验用户名
+      if (!username.value) {
+        errors.value.username = '用户名不能为空';
       }
-  
-      return {
-        username,
-        password,
-        errors,
-        handleLogin,
-        toDashboard,
-      };
 
-    },
-  };
-  </script>
+      // 校验密码
+      if (!password.value) {
+        errors.value.password = '密码不能为空';
+      }
+
+      // 如果没有错误，提交表单
+      if (!errors.value.username && !errors.value.password) {
+        alert(`登录成功！用户名: ${username.value}`);
+        // 在这里调用 toDashboard 方法
+        toDashboard();
+      }
+    };
+
+    const toDashboard = () => {
+      // 使用 Pinia 存储数据
+      userStore.setUsername(username.value);
+      router.push('/dashboard');
+    };
+
+    return {
+      username,
+      password,
+      errors,
+      handleLogin,
+      toDashboard,
+    };
+  },
+};
+</script>
   
   <style scoped>
   .login-container {

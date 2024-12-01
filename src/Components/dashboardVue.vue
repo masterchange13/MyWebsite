@@ -1,8 +1,11 @@
 <template>
     <el-container>
-        <el-head>
-            <h1 style="text-align: center; fixed">raspberrypi</h1>
+        <el-head style="display: flex; align-items: center; justify-content: center;">
+            <h1 style="text-align: center">raspberrypi</h1>
+            <p style="posititon: fixed; margin-left: 600px">hello : {{ username }}</p>
         </el-head>
+
+
         <el-row class="tac">
             <el-col :span="2">
                 <!-- <h5 class="mb-2">raspberryp</h5> -->
@@ -53,16 +56,23 @@
             </el-col>
         </el-row>
         <!-- Footer -->
-    <el-footer style="position: fixed; bottom: 0; left: 0; right: 0; text-align: center; background-color: #f5f5f5; color: #333; padding: 20px 0; border-top: 1px solid #eaeaea;">
-      <div>Welcome to my website</div>
-      <div>&copy; 2024 </div>
-    </el-footer>
+        <el-footer
+            style="position: fixed; bottom: 0; left: 0; right: 0; text-align: center; background-color: #f5f5f5; color: #333; padding: 20px 0; border-top: 1px solid #eaeaea;">
+            <div>Welcome to my website</div>
+            <div>&copy; 2024 </div>
+        </el-footer>
     </el-container>
 </template>
   
 <script lang="ts" setup>
+import { computed } from 'vue'; // 使用 computed 而不是 ref
+import { useRouter } from 'vue-router';
+import { useUserStore } from '@/stores/userStore';
 
-import { useRouter } from 'vue-router'
+// 获取 Pinia store 实例
+const userStore = useUserStore();
+const username = computed(() => userStore.getUsername()); // 创建响应式的计算属性
+
 
 import {
     Document,
