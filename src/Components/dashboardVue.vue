@@ -22,7 +22,7 @@
                             <el-menu-item index="1-2" @click="toDocument()">document</el-menu-item>
                         </el-menu-item-group>
                         <el-menu-item-group title="Group Two">
-                            <el-menu-item index="1-3">item three</el-menu-item>
+                            <el-menu-item index="1-3" @click="toTransfer()">transfer</el-menu-item>
                         </el-menu-item-group>
                         <el-sub-menu index="1-4">
                             <template #title>item four</template>
@@ -99,5 +99,9 @@ const toDocument = () => {
 
 const toNavigator = () => {
     router.push("/navigator")
+}
+
+const toTransfer = () => {
+    router.push("/transfer")
 }
 </script>

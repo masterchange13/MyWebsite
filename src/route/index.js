@@ -28,6 +28,11 @@ const routes = [
                 path: '/navigator',
                 name: 'navigator',
                 component: () => import('@/Components/navigatorVue.vue')
+            },
+            {
+                path: '/transfer',
+                name: 'transfer',
+                component: () => import('@/Components/transferVue.vue')
             }
         ]
     },
