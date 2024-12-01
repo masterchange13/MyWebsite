@@ -39,7 +39,7 @@
                     <el-icon>
                         <setting />
                     </el-icon>
-                    <span>Navigator Four</span>
+                    <span @click="toNavigator()">Navigator Four</span>
                 </el-menu-item>
             </el-menu>
         </el-col>
@@ -78,5 +78,9 @@ const toVideo = () => {
 
 const toDocument = () => {
     router.push("/document")
+}
+
+const toNavigator = () => {
+    router.push("/navigator")
 }
 </script>
