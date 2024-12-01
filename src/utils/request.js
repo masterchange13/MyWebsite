@@ -1,63 +1,92 @@
 import axios from 'axios';
-import { ElMessage } from 'element-plus';
+import { ElMessage, ElLoading } from 'element-plus';
 
-// 创建 Axios 实例
+let loadingInstance;
+
+function showError(message) {
+    ElMessage.error(message || '发生未知错误，请稍后重试。');
+}
+
+async function refreshAccessToken() {
+    const refreshToken = localStorage.getItem('refresh_token');
+    if (refreshToken) {
+        try {
+            const response = await axios.post('/api/auth/refresh', { refreshToken });
+            const newToken = response.data.token;
+            localStorage.setItem('token', newToken);
+            return newToken;
+        } catch (error) {
+            console.error('Token refresh failed:', error);
+            return null;
+        }
+    }
+    return null;
+}
+
 export const request = axios.create({
-    baseURL: '/api', // 使用代理后的基本 URL
-    timeout: 10000, // 设置请求超时为 10 秒
+    baseURL: '/api',
+    timeout: 10000,
 });
 
-// 添加请求拦截器
-// request.interceptors.request.use(
-//     config => {
-//         // 在请求发送之前可以做一些处理，比如添加 token
-//         // config.headers['Authorization'] = 'Bearer your_token';
-//         return config;
-//     },
-//     error => {
-//         // 对请求错误做些什么
-//         return Promise.reject(error);
-//     }
-// );
-
-// 添加响应拦截器
-request.interceptors.response.use(
-    response => {
-        // 对响应数据做些什么
-        ElMessage(`请求成功`);
-        return response.data; // 直接返回响应数据
+request.interceptors.request.use(
+    config => {
+        const token = localStorage.getItem('token');
+        if (token) {
+            config.headers['Authorization'] = `Bearer ${token}`;
+        }
+        loadingInstance = ElLoading.service({
+            lock: true,
+            text: '加载中...',
+            background: 'rgba(0, 0, 0, 0.7)'
+        });
+        return config;
     },
     error => {
-        // 对响应错误做些什么
-        const response = error.response;
+        if (loadingInstance) loadingInstance.close();
+        return Promise.reject(error);
+    }
+);
 
-        // 提取错误信息
+request.interceptors.response.use(
+    response => {
+        const token = localStorage.getItem('token');
+        console.log(`Token: ${token}`)
+        if (loadingInstance) loadingInstance.close();
+        return response.data;
+    },
+    async error => {
+        if (loadingInstance) loadingInstance.close();
+        const response = error.response;
         const status = response ? response.status : null;
-        const statusText = response ? response.statusText : null;
         const message = response?.data.error || error.message || '未知错误';
 
-        // 根据不同的错误状态码进行处理
         switch (status) {
-            case 400:
-                ElMessage(`请求错误: ${message}`);
-                break;
             case 401:
-                ElMessage(`未授权，请登录。`);
+                const newToken = await refreshAccessToken();
+                if (newToken) {
+                    error.config.headers['Authorization'] = `Bearer ${newToken}`;
+                    return axios.request(error.config);
+                } else {
+                    showError('登录已过期，请重新登录。');
+                    localStorage.removeItem('token');
+                    setTimeout(() => {
+                        window.location.href = '/login';
+                    }, 1000);
+                }
                 break;
             case 403:
-                ElMessage(`没有权限访问该资源。`);
+                showError('没有权限访问该资源。');
                 break;
             case 404:
-                ElMessage(`请求的资源未找到。`);
+                showError('请求的资源未找到。');
                 break;
             case 500:
-                ElMessage(`服务器内部错误，请稍后重试。`);
+                showError('服务器内部错误，请稍后重试。');
                 break;
             default:
-                ElMessage(`发生错误: ${statusText || message}`);
+                showError(message || '发生未知错误。');
         }
 
-        // 返回 Promise.reject 以便后续处理
         return Promise.reject(error);
     }
 );

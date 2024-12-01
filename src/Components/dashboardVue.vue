@@ -3,6 +3,7 @@
         <el-head style="display: flex; align-items: center; justify-content: center;">
             <h1 style="text-align: center">raspberrypi</h1>
             <p style="posititon: fixed; margin-left: 600px">hello : {{ username }}</p>
+            <button @click="router.push('/')">logout</button>
         </el-head>
 
 
