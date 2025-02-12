@@ -1,0 +1,37 @@
+[
+    {
+        "name": "github",
+        "url": "https://github.com/",
+        "img": "../../public/icon/github.png"
+    },
+    {
+        "name": "bilibili",
+        "url": "https://www.bilibili.com/",
+        "img": "../../public/icon/bilibili.png"
+    },
+    {
+        "name": "chatGPT",
+        "url": "https://chatgpt.com/",
+        "img": "../../public/icon/chatGPT.png"
+    },
+    {
+        "name": "youTuBe",
+        "url": "https://www.youtube.com/",
+        "img": "../../public/icon/youTuBe.png"
+    },
+    {
+        "name": "blog",
+        "url": "https://masterchange13.github.io/qing.github.io/",
+        "img": "../../public/icon/blog.png"
+    },
+    {
+        "name": "openwrt",
+        "url": "http://192.168.1.1/cgi-bin/luci/admin/quickstart/",
+        "img": "../../public/icon/openwrt.png"
+    },
+    {
+        "name": "ha",
+        "url": "http://192.168.1.155:8123/lovelace/0",
+        "img": "../../public/icon/ha.png"
+    }
+]

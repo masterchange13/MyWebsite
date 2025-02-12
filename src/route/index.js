@@ -33,6 +33,11 @@ const routes = [
                 path: '/transfer',
                 name: 'transfer',
                 component: () => import('@/Components/transferVue.vue')
+            },
+            {
+                path: '/getDocument',
+                name: 'getDocument',
+                component: () => import('@/Components/getDocumentVue.vue')
             }
         ]
     },

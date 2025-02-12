@@ -80,7 +80,7 @@ export default {
           if (res.success) {
             // 使用 Pinia 存储数据
             userStore.setUsername(username.value);
-            router.push('/dashboard');
+            router.push('/navigator');
             // console.log(res)
             const newToken = res.token;
             localStorage.setItem('token', newToken);

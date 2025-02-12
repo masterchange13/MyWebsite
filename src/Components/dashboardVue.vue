@@ -10,7 +10,7 @@
         <el-row class="tac">
             <el-col :span="2">
                 <!-- <h5 class="mb-2">raspberryp</h5> -->
-                <el-menu default-active="2" class="el-menu-vertical-demo" @open="handleOpen" @close="handleClose">
+                <el-menu default-active="4" class="el-menu-vertical-demo" @open="handleOpen" @close="handleClose">
                     <el-sub-menu index="1">
                         <template #title>
                             <el-icon>
@@ -24,6 +24,7 @@
                         </el-menu-item-group>
                         <el-menu-item-group title="Group Two">
                             <el-menu-item index="1-3" @click="toTransfer()">transfer</el-menu-item>
+                            <el-menu-item index="1-3-2" @click="getDocument()">getDocument</el-menu-item>
                         </el-menu-item-group>
                         <el-sub-menu index="1-4">
                             <template #title>item four</template>
@@ -34,7 +35,7 @@
                         <el-icon><icon-menu /></el-icon>
                         <span>Navigator Two</span>
                     </el-menu-item>
-                    <el-menu-item index="3" disabled>
+                    <el-menu-item index="3">
                         <el-icon>
                             <document />
                         </el-icon>
@@ -104,5 +105,9 @@ const toNavigator = () => {
 
 const toTransfer = () => {
     router.push("/transfer")
+}
+
+const getDocument = () => {
+    router.push("/getDocument")
 }
 </script>
