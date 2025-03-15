@@ -38,6 +38,11 @@ const routes = [
                 path: '/getDocument',
                 name: 'getDocument',
                 component: () => import('@/Components/getDocumentVue.vue')
+            },
+            {
+                path: '/chat',
+                name: 'chat',
+                component: () => import('@/Components/chatVue.vue')
             }
         ]
     },

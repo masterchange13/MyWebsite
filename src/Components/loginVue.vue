@@ -25,7 +25,7 @@ import { useRouter } from 'vue-router';
 // pinia
 import { useUserStore } from '@/stores/userStore';
 import { request } from '@/utils/request';
-import { ElMessage } from 'element-plus';
+import Message from '@/utils/message';
 
 export default {
   name: 'Login',
@@ -77,19 +77,20 @@ export default {
       })
         .then((res) => {
           // console.log(res);
-          if (res.success) {
+          if (res.data.success) {
             // 使用 Pinia 存储数据
             userStore.setUsername(username.value);
             router.push('/navigator');
             // console.log(res)
-            const newToken = res.token;
+            const newToken = res.data.token;
             localStorage.setItem('token', newToken);
+            Message.success('登录成功');
           } else {
-            ElMessage.error('Login failed');
+            Message.error('Login failed');
           }
         })
         .catch((err) => {
-          ElMessage.error(err.message);
+          Message .error(err.message);
           console.error(err);
         });
     };

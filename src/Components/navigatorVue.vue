@@ -17,15 +17,16 @@
 </template>
 
 <script setup>
-    import { ref } from 'vue';
+    import { onMounted, ref } from 'vue';
     import addIconVue from './addIcon.vue';
+    import { request } from '@/utils/request'
 
     // 使用 import 动态读取 src.json 文件
     import src from '../../Node/website/src.json';
     console.log(src);
 
     // 将 src.json 转换为图标数组
-    const icons = ref(src);
+    const icons = ref('');
 
     // 打开链接的函数
     const openLink = (url) => {
@@ -40,4 +41,18 @@
     const addIcon = () => {
         showAddIcon.value = true;
     };
+
+    const getIcons = async () => {
+        const response = await request({
+            url: '/getAllNavigators',
+            method: 'GET',
+        })
+        console.log(response);
+        // const data = await response.json();
+        icons.value = response.data;
+    }
+
+    onMounted(() => {
+        getIcons();
+    })
 </script>

@@ -20,6 +20,8 @@
 <script setup>
 import { ref } from 'vue';
 import axios from 'axios';
+import { request } from '@/utils/request'
+import Message from '@/utils/message'
 
 const website = ref({
     name: '',
@@ -33,32 +35,34 @@ const resetForm = () => {
     website.value.img = '';
 };
 
-const submitForm = async () => {  
-    console.log(JSON.stringify(website.value));  // 使用 website.value
+const submitForm = async () => {
+    console.log(JSON.stringify(website.value));  
+
     try {
-        // 发送 POST 请求到后端
-        const response = await fetch('http://localhost:3000/save-icon', {
-            method: 'POST',
+        const response = await request({
+            url: '/save-icon',
+            method: 'post',
+            data: website.value,
             headers: {
                 'Content-Type': 'application/json',
-            },    
-            body: JSON.stringify(website.value), // 发送实际的对象数据
-        });    
+            }
+        });
 
-        console.log(response)
+        console.log(response);
 
-        if (response.ok) {
-            alert('Icon added successfully!');
+        if (response.data && response.code === 200) {
+            Message.success('Icon added successfully!');
+            setTimeout(() => {
+                window.location.reload();
+            }, 1000); // 延迟 1 秒后刷新页面
         } else {
-            alert('Failed to add icon!');
-        }    
+            console.error('Error response:', response.data);
+            Message.error('Failed to add icon');
+        }
     } catch (error) {
         console.error('Error:', error);
-        alert('Error occurred while adding icon');
-    }    
-    // resetForm();
-    // refresh 
-    window.location.reload();
+        Message.error('Error occurred while adding icon');
+    }
 };
 
 

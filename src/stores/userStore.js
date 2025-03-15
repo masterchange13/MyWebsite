@@ -3,27 +3,24 @@ import { defineStore } from 'pinia';
 export const useUserStore = defineStore('user', {
     state: () => ({
         user: {
-            name: '',
-            age: 0
+            name: localStorage.getItem('username') || '',  // ✅ 这里初始化
+            age: Number(localStorage.getItem('age')) || 0
         }
     }),
     actions: {
-        setUsername(name) {
-            this.user.name = name;
-            // 将用户名保存到 localStorage
-            localStorage.setItem('username', name);
-        },
-        getUsername() {
-            // 从 localStorage 获取用户名
-            return this.user.name || localStorage.getItem('username') || '';
-        },
         setUser(name, age) {
             this.user.name = name;
             this.user.age = age;
             localStorage.setItem('username', name);
+            localStorage.setItem('age', String(age));
         },
-        getUser() {
-            return this.user;
+        getUsername() {
+            return this.user.name;
+        },
+        setUsername(name) {
+            this.user.name = name;
+            localStorage.setItem('username', name);
         }
-    }
+    },
+    persist: true // ✅ 启用持久化
 });

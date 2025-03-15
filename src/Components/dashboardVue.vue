@@ -39,7 +39,7 @@
                         <el-icon>
                             <document />
                         </el-icon>
-                        <span>Navigator Three</span>
+                        <span @click="toChat()">Chat</span>
                     </el-menu-item>
                     <el-menu-item index="4">
                         <el-icon>
@@ -109,5 +109,9 @@ const toTransfer = () => {
 
 const getDocument = () => {
     router.push("/getDocument")
+}
+
+const toChat = () => {
+    router.push("/chat")
 }
 </script>

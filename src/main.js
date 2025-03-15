@@ -6,11 +6,13 @@ import elementPlus from 'element-plus';
 import 'element-plus/dist/index.css';
 import * as ElementPlusIconsVue from '@element-plus/icons-vue';
 import { createPinia } from 'pinia'; // 导入 createPinia
+import piniaPersist from 'pinia-plugin-persistedstate'
 
 const app = createApp(App);
 
 // 使用 pinia
 const pinia = createPinia();
+pinia.use(piniaPersist);
 app.use(pinia);
 
 // 使用 router
