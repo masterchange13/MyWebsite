@@ -48,6 +48,11 @@ const routes = [
                 path: '/chat',
                 name: 'chat',
                 component: () => import('@/Components/chatVue.vue')
+            },
+            {
+                path: '/documentDetail/:id',
+                name: 'documentDetail',
+                component: () => import('@/Components/documentDetailVue.vue')
             }
         ]
     },
