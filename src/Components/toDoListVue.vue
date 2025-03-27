@@ -22,11 +22,11 @@
         <li
           v-for="todo in filteredTodos"
           class="todo"
-          :key="todo.id"
-          :class="{ completed: todo.completed, editing: todo === editedTodo }"
+          :key="todo.time"
+          :class="{ completed: todo.completed, editing: todo === editedTodo }" 
         >
           <div class="view">
-            <input class="toggle" type="checkbox" v-model="todo.completed">
+            <input class="toggle" type="checkbox" v-model="todo.completed" @change="toDoApi.updateTodoStatus(todo)">
             <label @dblclick="editTodo(todo)">{{ todo.title }}</label>
             <button class="destroy" @click="removeTodo(todo)"></button>
           </div>
@@ -68,6 +68,8 @@
 
 <script setup>
 import { ref, computed, watchEffect } from 'vue'
+import { toDoApi } from '@/api/toDoApi'
+import { ElMessage } from 'element-plus'
 
 const STORAGE_KEY = 'vue-todomvc'
 
@@ -81,6 +83,10 @@ const filters = {
 const todos = ref(JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]'))
 const visibility = ref('all')
 const editedTodo = ref()
+
+toDoApi.getAllTodo().then(response => {
+  todos.value = response.data
+})
 
 // derived state
 const filteredTodos = computed(() => filters[visibility.value](todos.value))
@@ -100,18 +106,40 @@ function toggleAll(e) {
 
 function addTodo(e) {
   const value = e.target.value.trim()
-  if (value) {
-    todos.value.push({
-      id: Date.now(),
+//   if (value) {
+//     todos.value.push({
+//       time: Date.now(),
+//       title: value,
+//       completed: false
+//     })
+//     e.target.value = ''
+//   }
+    const data = {
+      time: Date.now(),
       title: value,
       completed: false
+    }
+    toDoApi.addTodo(data).then(response => {
+      if (response.code === 200) {
+        todos.value.push(data)
+        e.target.value = ''
+        console.log(response);
+      }else{
+        ElMessage.error(response.msg)
+      }
     })
-    e.target.value = ''
-  }
 }
 
 function removeTodo(todo) {
   todos.value.splice(todos.value.indexOf(todo), 1)
+  toDoApi.removeTodo(todo).then(response => {
+    if (response.code === 200) {
+      ElMessage.success("删除成功")
+      console.log(response);
+    }else{
+      ElMessage.error(response.msg)
+    }
+  })
 }
 
 let beforeEditCache = ''
@@ -129,12 +157,27 @@ function doneEdit(todo) {
   if (editedTodo.value) {
     editedTodo.value = null
     todo.title = todo.title.trim()
-    if (!todo.title) removeTodo(todo)
+    toDoApi.doneEdit(todo).then(response => {
+      if (response.code === 200) {
+        ElMessage.success(response.data)
+        console.log(response);
+      }else{
+        ElMessage.error(response.msg)
+      } 
+    })
   }
 }
 
 function removeCompleted() {
   todos.value = filters.active(todos.value)
+  toDoApi.removeCompleted().then(response => {
+    if (response.code === 200) {
+      ElMessage.success(response.data)
+      console.log(response);
+    }else{
+      ElMessage.error(response.msg)
+    } 
+  })
 }
 </script>
 
