@@ -40,6 +40,11 @@ const routes = [
                 component: () => import('@/Components/getDocumentVue.vue')
             },
             {
+                path: '/todoList',
+                name: 'todoList',
+                component: () => import('@/Components/toDoListVue.vue')
+            },
+            {
                 path: '/chat',
                 name: 'chat',
                 component: () => import('@/Components/chatVue.vue')
