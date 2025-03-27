@@ -35,7 +35,7 @@
 
     // 控制添加图标的显示
     const showAddIcon = ref(false);
-    const add = ref("../../public/icon/add.png");
+    const add = ref("/icon/add.png");
     
     // 点击添加按钮时，显示添加图标
     const addIcon = () => {

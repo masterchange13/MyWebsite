@@ -21,7 +21,7 @@ import { ref, onMounted, onUnmounted } from "vue";
 import { request } from "@/utils/request";
 import { useUserStore } from "@/stores/userStore";
 
-const wsUrl = "ws://localhost:8080/ws"; // WebSocket 地址
+const wsUrl = "ws://localhost:8083/ws"; // WebSocket 地址
 const socket = ref(null);
 const message = ref("");
 const messages = ref([]);
