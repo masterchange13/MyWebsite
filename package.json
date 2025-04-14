@@ -17,6 +17,7 @@
     "element-plus": "^2.8.8",
     "express": "^4.21.2",
     "fs": "^0.0.1-security",
+    "less": "^4.3.0",
     "pinia": "^2.2.8",
     "pinia-plugin-persistedstate": "^4.2.0",
     "todomvc-app-css": "^2.4.3",

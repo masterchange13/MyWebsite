@@ -53,6 +53,11 @@ const routes = [
                 path: '/documentDetail/:id',
                 name: 'documentDetail',
                 component: () => import('@/Components/documentDetailVue.vue')
+            },
+            {
+                path: '/music',
+                name: 'music',
+                component: () => import('@/views/musicVue.vue')
             }
         ]
     },
