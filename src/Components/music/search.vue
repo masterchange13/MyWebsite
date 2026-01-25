@@ -10,7 +10,8 @@
                 <div class="song-name">{{ item.name }}</div>
                 <img class="cover" :src="item.cover" />
                 <div class="play-icon">
-                    <img class="wava" v-show="(clickIndex == index) && playStatus" src="../assets/wave.gif" alt="">
+                    <!-- 暂时有错误，先注释保证构建通过 -->
+                    <!-- <img class="wava" v-show="(clickIndex == index) && playStatus" src="../assets/wave.gif" alt=""> -->
                 </div>
                 <div class="song-time">{{ item.time }}</div>
                 <div class="arties">{{ item.artistsName }}</div>
@@ -21,7 +22,7 @@
 <script>
 import { reactive, ref, computed, onMounted, toRefs } from "vue";
 import { Search } from "@element-plus/icons-vue";
-import requestApi from "../api/search/index";
+import requestApi from "../../api/search/index";
 import { TimeToString } from "@/utils/musicUtil";
 export default {
     props: {

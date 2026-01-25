@@ -76,7 +76,7 @@ export default {
         },
       })
         .then((res) => {
-          // console.log(res);
+          console.log(res);
           if (res.data.success) {
             // 使用 Pinia 存储数据
             userStore.setUsername(username.value);

@@ -23,6 +23,8 @@
                     </Search>
                     <History v-show="activeIndex == 3" :playStatus="playStatus" @PlayHistoryMusic="PlayHistoryMusic">
                     </History>
+                    <MyMusic v-show="activeIndex == 4" :playStatus="playStatus" @PlayThisMusic="PlayThisMusic"></MyMusic>
+                    <LoveMusci v-show="activeIndex == 5" :playStatus="playStatus" @PlayThisMusic="PlayThisMusic"></LoveMusci>
                 </div>
             </div>
             <div class="song-info"></div>
@@ -73,10 +75,10 @@
 
 <script>
 import { onMounted, reactive, ref, toRefs, computed } from "vue";
-import Playing from "@/Components/playing.vue";
+import Playing from "@/Components/music/playing.vue";
 import liricApi from "../api/liric/index";
-import Search from "@/Components/search.vue";
-import History from "@/Components/history.vue";
+import Search from "@/Components/music/search.vue";
+import History from "@/Components/music/history.vue";
 export default {
     name: "netMusic",
     components: {
@@ -87,14 +89,14 @@ export default {
     setup() {
         const state = reactive({
             backgroundUrl: "https://peiyinimg.qupeiyin.cn/1629950282884-288.jpg",
-            menuList: ["正在播放", "推荐", "搜索", "播放历史"],
+            menuList: ["正在播放", "推荐", "搜索", "播放历史", "我的" ,"收藏"],
             activeIndex: 0, // 选中
             playing: false,
             songList: [
                 {
                     albumId: 122397809,
                     albumTitle: "一些古风歌【2021】",
-                    artistsName: "平生不晚",``
+                    artistsName: "平生不晚",
                     cover:
                         "https://p2.music.126.net/pOR45DW9BfLSQ2JDJJeUgQ==/109951165714496390.jpg",
                     id: 1820643403,

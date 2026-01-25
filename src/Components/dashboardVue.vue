@@ -5,7 +5,7 @@
         <h1 class="title">Raspberry Pi</h1>
   
         <div class="user-info">
-          <el-avatar class="avatar" :size="40" src="https://i.pravatar.cc/150" />
+          <el-avatar class="avatar" :size="40" src="https://api.dicebear.com/7.x/identicon/svg?seed=vue" />
           <span class="username">Hello, {{ username }}</span>
           <el-button @click="logout" class="logout-button">Logout</el-button>
         </div>
