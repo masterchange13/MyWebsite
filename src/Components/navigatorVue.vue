@@ -44,7 +44,7 @@
 
     const getIcons = async () => {
         const response = await request({
-            url: '/getAllNavigators',
+            url: 'users/getAllNavigators/',
             method: 'GET',
         })
         console.log(response);

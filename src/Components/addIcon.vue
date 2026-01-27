@@ -16,7 +16,7 @@
         </el-form-item>
     </el-form>
 </template>
-
+ 
 <script setup>
 import { ref } from 'vue';
 import axios from 'axios';
@@ -40,7 +40,7 @@ const submitForm = async () => {
 
     try {
         const response = await request({
-            url: '/save-icon',
+            url: 'users/save_icon/',
             method: 'post',
             data: website.value,
             headers: {

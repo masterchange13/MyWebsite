@@ -7,6 +7,8 @@ import 'element-plus/dist/index.css';
 import * as ElementPlusIconsVue from '@element-plus/icons-vue';
 import { createPinia } from 'pinia'; // 导入 createPinia
 import piniaPersist from 'pinia-plugin-persistedstate'
+import request from '@/utils/request'
+
 
 const app = createApp(App);
 
@@ -25,6 +27,8 @@ app.use(elementPlus);
 for (const [key, component] of Object.entries(ElementPlusIconsVue)) {
     app.component(key, component);
 }
+
+request.get('/csrf/')   // 🔥 这一步就是“领 CSRF 身份证”
 
 // 挂载应用
 app.mount('#app');

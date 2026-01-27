@@ -39,7 +39,7 @@
     const getAllFile = async () => {
         // get all the file in the server
         try{
-            const res = await request.get('/document/getAll')
+            const res = await request.get('/document/getAll/')
             if(res.code === 200){
                 files.value = res.data
                 ElMessage.success(res.message)
@@ -64,7 +64,7 @@
     }
 
     const showDocument = (id) => {
-        router.push({name: 'documentDetail', params: {id: id}})
+        router.push({name: '/document/documentDetail/', params: {id: id}})
     }
 
 </script>

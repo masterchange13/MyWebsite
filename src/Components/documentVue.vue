@@ -61,7 +61,7 @@ const handleCreated = (editor) => {
 // 发布方法
 const publish = async () => {
   try {
-    const res = await request.post('/document/publish', {
+    const res = await request.post('/document/publish/', {
       author: author.value, // 取计算属性的值
       content: valueHtml.value
     })

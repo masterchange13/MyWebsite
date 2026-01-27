@@ -19,17 +19,14 @@
   </div>
 </template>
   
-<script>
-import { ref } from 'vue';
-import { useRouter } from 'vue-router';
-// pinia
-import { useUserStore } from '@/stores/userStore';
-import { request } from '@/utils/request';
-import Message from '@/utils/message';
+<script setup>
+    import { ref, onMounted } from 'vue';
+    import { useRouter } from 'vue-router';
+    // pinia
+    import { useUserStore } from '@/stores/userStore';
+    import { request } from '@/utils/request';
+    import Message from '@/utils/message';
 
-export default {
-  name: 'Login',
-  setup() {
     const router = useRouter();
     const userStore = useUserStore(); // 在这里获取 store 实例
 
@@ -65,45 +62,40 @@ export default {
 
     const toDashboard = () => {
       request({
-        url: '/login',
+        url: '/users/login/',
         method: 'post',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        withCredentials: true,   // ⭐ 必须
         data: {
           username: username.value,
           password: password.value,
         },
       })
-        .then((res) => {
-          console.log(res);
-          if (res.data.success) {
-            // 使用 Pinia 存储数据
-            userStore.setUsername(username.value);
-            router.push('/navigator');
-            // console.log(res)
-            const newToken = res.data.token;
-            localStorage.setItem('token', newToken);
-            Message.success('登录成功');
-          } else {
-            Message.error('Login failed');
-          }
-        })
-        .catch((err) => {
-          Message .error(err.message);
-          console.error(err);
-        });
+      .then((res) => {
+        console.log(res);
+
+        if (res.success) {   // ⭐ 注意这里
+          userStore.setUsername(username.value);
+          router.push('/navigator');
+          Message.success('登录成功');
+        } else {
+          Message.error(res.msg || 'Login failed');
+        }
+      })
+      .catch((err) => {
+        Message.error(err.message);
+        console.error(err);
+      });
     };
 
-    return {
-      username,
-      password,
-      errors,
-      handleLogin,
-      toDashboard,
-    };
-  },
-};
+    // ⭐ 页面加载时获取 CSRF Cookie
+    onMounted(async () => {
+      try {
+        await request.get('/api/csrf/')
+        console.log('CSRF cookie ready')
+      } catch (e) {
+        console.error('CSRF 获取失败', e)
+      }
+    })
 </script>
   
 <style scoped>
