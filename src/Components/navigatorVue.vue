@@ -7,6 +7,7 @@
         <!-- 遍历 icons 数组 -->
         <div v-for="(icon, index) in icons" :key="index" style="display: inline-block; margin-right: 30px;">
             <img :src="icon.img" style="width: 100px; height: 100px;" @click="openLink(icon.url)"/>
+            <p>{{ icon.name }}</p>
         </div>
     </div>
 

@@ -60,7 +60,7 @@
   
       <el-footer class="footer">
         <div>Welcome to my website</div>
-        <div>&copy; 2024</div>
+        <div>&copy; 2026</div>
       </el-footer>
     </el-container>
   </template>

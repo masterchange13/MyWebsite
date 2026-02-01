@@ -124,7 +124,7 @@ export default {
             songInfo: {},
             lyricInfo: [],
             audioTime: "00:00",
-            volume: 80,
+            volume: 50,
             playStatus: false, // 搜索或者历史播放完成后关闭播放状态按钮
         });
         let track = ref(null);
