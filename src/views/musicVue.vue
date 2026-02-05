@@ -17,14 +17,11 @@
                     </div>
                 </div>
                 <div class="main-container">
-                    <Playing v-show="activeIndex == 0" :songInfo="songInfo" :lyricIndex="lyricIndex"
-                        :lyricInfo="lyricInfo"></Playing>
-                    <Search v-show="activeIndex == 2" :playStatus="playStatus" @PlayThisMusic="PlayThisMusic">
-                    </Search>
-                    <History v-show="activeIndex == 3" :playStatus="playStatus" @PlayHistoryMusic="PlayHistoryMusic">
-                    </History>
+                    <Playing v-show="activeIndex == 0" :songInfo="songInfo" :lyricIndex="lyricIndex" :lyricInfo="lyricInfo"></Playing>
+                    <Search v-show="activeIndex == 2" :playStatus="playStatus" @PlayThisMusic="PlayThisMusic"></Search>
+                    <History v-show="activeIndex == 3" :playStatus="playStatus" @PlayHistoryMusic="PlayHistoryMusic"></History>
                     <MyMusic v-show="activeIndex == 4" :playStatus="playStatus" @PlayThisMusic="PlayThisMusic"></MyMusic>
-                    <LoveMusci v-show="activeIndex == 5" :playStatus="playStatus" @PlayThisMusic="PlayThisMusic"></LoveMusci>
+                    <LoveMusic v-show="activeIndex == 5" :playStatus="playStatus" @PlayThisMusic="PlayThisMusic"></LoveMusic>
                 </div>
             </div>
             <div class="song-info"></div>
@@ -79,12 +76,14 @@ import Playing from "@/Components/music/playing.vue";
 import liricApi from "../api/liric/index";
 import Search from "@/Components/music/search.vue";
 import History from "@/Components/music/history.vue";
+import LoveMusic from "@/Components/music/love.vue";
 export default {
     name: "netMusic",
     components: {
         Playing,
         Search,
         History,
+        LoveMusic,
     },
     setup() {
         const state = reactive({
