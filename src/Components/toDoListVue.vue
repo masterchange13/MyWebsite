@@ -25,11 +25,22 @@
           :key="todo.time"
           :class="{ completed: todo.completed, editing: todo === editedTodo }" 
         >
-          <div class="view">
-            <input class="toggle" type="checkbox" v-model="todo.completed" @change="toDoApi.updateTodoStatus(todo)">
-            <label @dblclick="editTodo(todo)">{{ todo.title }}</label>
-            <button class="destroy" @click="removeTodo(todo)"></button>
+        <div class="view">
+          <input class="toggle" type="checkbox" v-model="todo.completed" @change="toDoApi.updateTodoStatus(todo)">
+          <div class="todo-content">
+            <label class="todo-title" @dblclick="editTodo(todo)">
+              {{ todo.title }}
+            </label>
+
+            <div class="todo-time">
+              <span class="time created">创建 {{ formatTime(todo.created_time) }}</span>
+              <span class="time updated">更新 {{ formatTime(todo.updated_time) }}</span>
+            </div>
           </div>
+
+          <button class="destroy" @click="removeTodo(todo)"></button>
+        </div>
+
           <input
             v-if="todo === editedTodo"
             class="edit"
@@ -50,13 +61,25 @@
       </span>
       <ul class="filters">
         <li>
-          <a href="#/all" :class="{ selected: visibility === 'all' }">All</a>
+          <a href="#" 
+            :class="{ selected: visibility === 'all' }"
+            @click.prevent="visibility = 'all'">
+            All
+          </a>
         </li>
         <li>
-          <a href="#/active" :class="{ selected: visibility === 'active' }">Active</a>
+          <a href="#" 
+            :class="{ selected: visibility === 'active' }"
+            @click.prevent="visibility = 'active'">
+            Active
+          </a>
         </li>
         <li>
-          <a href="#/completed" :class="{ selected: visibility === 'completed' }">Completed</a>
+          <a href="#" 
+            :class="{ selected: visibility === 'completed' }"
+            @click.prevent="visibility = 'completed'">
+            Completed
+          </a>
         </li>
       </ul>
       <button class="clear-completed" @click="removeCompleted" v-show="todos.length > remaining">
@@ -106,18 +129,15 @@ function toggleAll(e) {
 
 function addTodo(e) {
   const value = e.target.value.trim()
-//   if (value) {
-//     todos.value.push({
-//       time: Date.now(),
-//       title: value,
-//       completed: false
-//     })
-//     e.target.value = ''
-//   }
     const data = {
       time: Date.now(),
       title: value,
-      completed: false
+      completed: false,
+      created_time: Date.now(),
+      updated_time: Date.now()
+    }
+    if (!value) {
+      return
     }
     toDoApi.addTodo(data).then(response => {
       if (response.code === 200) {
@@ -179,10 +199,94 @@ function removeCompleted() {
     } 
   })
 }
+
+const formatTime = (timeStr) => {
+  if (!timeStr) return ''
+
+  const date = new Date(timeStr)
+
+  const Y = date.getFullYear()
+  const M = String(date.getMonth() + 1).padStart(2, '0')
+  const D = String(date.getDate()).padStart(2, '0')
+  const h = String(date.getHours()).padStart(2, '0')
+  const m = String(date.getMinutes()).padStart(2, '0')
+
+  return `${Y}-${M}-${D} ${h}:${m}`
+}
 </script>
 
 <style scoped>
 @import "todomvc-app-css/index.css";
+
+.view {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 12px;
+  border-bottom: 1px solid #eee;
+}
+
+.todo-content {
+  flex: 1;
+  margin-left: 10px;
+  display: flex;
+  flex-direction: column;
+}
+
+.todo-title {
+  font-size: 24px;
+  font-weight: 500;
+  color: #333;
+  cursor: pointer;
+}
+
+.todo-title:hover {
+  color: #409eff;
+}
+
+.todo-time {
+  margin-top: 4px;
+  display: flex;
+  gap: 10px;
+}
+
+.time {
+  font-size: 12px;
+  color: #999;
+}
+
+.time.created::before {
+  content: "🕒 ";
+}
+
+.time.updated::before {
+  content: "🔄 ";
+}
+
+.toggle {
+  width: 24px;
+  height: 24px;
+}
+
+.destroy {
+  width: 18px;
+  height: 18px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  opacity: 0.4;
+}
+
+.destroy:hover {
+  opacity: 1;
+  color: red;
+}
+
+.destroy::after {
+  content: "×";
+  font-size: 16px;
+  color: #cc9a9a;
+}
 </style>
 
 
