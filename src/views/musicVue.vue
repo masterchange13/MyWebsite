@@ -2,7 +2,7 @@
     <div class="net-easy-player">
         <div class="background-flitter" :style="`background-image: url(${backgroundUrl});`"></div>
         <div class="music-mask"></div>
-        <audio :src="songInfo.url" id="audio"></audio>
+        <audio ref="audioRef" :src="songInfo.url"></audio>
         <div class="music-header">
             <!-- <div></div>  -->
             <!-- <div>界面</div> -->
@@ -31,10 +31,10 @@
                 <img class="audioCover" :src="songInfo.cover" alt="" />
             </div>
             <div class="play-icon-container">
-                <img class="play-icon" src="../assets/arrow_01.png" alt="上一曲" />
+                <img class="play-icon" src="../assets/arrow_01.png" alt="上一曲" @click="prevSong"/>
                 <img v-show="!playing" @click="playMusic" class="play-icon" src="../assets/play_01.png" alt="播放" />
                 <img v-show="playing" @click="playMusic" class="play-icon" src="../assets/play_02.png" alt="暂停" />
-                <img class="play-icon" src="../assets/arrow_02.png" alt="下一曲" />
+                <img class="play-icon" src="../assets/arrow_02.png" alt="下一曲" @click="nextSong"/>
             </div>
             <div class="music-speed">
                 <div class="name-time">
@@ -42,7 +42,7 @@
                     <div>{{ currentTime }}/{{ audioTime }}</div>
                 </div>
                 <div class="process-container">
-                    <div class="process-bar" ref="track" id="audio-bar">
+                    <div class="process-bar" ref="trackRef" @click="clickProgress">
                         <div class="progress-box" :style="{ width: audioProgressPercent }">
                             <div class="play-point" :style="{ transform: 'translateX(' + thumbTranslateX + 'px)' }">
                                 <img src="../assets/dot_01.png" alt="" />
@@ -70,284 +70,187 @@
     </div>
 </template>
 
-<script>
-import { onMounted, reactive, ref, toRefs, computed } from "vue";
+<script setup>
+import { ref, reactive, onMounted, computed, toRefs, nextTick } from "vue";
 import Playing from "@/Components/music/playing.vue";
-import liricApi from "../api/liric/index";
 import Search from "@/Components/music/search.vue";
 import History from "@/Components/music/history.vue";
 import LoveMusic from "@/Components/music/love.vue";
-export default {
-    name: "netMusic",
-    components: {
-        Playing,
-        Search,
-        History,
-        LoveMusic,
+import liricApi from "../api/liric/index";
+import { musicApi } from '@/api/musicApi'
+import { watch } from 'vue'
+
+/* refs */
+const audioRef = ref(null);
+const trackRef = ref(null);
+
+/* 状态 */
+const state = reactive({
+  backgroundUrl: "",
+  menuList: ["正在播放", "推荐", "搜索", "播放历史", "我的", "收藏"],
+  activeIndex: 0,
+  playing: false,
+  playIndex: 0,
+  audioProgress: 0,
+  thumbTranslateX: 0,
+  lyricIndex: 0,
+  currentTime: "00:00",
+  audioTime: "00:00",
+  progressL: 0,
+  volume: 50,
+  playStatus: false,
+  songInfo: {},
+  lyricInfo: [],
+  songList: [
+    {
+      name: "辞·九门回忆",
+      cover: "https://p1.music.126.net/pWJXXU4kbhsk1HhXCPUMag==/109951163879149420.jpg",
+      url: "https://music.163.com/song/media/outer/url?id=1347524822.mp3",
+      id: 1347524822,
     },
-    setup() {
-        const state = reactive({
-            backgroundUrl: "https://peiyinimg.qupeiyin.cn/1629950282884-288.jpg",
-            menuList: ["正在播放", "推荐", "搜索", "播放历史", "我的" ,"收藏"],
-            activeIndex: 0, // 选中
-            playing: false,
-            songList: [
-                {
-                    albumId: 122397809,
-                    albumTitle: "一些古风歌【2021】",
-                    artistsName: "平生不晚",
-                    cover:
-                        "https://p2.music.126.net/pOR45DW9BfLSQ2JDJJeUgQ==/109951165714496390.jpg",
-                    id: 1820643403,
-                    name: "伯虎说（纯戏腔段）",
-                    url: "https://music.163.com/song/media/outer/url?id=1820643403.mp3",
-                },
-                {
-                    albumId: 75612550,
-                    albumTitle: "辞.九门回忆",
-                    artistsName: "解忧草/冰幽",
-                    cover:
-                        "https://p1.music.126.net/pWJXXU4kbhsk1HhXCPUMag==/109951163879149420.jpg",
-                    id: 557640761,
-                    name: "辞.九门回忆",
-                    url: "https://music.163.com/song/media/outer/url?id=1347524822.mp3",
-                },
-            ],
-            audioProgress: 0, // 进度
-            playType: 1, // 播放类型，单曲循环还是顺序播放
-            playIndex: 0, // 当前播放哪一首
-            thumbTranslateX: 0,
-            lyricIndex: 0, // 歌词到哪一行了
-            currentTime: 0, // 当前播放进度
-            progressL: 0, // 进度条总长度
-            songInfo: {},
-            lyricInfo: [],
-            audioTime: "00:00",
-            volume: 50,
-            playStatus: false, // 搜索或者历史播放完成后关闭播放状态按钮
-        });
-        let track = ref(null);
-        // let rotate = ref(null);
-        onMounted(() => {
-            const audio = document.getElementById("audio");
-            // state.progressL = track.value.offsetHeight;
-            console.log(state.progressL); //取元素宽高等属性操作
-            let bar = document.getElementById("audio-bar");
-            console.log("bar", bar.offsetWidth);
-            state.progressL = bar.offsetWidth;
-            // window.addEventListener("resize", function () {
-            //   // 变化后需要做的事
-            //   state.progressL = track.value.offsetHeight;
-            // });
-            Init(); // 初始化
-        });
-        const PlayThisMusic = (data) => {
-            state.playStatus = true;
-            console.log(data);
-            state.songList.push(data);
-            localStorage.setItem("historyList", JSON.stringify(state.songList));
-            state.songInfo = data;
-            state.backgroundUrl = state.songInfo.cover;
-            audioInit();
-            GetLyric(state.songInfo.id);
-            setTimeout(() => {
-                // rotate.style.animationPlayState = "running";
-                state.playing = true;
-                audio.play();
-            }, 100);
-        };
-        const PlayHistoryMusic = (data, index) => {
-            // state.songList = data;
-            state.playStatus = true;
-            state.songInfo = data[index];
-            state.backgroundUrl = state.songInfo.cover;
-            audioInit();
-            GetLyric(state.songInfo.id);
-            setTimeout(() => {
-                // rotate.style.animationPlayState = "running";
-                state.playing = true;
-                audio.play();
-            }, 100);
-        };
-        const Init = () => {
-            if (localStorage.getItem("historyList")) {
-                state.songList = JSON.parse(localStorage.getItem("historyList"));
-            }
-            GetSongInfo();
-        };
-        const GetSongInfo = () => {
-            let myList = state.songList;
-            state.songInfo = myList[0];
-            state.backgroundUrl = state.songInfo.cover;
-            audioInit();
-            GetLyric(state.songInfo.id);
-        };
-        const audioInit = () => {
-            // let progressL = track.value.offsetWidth; // 进度条总长
-            audio.addEventListener("canplay", () => {
-                state.audioTime = TimeToString(audio.duration);
-            });
-            audio.addEventListener("timeupdate", () => {
-                // 当前播放时间
-                let compareTime = audio.currentTime;
-                for (let i = 0; i < state.lyricInfo.length; i++) {
-                    if (compareTime > parseInt(state.lyricInfo[i].time)) {
-                        const index = state.lyricInfo[i].index;
-                        if (i === parseInt(index)) {
-                            state.lyricIndex = i;
-                        }
-                    }
-                }
-                state.currentTime = TimeToString(audio.currentTime);
-                state.audioProgress = audio.currentTime / audio.duration;
-                state.thumbTranslateX = (state.audioProgress * state.progressL).toFixed(
-                    3
-                );
-            });
-            audio.addEventListener("ended", () => {
-                switch (parseInt(state.playType)) {
-                    case 1: // 列表循环
-                        state.playIndex =
-                            state.playIndex + 1 >= state.songList.length
-                                ? 0
-                                : state.playIndex + 1;
-                        break;
-                    case 2: // 随机播放
-                        state.playIndex = Math.floor(Math.random() * state.songList.length);
-                        break;
-                    case 3: // 单曲循环
-                        break;
-                }
-                state.songInfo = state.songList[state.playIndex];
-                state.backgroundUrl = state.songInfo.cover;
-                GetLyric(state.songInfo.id);
-                state.playStatus = false;
-                setTimeout(() => {
-                    // rotate.style.animationPlayState = "running";
-                    audio.play();
-                }, 100);
-            });
-        };
+  ],
+});
 
-        const GetLyric = (id) => {
-            liricApi
-                .GetLiricInfo({
-                    id,
-                })
-                .then((res) => {
-                    console.log("res", res);
-                    let lrc = res.lrc.lyric;
-                    GetLyricList(lrc);
-                });
-        };
-        const GetLyricList = (lrc) => {
-            let lyricsObjArr = [];
-            const regNewLine = /\n/;
-            const lineArr = lrc.split(regNewLine); // 每行歌词的数组
-            const regTime = /\[\d{2}:\d{2}.\d{2,3}\]/;
-            lineArr.forEach((item) => {
-                if (item === "") return;
-                const obj = {};
-                const time = item.match(regTime);
+const {
+  backgroundUrl,
+  menuList,
+  activeIndex,
+  playing,
+  songInfo,
+  lyricInfo,
+  lyricIndex,
+  currentTime,
+  audioTime,
+  thumbTranslateX,
+  volume,
+  playStatus,
+} = toRefs(state);
 
-                obj.lyric =
-                    item.split("]")[1].trim() === "" ? "" : item.split("]")[1].trim();
-                obj.time = time
-                    ? TimeToSeconds(time[0].slice(1, time[0].length - 1))
-                    : 0;
-                obj.uid = Math.random().toString().slice(-6);
-                if (obj.lyric === "") {
-                    console.log("这一行没有歌词");
-                } else {
-                    lyricsObjArr.push(obj);
-                }
-            });
-            state.lyricInfo = lyricsObjArr.map((item, index) => {
-                item.index = index;
-                return {
-                    ...item,
-                };
-            });
-            console.log("state.lyricInfo", state.lyricInfo);
-        };
-        const TimeToSeconds = (time) => {
-            // 格式化歌词的时间 转换成 sss:ms
-            const regMin = /.*:/;
-            const regSec = /:.*\./;
-            const regMs = /\./;
-
-            const min = parseInt(time.match(regMin)[0].slice(0, 2));
-            let sec = parseInt(time.match(regSec)[0].slice(1, 3));
-            const ms = time.slice(
-                time.match(regMs).index + 1,
-                time.match(regMs).index + 3
-            );
-            if (min !== 0) {
-                sec += min * 60;
-            }
-            return Number(sec + "." + ms);
-        };
-        const ChangeActive = (index) => {
-            if (index == 3) {
-                state.songList = JSON.parse(localStorage.getItem("historyList"));
-            }
-            state.activeIndex = index;
-        };
-        const TimeToString = (seconds) => {
-            let param = parseInt(seconds);
-            let hh = "",
-                mm = "",
-                ss = "";
-            if (param >= 0 && param < 60) {
-                param < 10 ? (ss = "0" + param) : (ss = param);
-                return "00:" + ss;
-            } else if (param >= 60 && param < 3600) {
-                mm = parseInt(param / 60);
-                mm < 10 ? (mm = "0" + mm) : mm;
-                param - parseInt(mm * 60) < 10
-                    ? (ss = "0" + String(param - parseInt(mm * 60)))
-                    : (ss = param - parseInt(mm * 60));
-                return mm + ":" + ss;
-            }
-        };
-
-        const playMusic = () => {
-            if (state.playing) {
-                // 播放中,点击则为暂停
-                state.playing = false;
-                // rotate.style.animationPlayState = "paused";
-                audio.pause();
-            } else {
-                // 暂停中,点击则为播放
-                state.playing = true;
-                // rotate.style.animationPlayState = "running";
-                audio.play();
-            }
-        };
-
-        const audioProgressPercent = computed(() => {
-            return `${state.audioProgress * 100}%`;
-        });
-
-        return {
-            ...toRefs(state),
-            ChangeActive,
-            playMusic,
-            PlayThisMusic,
-            PlayHistoryMusic,
-            // rotate,
-            audioProgressPercent,
-        };
-    },
+const getAllMusic = async () => {
+  const res = await musicApi.getAllMusic();
+  state.songList = res.data;
+  console.log("all music's res.data", res.data);
 };
+
+// /* 播放 */
+const PlayThisMusic = (song) => {
+  state.playIndex = state.songList.findIndex((item) => item.id == song.id);
+  loadSong(song);
+};
+
+const PlayHistoryMusic = (song) => {
+  state.playIndex = state.songList.findIndex((item) => item.id == song.id);
+  loadSong(song);
+}
+
+/* 初始化 */
+onMounted(async () => {
+  await getAllMusic();
+  state.progressL = trackRef.value.offsetWidth;
+  loadSong(state.songList[0]);
+  initAudioEvents();
+});
+
+/* 音频事件 */
+watch(() => state.volume, (val) => {
+  audioRef.value.volume = val / 100
+})
+
+const clickProgress = (e) => {
+  const rect = trackRef.value.getBoundingClientRect()
+  const percent = (e.clientX - rect.left) / rect.width
+  audioRef.value.currentTime = percent * audioRef.value.duration
+}
+
+const initAudioEvents = () => {
+  const audio = audioRef.value;
+
+//   audio.oncanplay = () => {
+//     state.audioTime = TimeToString(audio.duration);
+//   };
+  audio.onloadedmetadata = () => {
+    state.audioTime = TimeToString(audio.duration);
+    state.progressL = trackRef.value.offsetWidth; // 这里再获取宽度更安全
+  };
+
+
+  audio.ontimeupdate = () => {
+    state.currentTime = TimeToString(audio.currentTime);
+    state.audioProgress = audio.currentTime / audio.duration;
+    state.thumbTranslateX = state.audioProgress * state.progressL;
+    updateLyric(audio.currentTime);
+  };
+
+  audio.onended = () => nextSong();
+};
+
+/* 播放 */
+const playMusic = () => {
+  const audio = audioRef.value;
+  state.playing ? audio.pause() : audio.play();
+  state.playing = !state.playing;
+};
+
+/* 切歌 */
+const prevSong = () => {
+  state.playIndex =
+    (state.playIndex - 1 + state.songList.length) % state.songList.length;
+  loadSong(state.songList[state.playIndex]);
+};
+
+const nextSong = () => {
+  state.playIndex = (state.playIndex + 1) % state.songList.length;
+  loadSong(state.songList[state.playIndex]);
+};
+
+const loadSong = async (song) => {
+  state.songInfo = song;
+  state.backgroundUrl = song.cover;
+  await nextTick();
+  audioRef.value.load();
+  audioRef.value.play();
+  state.playing = true;
+  GetLyric(song.id);
+};
+
+/* 歌词 */
+const GetLyric = async (id) => {
+  try {
+    const res = await liricApi.GetLiricInfo({ id });
+    parseLyric(res.lrc.lyric);
+  } catch {}
+};
+
+const parseLyric = (lrc) => {
+  state.lyricInfo = lrc.split("\n").map((line, i) => {
+    const m = line.match(/\[(\d+):(\d+\.\d+)\]/);
+    return m ? { time: +m[1] * 60 + +m[2], lyric: line.split("]")[1], index: i } : null;
+  }).filter(Boolean);
+};
+
+const updateLyric = (time) => {
+  const i = state.lyricInfo.findIndex(l => time < l.time);
+  state.lyricIndex = i > 0 ? i - 1 : 0;
+};
+
+/* 工具 */
+const TimeToString = s => {
+  s = Math.floor(s || 0);
+  return `${String(Math.floor(s/60)).padStart(2,"0")}:${String(s%60).padStart(2,"0")}`;
+};
+
+const audioProgressPercent = computed(() => `${state.audioProgress * 100}%`);
+
+const ChangeActive = i => state.activeIndex = i;
 </script>
+
 
 <style lang="less" scoped>
 .net-easy-player {
     width: 100%;
     height: 100%;
-    color: #fff;
     overflow: hidden;
+    color: #fff;
 
     /*遮罩*/
     .music-mask,
