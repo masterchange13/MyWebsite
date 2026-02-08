@@ -97,7 +97,7 @@ const state = reactive({
   currentTime: "00:00",
   audioTime: "00:00",
   progressL: 0,
-  volume: 50,
+  volume: 15,
   playStatus: false,
   songInfo: {},
   lyricInfo: [],
@@ -168,11 +168,12 @@ const initAudioEvents = () => {
 //   audio.oncanplay = () => {
 //     state.audioTime = TimeToString(audio.duration);
 //   };
-  audio.onloadedmetadata = () => {
+    audio.onloadedmetadata = () => {
     state.audioTime = TimeToString(audio.duration);
-    state.progressL = trackRef.value.offsetWidth; // 这里再获取宽度更安全
-  };
-
+    nextTick(() => {
+        state.progressL = trackRef.value.offsetWidth;
+    });
+    };
 
   audio.ontimeupdate = () => {
     state.currentTime = TimeToString(audio.currentTime);
@@ -208,8 +209,8 @@ const loadSong = async (song) => {
   state.backgroundUrl = song.cover;
   await nextTick();
   audioRef.value.load();
-  audioRef.value.play();
-  state.playing = true;
+//   audioRef.value.play();
+  state.playing = false ;
   GetLyric(song.id);
 };
 
@@ -250,6 +251,8 @@ const ChangeActive = i => state.activeIndex = i;
     width: 100%;
     height: 100%;
     overflow: hidden;
+    display: flex;
+    flex-direction: column;
     color: #fff;
 
     /*遮罩*/
@@ -292,6 +295,8 @@ const ChangeActive = i => state.activeIndex = i;
     }
 
     .music-container {
+        flex: 1;
+        overflow: hidden;
         position: relative;
         width: 100%;
         height: calc(~"100% - 144px");
@@ -376,6 +381,8 @@ const ChangeActive = i => state.activeIndex = i;
                 width: 100%;
                 height: calc(~"100% - 60px");
                 position: relative;
+                flex: 1;
+                overflow-y: auto;  /* ✅ 滚动只在这里 */
             }
         }
 
