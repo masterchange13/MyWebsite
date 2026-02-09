@@ -299,7 +299,7 @@ const ChangeActive = i => state.activeIndex = i;
         overflow: hidden;
         position: relative;
         width: 100%;
-        height: calc(~"100% - 144px");
+        height: 100%;
         display: flex;
 
         .list-main {
@@ -379,7 +379,7 @@ const ChangeActive = i => state.activeIndex = i;
 
             .main-container {
                 width: 100%;
-                height: calc(~"100% - 60px");
+                height: calc(100% - 60px);
                 position: relative;
                 flex: 1;
                 overflow-y: auto;  /* ✅ 滚动只在这里 */

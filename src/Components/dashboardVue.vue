@@ -11,9 +11,9 @@
       </div>
     </el-header>
 
-    <el-row class="tac">
-      <el-col :span="2">
-        <el-menu default-active="4" class="el-menu-vertical-demo" @open="handleOpen" @close="handleClose">
+    <el-row class="tac" style="flex: 1; min-height: 0; overflow: hidden; display: flex;">
+      <el-col :span="2" style="height: 100%; overflow: hidden;">
+        <el-menu default-active="4" class="el-menu-vertical-demo" @open="handleOpen" @close="handleClose" style="height: 100%; overflow-y: auto;">
           <el-sub-menu index="1">
             <template #title>
               <el-icon>
@@ -51,8 +51,8 @@
         </el-menu>
       </el-col>
 
-      <el-col :span="22">
-        <el-main>
+      <el-col :span="22" style="height: 100%; overflow: hidden; display: flex; flex-direction: column;">
+        <el-main style="flex: 1; overflow: auto; padding: 0;">
           <router-view></router-view>
         </el-main>
       </el-col>
@@ -97,6 +97,13 @@ const toMusic = () => router.push("/music");
 </script>
 
 <style scoped>
+.el-container {
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
 .header {
   display: flex;
   justify-content: space-between;
@@ -141,14 +148,11 @@ const toMusic = () => router.push("/music");
 }
 
 .footer {
-  position: fixed;
-  bottom: 0;
-  left: 0;
-  right: 0;
   text-align: center;
   background-color: #f5f5f5;
   color: #333;
   padding: 20px 0;
   border-top: 1px solid #eaeaea;
+  flex-shrink: 0;
 }
 </style>
