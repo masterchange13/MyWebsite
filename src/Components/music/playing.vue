@@ -4,8 +4,8 @@
             <div class="poster" ref="rotate">
                 <img :src="songInfo.cover" alt="" />
             </div>
-            <div class="song-name">{{ songInfo.name }}</div>
-            <div class="song-artistsName">{{ songInfo.artistsName }}</div>
+            <div class="song-name">{{ songInfo.title }}</div>
+            <div class="song-artistsName">{{ songInfo.artist }}</div>
         </div>
         <div class="lyric">
             <div ref="musicLyric" class="music-lyric" :style="{ 'padding-top': paddingTop }">

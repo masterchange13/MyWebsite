@@ -24,6 +24,7 @@ import { reactive, ref, computed, onMounted, toRefs } from "vue";
 import { Search } from "@element-plus/icons-vue";
 import requestApi from "../../api/search/index";
 import { TimeToString } from "@/utils/musicUtil";
+import { musicApi } from "@/api/musicApi";
 export default {
     props: {
         songInfo: {
@@ -46,36 +47,51 @@ export default {
         onMounted(() => {
             // GetLyric(props.songInfo.id);
         });
-        const SearchSongs = (num) => {
-            console.log('是否有：', typeof (num))
-            if (typeof (num) == 'string') {
+        const searchSongs> {
+            // 如果输入是字符串（用户输入搜索），重置页码
+            if (typeof (num) === 'string') {
                 state.pageSize = 30
             }
-            requestApi
-                .SearchSongs({
-                    pageSize: state.pageSize,
-                    start: 0,
-                    keywords: state.keyWords,
-                })
-                .then((res) => {
-                    console.log("res", res);
+            
+            // 检查关键词是否为空
+            if (!state.keyWords.trim()) {
+                state.searchList = []
+                return
+            }
+            
+            musicApi.SearchSongs({
+                pageSize: state.pageSize,
+                start: 0,
+                keywords: state.keyWords,
+            })
+            .then((res) => {
+                if (res && res.result && res.result.songs) {
                     state.searchList = res.result.songs.map((item) => {
                         return {
                             name: item.name,
                             cover: "",
                             time: TimeToString(item.duration / 1000),
-                            artistsName: item.artists[0].name,
+                            artistsName: item.artists[0]?.name || '未知歌手',
                             albumTitle: "",
                             id: item.id,
                             url: '',
                             albumId: item.album.id
                         }
                     })
+                    // 获取专辑封面
                     res.result.songs.forEach((item, index) => {
-                        GetCover(item.album.id, index, item.id);
+                        if (item.album && item.album.id) {
+                            GetCover(item.album.id, index, item.id);
+                        }
                     });
-                    console.log(state.searchList)
-                });
+                } else {
+                    state.searchList = []
+                }
+            })
+            .catch((error) => {
+                console.error("搜索失败:", error)
+                state.searchList = []
+            });
         };
         const GetCover = (id, index, urlId) => {
             requestApi
@@ -190,7 +206,24 @@ export default {
     input {
         background: rgba(255, 255, 255, 0.1);
         color: #3184ce;
-        border: #40ce8f;
+        border: 1px solid #40ce8f;
+        border-radius: 4px;
+        font-size: 14px;
+        font-weight: 500;
+        text-shadow: 0 0 1px rgba(255, 255, 255, 0.8);
+        backdrop-filter: blur(2px);
+    }
+
+    input::placeholder {
+        color: rgba(49, 132, 206, 0.7);
+        font-weight: 400;
+        text-shadow: none;
+    }
+
+    input:focus {
+        outline: none;
+        box-shadow: 0 0 0 2px rgba(64, 206, 143, 0.2);
+        background: rgba(255, 255, 255, 0.15);
     }
 
     .el-input-focus-border {

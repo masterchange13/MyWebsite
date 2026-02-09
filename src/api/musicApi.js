@@ -11,4 +11,5 @@ export const musicApi = {
     getAllMusic: () => request.get('/music/get_all'),
     updateMusicStatus: (data) => request.post('/music/update_music_status', data),
     uploadMusic: (data) => request.post('/music/upload', data),
+    SearchSongs: (params) => request.get('/music/search', {params}),
 }
