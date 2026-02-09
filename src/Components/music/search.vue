@@ -127,7 +127,7 @@ export default {
     }
 
     .list-box {
-        height: calc(~"100% - 42px");
+        height: calc(100% - 42px);
         width: 100%;
         overflow: auto;
         padding: 0px 36px;
