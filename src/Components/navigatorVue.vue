@@ -1,59 +1,152 @@
 <template>
-    <el-drawer v-model="showAddIcon">
-        <addIconVue v-if="showAddIcon"/>
+  <div class="navigator">
+    <el-drawer v-model="showAddIcon" title="添加导航">
+      <addIconVue v-if="showAddIcon" @added="onAdded" />
     </el-drawer>
 
-    <div style="font-size: 20px">
-        <!-- 遍历 icons 数组 -->
-        <div v-for="(icon, index) in icons" :key="index" style="display: inline-block; margin-right: 30px;">
-            <img :src="icon.img" style="width: 100px; height: 100px;" @click="openLink(icon.url)"/>
-            <p>{{ icon.name }}</p>
-        </div>
+    <div class="header">
+      <h2 class="title">我的导航</h2>
+      <p class="subtitle">常用网站快捷入口</p>
     </div>
 
-    <!-- Add icon -->
-    <div>
-        <img :src="add" style="width: 100px; height: 100px; margin-right: 30px; position: absolute; right: 0; top: 100%" @click="addIcon"/>
+    <el-row :gutter="16" class="grid">
+      <el-col :xs="12" :sm="8" :md="6" :lg="4" v-for="(icon, index) in icons" :key="index">
+        <el-card shadow="hover" class="card" @click="openLink(icon.url)">
+          <button class="card-remove" title="删除" @click.stop="remove(icon)">×</button>
+          <img :src="icon.img" class="card-img" />
+          <div class="card-name">{{ icon.name }}</div>
+        </el-card>
+      </el-col>
+    </el-row>
+
+    <!-- 悬浮添加按钮（固定在右下角） -->
+    <div class="floating-add" @click="addIcon" title="添加导航">
+      <img :src="add" alt="添加" />
     </div>
+  </div>
 </template>
 
 <script setup>
-    import { onMounted, ref } from 'vue';
-    import addIconVue from './addIcon.vue';
-    import { request } from '@/utils/request'
+import { onMounted, ref } from 'vue';
+import addIconVue from './addIcon.vue';
+import { navigatorApi } from '@/api/navigatorApi'
+import { ElMessage } from 'element-plus'
 
-    // 使用 import 动态读取 src.json 文件
-    import src from '../../Node/website/src.json';
-    console.log(src);
+// 数据
+const icons = ref([]);
 
-    // 将 src.json 转换为图标数组
-    const icons = ref('');
+// 打开链接
+const openLink = (url) => {
+  window.open(url, '_blank');
+};
 
-    // 打开链接的函数
-    const openLink = (url) => {
-        window.open(url, '_blank'); // 在新标签页打开链接
-    };
+// 添加入口
+const showAddIcon = ref(false);
+const add = ref('/icon/add.png');
+const addIcon = () => {
+  showAddIcon.value = true;
+};
 
-    // 控制添加图标的显示
-    const showAddIcon = ref(false);
-    const add = ref("/icon/add.png");
-    
-    // 点击添加按钮时，显示添加图标
-    const addIcon = () => {
-        showAddIcon.value = true;
-    };
+// 获取导航数据
+const getIcons = async () => {
+  const response = await navigatorApi.getAllNavigators()
+  icons.value = response.data || [];
+}
 
-    const getIcons = async () => {
-        const response = await request({
-            url: 'users/getAllNavigators/',
-            method: 'GET',
-        })
-        console.log(response);
-        // const data = await response.json();
-        icons.value = response.data;
+onMounted(() => {
+  getIcons();
+})
+
+const onAdded = async () => {
+  showAddIcon.value = false
+  await getIcons()
+  ElMessage.success('已添加导航')
+}
+
+const remove = async (icon) => {
+  try {
+    const res = await navigatorApi.removeNavigator(icon)
+    if (res.code === 200) {
+      ElMessage.success('已删除')
+      await getIcons()
+    } else {
+      ElMessage.error(res.msg || '删除失败')
     }
-
-    onMounted(() => {
-        getIcons();
-    })
+  } catch (e) {
+    ElMessage.error('删除失败')
+  }
+}
 </script>
+
+<style scoped>
+.navigator {
+  padding: 20px;
+}
+.header {
+  margin-bottom: 12px;
+}
+.title {
+  margin: 0;
+  font-size: 20px;
+  font-weight: 600;
+}
+.subtitle {
+  margin: 4px 0 0;
+  color: #888;
+  font-size: 12px;
+}
+.grid {
+  margin-top: 8px;
+}
+.card {
+  text-align: center;
+  cursor: pointer;
+  position: relative;
+}
+.card-img {
+  width: 72px;
+  height: 72px;
+  border-radius: 12px;
+  object-fit: cover;
+}
+.card-name {
+  margin-top: 8px;
+  font-size: 14px;
+}
+.card-remove {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  width: 22px;
+  height: 22px;
+  border: none;
+  border-radius: 11px;
+  background: #ffecec;
+  color: #d9363e;
+  font-size: 16px;
+  line-height: 22px;
+  cursor: pointer;
+}
+.floating-add {
+  position: fixed;
+  right: 24px;
+  bottom: 24px;
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background: #fff;
+  box-shadow: 0 6px 20px rgba(0,0,0,0.15);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+.floating-add img {
+  width: 28px;
+  height: 28px;
+}
+.floating-add:hover {
+  transform: translateY(-1px);
+  transition: transform 0.15s ease;
+}
+</style>

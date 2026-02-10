@@ -19,9 +19,9 @@
  
 <script setup>
 import { ref } from 'vue';
-import axios from 'axios';
-import { request } from '@/utils/request'
 import Message from '@/utils/message'
+import { navigatorApi } from '@/api/navigatorApi'
+const emit = defineEmits(['added'])
 
 const website = ref({
     name: '',
@@ -36,32 +36,18 @@ const resetForm = () => {
 };
 
 const submitForm = async () => {
-    console.log(JSON.stringify(website.value));  
-
     try {
-        const response = await request({
-            url: 'users/save_icon/',
-            method: 'post',
-            data: website.value,
-            headers: {
-                'Content-Type': 'application/json',
-            }
-        });
-
-        console.log(response);
-
-        if (response.data && response.code === 200) {
-            Message.success('Icon added successfully!');
-            setTimeout(() => {
-                window.location.reload();
-            }, 1000); // 延迟 1 秒后刷新页面
+        const res = await navigatorApi.addNavigator(website.value)
+        if (res && res.code === 200) {
+            Message.success('Icon added successfully!')
+            emit('added')
+            resetForm()
         } else {
-            console.error('Error response:', response.data);
-            Message.error('Failed to add icon');
+            Message.error(res?.msg || 'Failed to add icon')
         }
     } catch (error) {
-        console.error('Error:', error);
-        Message.error('Error occurred while adding icon');
+        Message.error('Error occurred while adding icon')
+        console.error(error)
     }
 };
 
