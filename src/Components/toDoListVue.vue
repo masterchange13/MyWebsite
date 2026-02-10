@@ -27,17 +27,13 @@
         >
         <div class="view">
           <input class="toggle" type="checkbox" v-model="todo.completed" @change="toDoApi.updateTodoStatus(todo)">
-          <div class="todo-content">
-            <label class="todo-title" @dblclick="editTodo(todo)">
-              {{ todo.title }}
-            </label>
-
-            <div class="todo-time">
-              <span class="time created">创建 {{ formatTime(todo.created_time) }}</span>
-              <span class="time updated">更新 {{ formatTime(todo.updated_time) }}</span>
-            </div>
+          <label class="todo-title" @dblclick="editTodo(todo)">
+            {{ todo.title }}
+          </label>
+          <div class="todo-time">
+            <span class="time created">创建 {{ formatTime(todo.created_time) }}</span>
+            <span class="time updated">更新 {{ formatTime(todo.updated_time) }}</span>
           </div>
-
           <button class="destroy" @click="removeTodo(todo)"></button>
         </div>
 

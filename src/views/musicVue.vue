@@ -149,7 +149,21 @@ onMounted(async () => {
   audioRef.value = document.getElementById('globalAudio')
   await getAllMusic();
   state.progressL = trackRef.value.offsetWidth;
-  loadSong(state.songList[0]);
+  if (!audioRef.value || !audioRef.value.src) {
+    loadSong(state.songList[0]);
+  } else {
+    state.playing = !audioRef.value.paused;
+    state.audioTime = TimeToString(audioRef.value.duration);
+    state.currentTime = TimeToString(audioRef.value.currentTime);
+    state.audioProgress = audioRef.value.duration ? audioRef.value.currentTime / audioRef.value.duration : 0;
+    state.thumbTranslateX = state.audioProgress * state.progressL;
+    const currentSong = state.songList.find(s => s.url === audioRef.value.src);
+    if (currentSong) {
+      state.songInfo = currentSong;
+      state.backgroundUrl = currentSong.cover;
+      GetLyric(currentSong.id);
+    }
+  }
   initAudioEvents();
 });
 
@@ -234,12 +248,18 @@ const loadSong = async (song) => {
   state.backgroundUrl = song.cover;
   await nextTick();
   if (audioRef.value) {
-    audioRef.value.src = song.url
-    // 不自动播放，保持用户控制
-    // audioRef.value.play()
+    if (audioRef.value.src !== song.url) {
+      audioRef.value.src = song.url
+    }
   }
-  state.playing = false ;
+  state.playing = audioRef.value ? !audioRef.value.paused : false;
   GetLyric(song.id);
+  window.dispatchEvent(new CustomEvent('global-player-song', {
+    detail: {
+      title: song.name || song.title || '',
+      cover: song.cover || ''
+    }
+  }));
 };
 
 /* 歌词 */

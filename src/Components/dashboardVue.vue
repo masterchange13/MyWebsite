@@ -65,9 +65,29 @@
     </el-row>
 
     <el-footer class="footer">
-      <div>Welcome to my website</div>
-      <div>&copy; 2026</div>
-          <audio id="globalAudio" preload="auto" style="display: none"></audio>
+      <div class="mini-player">
+        <div class="cover">
+          <img :src="cover" alt="" />
+        </div>
+        <div class="info">
+          <div class="title">{{ title }}</div>
+          <div class="time">{{ currentTimeFormatted }} / {{ durationFormatted }}</div>
+          <div class="track" ref="trackRef" @click="clickProgress">
+            <div class="bar">
+              <div class="bar-progress" :style="{ width: progress + '%' }"></div>
+            </div>
+          </div>
+        </div>
+        <div class="controls">
+          <el-button link @click="prevSong">⏮️</el-button>
+          <el-button link @click="togglePlay">{{ isPlaying ? '⏸️' : '▶️' }}</el-button>
+          <el-button link @click="nextSong">⏭️</el-button>
+        </div>
+        <div class="volume">
+          <el-slider v-model="volume" :min="0" :max="100" />
+        </div>
+      </div>
+      <audio id="globalAudio" preload="auto" style="display: none"></audio>
     </el-footer>
   </el-container>
 </template>
@@ -101,6 +121,85 @@ const getDocument = () => router.push("/getDocument");
 const toChat = () => router.push("/chat");
 const toDoList = () => router.push("/todoList");
 const toMusic = () => router.push("/music");
+
+import { ref, computed, onMounted, watch } from "vue";
+const audioRef = ref<HTMLAudioElement | null>(null);
+const trackRef = ref<HTMLElement | null>(null);
+const isPlaying = ref(false);
+const title = ref<string>("");
+const cover = ref<string>("");
+const currentTime = ref(0);
+const duration = ref(0);
+const volume = ref(15);
+
+const currentTimeFormatted = computed(() => {
+  const min = Math.floor(currentTime.value / 60);
+  const sec = Math.floor(currentTime.value % 60);
+  return `${String(min).padStart(2, "0")}:${String(sec).padStart(2, "0")}`;
+});
+
+const durationFormatted = computed(() => {
+  const min = Math.floor(duration.value / 60);
+  const sec = Math.floor(duration.value % 60);
+  return `${String(min).padStart(2, "0")}:${String(sec).padStart(2, "0")}`;
+});
+
+const progress = computed(() =>
+  duration.value ? (currentTime.value / duration.value) * 100 : 0
+);
+
+onMounted(() => {
+  audioRef.value = document.getElementById("globalAudio") as HTMLAudioElement | null;
+  if (!audioRef.value) return;
+  audioRef.value.volume = volume.value / 100;
+  audioRef.value.addEventListener("timeupdate", () => {
+    currentTime.value = audioRef.value!.currentTime;
+    duration.value = audioRef.value!.duration || 0;
+  });
+  audioRef.value.addEventListener("loadedmetadata", () => {
+    duration.value = audioRef.value!.duration || 0;
+    audioRef.value!.volume = volume.value / 100;
+  });
+  audioRef.value.addEventListener("play", () => {
+    isPlaying.value = true;
+  });
+  audioRef.value.addEventListener("pause", () => {
+    isPlaying.value = false;
+  });
+  window.addEventListener("global-player-song", (e: Event) => {
+    const detail = (e as CustomEvent).detail || {};
+    title.value = detail.title || "";
+    cover.value = detail.cover || "";
+  });
+});
+
+watch(volume, (val) => {
+  if (audioRef.value) audioRef.value.volume = val / 100;
+}, { immediate: true });
+
+const togglePlay = () => {
+  if (!audioRef.value) return;
+  if (audioRef.value.paused) audioRef.value.play();
+  else audioRef.value.pause();
+};
+
+const prevSong = () => {
+  window.dispatchEvent(new Event("global-player-prev"));
+};
+
+const nextSong = () => {
+  window.dispatchEvent(new Event("global-player-next"));
+};
+
+const clickProgress = (e: MouseEvent) => {
+  if (!audioRef.value || !trackRef.value || !isFinite(audioRef.value.duration)) return;
+  const rect = trackRef.value.getBoundingClientRect();
+  let percent = (e.clientX - rect.left) / rect.width;
+  percent = Math.max(0, Math.min(1, percent));
+  const target = percent * audioRef.value.duration;
+  if ((audioRef.value as any).fastSeek) (audioRef.value as any).fastSeek(target);
+  else audioRef.value.currentTime = target;
+};
 </script>
 
 <style scoped>
@@ -161,5 +260,51 @@ const toMusic = () => router.push("/music");
   padding: 20px 0;
   border-top: 1px solid #eaeaea;
   flex-shrink: 0;
+}
+
+.mini-player {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+.cover img {
+  width: 40px;
+  height: 40px;
+  border-radius: 4px;
+  object-fit: cover;
+}
+.info {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 240px;
+}
+.title {
+  font-size: 14px;
+  font-weight: 600;
+}
+.time {
+  font-size: 12px;
+  color: #666;
+}
+.track .bar {
+  width: 280px;
+  height: 4px;
+  background: #ddd;
+  border-radius: 4px;
+  position: relative;
+}
+.track .bar-progress {
+  height: 100%;
+  background: #40ce8f;
+  border-radius: 4px;
+}
+.controls {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.volume {
+  width: 140px;
 }
 </style>
