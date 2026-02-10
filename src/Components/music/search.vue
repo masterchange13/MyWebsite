@@ -47,7 +47,7 @@ export default {
         onMounted(() => {
             // GetLyric(props.songInfo.id);
         });
-        const searchSongs> {
+        const SearchSongs = (num) => {
             // 如果输入是字符串（用户输入搜索），重置页码
             if (typeof (num) === 'string') {
                 state.pageSize = 30

@@ -2,7 +2,7 @@
     <div class="net-easy-player">
         <div class="background-flitter" :style="`background-image: url(${backgroundUrl});`"></div>
         <div class="music-mask"></div>
-        <audio ref="audioRef" :src="songInfo.url"></audio>
+        <!-- 全局音频在 dashboard 中，当前页面不再渲染本地 audio 标签 -->
         <div class="music-header">
             <!-- <div></div>  -->
             <!-- <div>界面</div> -->
@@ -101,6 +101,7 @@ const state = reactive({
   playStatus: false,
   songInfo: {},
   lyricInfo: [],
+  resumeAfterSeek: false,
   songList: [
     {
       name: "辞·九门回忆",
@@ -145,6 +146,7 @@ const PlayHistoryMusic = (song) => {
 
 /* 初始化 */
 onMounted(async () => {
+  audioRef.value = document.getElementById('globalAudio')
   await getAllMusic();
   state.progressL = trackRef.value.offsetWidth;
   loadSong(state.songList[0]);
@@ -153,13 +155,29 @@ onMounted(async () => {
 
 /* 音频事件 */
 watch(() => state.volume, (val) => {
-  audioRef.value.volume = val / 100
-})
+  if (audioRef.value) audioRef.value.volume = val / 100
+}, { immediate: true })
 
 const clickProgress = (e) => {
-  const rect = trackRef.value.getBoundingClientRect()
-  const percent = (e.clientX - rect.left) / rect.width
-  audioRef.value.currentTime = percent * audioRef.value.duration
+  const audio = audioRef.value
+  const track = trackRef.value
+  if (!audio || !track || !isFinite(audio.duration)) return
+
+  const rect = track.getBoundingClientRect()
+  let percent = (e.clientX - rect.left) / rect.width
+  percent = Math.max(0, Math.min(1, percent))
+
+  state.resumeAfterSeek = !audio.paused
+
+  const target = percent * audio.duration
+  if (typeof audio.fastSeek === 'function') {
+    audio.fastSeek(target)
+  } else {
+    audio.currentTime = target
+  }
+
+  state.audioProgress = percent
+  state.thumbTranslateX = percent * state.progressL
 }
 
 const initAudioEvents = () => {
@@ -170,6 +188,7 @@ const initAudioEvents = () => {
 //   };
     audio.onloadedmetadata = () => {
     state.audioTime = TimeToString(audio.duration);
+    audio.volume = state.volume / 100
     nextTick(() => {
         state.progressL = trackRef.value.offsetWidth;
     });
@@ -183,6 +202,12 @@ const initAudioEvents = () => {
   };
 
   audio.onended = () => nextSong();
+  audio.onseeked = () => {
+    if (state.resumeAfterSeek) {
+      audio.play()
+    }
+    state.resumeAfterSeek = false
+  }
 };
 
 /* 播放 */
@@ -208,8 +233,11 @@ const loadSong = async (song) => {
   state.songInfo = song;
   state.backgroundUrl = song.cover;
   await nextTick();
-  audioRef.value.load();
-//   audioRef.value.play();
+  if (audioRef.value) {
+    audioRef.value.src = song.url
+    // 不自动播放，保持用户控制
+    // audioRef.value.play()
+  }
   state.playing = false ;
   GetLyric(song.id);
 };

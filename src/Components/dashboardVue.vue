@@ -32,10 +32,16 @@
               <el-menu-item index="1-3-3" @click="toDoList()">to do list</el-menu-item>
             </el-menu-item-group>
           </el-sub-menu>
-          <el-menu-item index="2">
-            <el-icon><icon-menu /></el-icon>
-            <span>Navigator Two</span>
-          </el-menu-item>
+          <el-sub-menu index="2">
+            <template #title>
+              <el-icon><icon-menu /></el-icon>
+              <span>Navigator Two</span>
+            </template>
+            <el-menu-item index="2-1" @click="toNavigator()">
+              <el-icon><icon-menu /></el-icon>
+              <span>agent</span>
+            </el-menu-item>
+          </el-sub-menu>
           <el-menu-item index="3">
             <el-icon>
               <document />
@@ -61,6 +67,7 @@
     <el-footer class="footer">
       <div>Welcome to my website</div>
       <div>&copy; 2026</div>
+          <audio id="globalAudio" preload="auto" style="display: none"></audio>
     </el-footer>
   </el-container>
 </template>
