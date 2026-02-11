@@ -114,6 +114,7 @@ onUnmounted(() => {
   display: flex;
   flex-direction: column;
   gap: 12px;
+  height: 100%;
 }
 .chat-header {
   display: flex;
@@ -145,12 +146,15 @@ onUnmounted(() => {
   display: flex;
   flex-direction: column;
   gap: 10px;
+  flex: 1;
+  min-height: 0;
 }
 .messages {
-  height: 420px;
   padding: 8px;
   background: #fafafa;
   border-radius: 8px;
+  flex: 1;
+  min-height: 0;
 }
 .message {
   display: flex;
