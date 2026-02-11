@@ -90,7 +90,7 @@
     // ⭐ 页面加载时获取 CSRF Cookie
     onMounted(async () => {
       try {
-        await request.get('/api/csrf/')
+        await request.get('/csrf/')
         console.log('CSRF cookie ready')
       } catch (e) {
         console.error('CSRF 获取失败', e)

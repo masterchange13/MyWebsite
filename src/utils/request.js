@@ -115,7 +115,9 @@ function getCookie(name) {
 export const request = axios.create({
   baseURL: '/api',
   timeout: 10000,
-  withCredentials: true   // ⭐ 关键：允许浏览器带 Cookie
+  withCredentials: true,
+  xsrfCookieName: 'csrftoken',
+  xsrfHeaderName: 'X-CSRFToken'
 })
 
 // ================= 请求拦截器 =================
@@ -155,7 +157,7 @@ request.interceptors.response.use(
     switch (status) {
       case 401:
         showError('未登录或登录已过期')
-        window.location.href = '/login'
+        // window.location.href = '/login'
         break
       case 403:
         showError('权限不足或 CSRF 校验失败')
