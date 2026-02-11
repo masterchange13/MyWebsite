@@ -1,29 +1,26 @@
 <template>
-  <el-row>
-    <!-- 显示从 /api/test 获取的字符串 -->
-    <!-- <h1>{{ testString }}</h1> -->
-
-    <el-col :span="20">
-      <!-- 使用 video 标签来展示视频流 -->      
-      <img
-        :src="videoSrc" 
-        :style="{ width: value + '%', height: 'auto' }" 
-        autoplay
-        loop
-        muted
-      />
-    </el-col>
-    <el-col :span="4">
-      <el-select v-model="value" placeholder="Size" size="large" style="width: 240px">
-        <el-option
-          v-for="item in optionOfSize"
-          :key="item.value"
-          :label="item.label"
-          :value="item.value"
+  <div class="video-page">
+    <el-card class="video-header" shadow="never">
+      <div class="title">Video Stream</div>
+      <div class="tools">
+        <span class="label">尺寸</span>
+        <el-slider
+          v-model="value"
+          :min="10"
+          :max="100"
+          :step="10"
+          show-stops
+          class="size-slider"
         />
-      </el-select>
-    </el-col>
-  </el-row>
+      </div>
+    </el-card>
+
+    <el-card class="video-body" shadow="always">
+      <div class="video-wrap">
+        <img :src="videoSrc" :style="{ width: value + '%', height: 'auto' }" />
+      </div>
+    </el-card>
+  </div>
 </template>
 
 <script setup>
@@ -50,18 +47,66 @@ onMounted(() => {
     })
 })
 
-const value = ref('80') // 默认值为 80%
-
-const optionOfSize = [
-  { value: '10', label: '10%' },
-  { value: '20', label: '20%' },
-  { value: '30', label: '30%' },
-  { value: '40', label: '40%' },
-  { value: '50', label: '50%' },
-  { value: '60', label: '60%' },
-  { value: '70', label: '70%' },
-  { value: '80', label: '80%' },
-  { value: '90', label: '90%' },
-  { value: '100', label: '100%' },
-]
+const value = ref(80)
 </script>
+
+<style scoped>
+.video-page {
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  height: 100%;
+  overflow: hidden;
+}
+.video-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.title {
+  font-size: 18px;
+  font-weight: 600;
+}
+.tools {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.label {
+  font-size: 12px;
+  color: #666;
+}
+.size-slider {
+  width: 240px;
+}
+.video-body {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #0b1324;
+  overflow: hidden;
+}
+.video-body :deep(.el-card__body) {
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 12px;
+}
+.video-wrap {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.video-wrap img {
+  max-width: 100%;
+  max-height: 100%;
+  border-radius: 8px;
+  box-shadow: 0 10px 24px rgba(0,0,0,0.25);
+}
+</style>
