@@ -37,7 +37,7 @@
               <el-icon><icon-menu /></el-icon>
               <span>Navigator Two</span>
             </template>
-            <el-menu-item index="2-1" @click="toNavigator()">
+            <el-menu-item index="2-1" @click="toAgent()">
               <el-icon><icon-menu /></el-icon>
               <span>agent</span>
             </el-menu-item>
@@ -116,6 +116,7 @@ const handleClose = (key: string, keyPath: string[]) => {
 const toVideo = () => router.push("/video");
 const toDocument = () => router.push("/document");
 const toNavigator = () => router.push("/navigator");
+const toAgent = () => router.push("/agent");
 const toTransfer = () => router.push("/transfer");
 const getDocument = () => router.push("/getDocument");
 const toChat = () => router.push("/chat");

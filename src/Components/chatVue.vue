@@ -1,29 +1,43 @@
 <template>
-  <div class="chat-container">
-    <h3 class="chat-title">WebSocket Chat</h3>
-    <div class="user-select">
-      <label for="user">选择聊天对象：</label>
-      <select v-model="selectedUser" id="user" class="user-dropdown">
-        <option v-for="user in users" :key="user.username" :value="user.username">
-          {{ user.username }}
-        </option>
-      </select>
-    </div>
-    <el-scrollbar height="400px" class="message-container">
-      <div v-for="msg in messages" :key="msg" :class="{'my-message': isMyMessage(msg), 'other-message': !isMyMessage(msg)}" class="message-bubble">
-        <p class="message-user">{{ getUsername(msg) }}</p>
-        <p class="message-text">{{ getMessageText(msg) }}</p>
+  <div class="chat-wrap">
+    <el-card class="chat-header" shadow="never">
+      <div class="header-left">
+        <div class="title">WebSocket Chat</div>
+        <div class="subtitle">实时聊天</div>
       </div>
-    </el-scrollbar>
-    <div class="input-container">
-      <input v-model="message" placeholder="输入消息..." @keyup.enter="sendMessage" class="input-box" />
-      <el-button @click="sendMessage" class="send-button">发送</el-button>
-    </div>
+      <div class="header-right">
+        <span class="label">聊天对象</span>
+        <el-select v-model="selectedUser" placeholder="选择用户" size="small" class="user-select">
+          <el-option v-for="user in users" :key="user.username" :label="user.username" :value="user.username" />
+        </el-select>
+      </div>
+    </el-card>
+
+    <el-card class="chat-body" shadow="always">
+      <el-scrollbar class="messages" ref="scrollRef">
+        <div v-for="msg in messages" :key="msg" :class="['message', isMyMessage(msg) ? 'user' : 'other']">
+          <div class="bubble">
+            <div class="meta">
+              <span class="user">{{ getUsername(msg) }}</span>
+            </div>
+            <div class="text">{{ getMessageText(msg) }}</div>
+          </div>
+        </div>
+      </el-scrollbar>
+
+      <div class="composer">
+        <el-input v-model="message" type="textarea" :rows="2" placeholder="输入消息，按 Enter 发送" @keyup.enter="sendMessage" />
+        <div class="actions">
+          <el-button type="primary" @click="sendMessage">发送</el-button>
+          <el-button @click="message = ''">清空</el-button>
+        </div>
+      </div>
+    </el-card>
   </div>
 </template>
 
 <script setup>
-import { ref, onMounted, onUnmounted } from "vue";
+import { ref, onMounted, onUnmounted, nextTick } from "vue";
 import { request } from "@/utils/request";
 import { useUserStore } from "@/stores/userStore";
 
@@ -34,6 +48,7 @@ const messages = ref([]);
 const users = ref([]);
 const selectedUser = ref("");
 const userStore = useUserStore();
+const scrollRef = ref(null);
 
 const connectWebSocket = () => {
   const username = userStore.getUsername();
@@ -41,9 +56,10 @@ const connectWebSocket = () => {
   socket.value = new WebSocket(wsurl);
   
   socket.value.onopen = () => console.log("WebSocket 连接成功");
-  socket.value.onmessage = (event) => {
+  socket.value.onmessage = async (event) => {
     const msgData = JSON.parse(event.data);
     messages.value.push(`${msgData.sendUsername}: ${msgData.data}`);
+    await scrollToBottom();
   };
   socket.value.onclose = () => console.log("WebSocket 连接关闭");
   socket.value.onerror = (error) => console.error("WebSocket 错误:", error);
@@ -58,8 +74,9 @@ const sendMessage = () => {
       sendUsername: userStore.getUsername()
     };
     socket.value.send(JSON.stringify(data));
-    messages.value.push(`${data.sendUsername}: ${data.data}`); // 立即在本地添加消息
+    messages.value.push(`${data.sendUsername}: ${data.data}`);
     message.value = "";
+    scrollToBottom();
   }
 };
 
@@ -75,6 +92,12 @@ const isMyMessage = (msg) => msg.startsWith(userStore.getUsername() + ":");
 const getUsername = (msg) => msg.slice(0, msg.indexOf(":"));
 const getMessageText = (msg) => msg.slice(msg.indexOf(":") + 2);
 
+const scrollToBottom = async () => {
+  await nextTick();
+  const wrap = scrollRef.value?.wrapRef;
+  if (wrap) wrap.scrollTop = wrap.scrollHeight;
+};
+
 onMounted(() => {
   connectWebSocket();
   getUsers();
@@ -86,73 +109,89 @@ onUnmounted(() => {
 </script>
 
 <style scoped>
-.chat-container {
-  width: 400px;
-  margin: auto;
-  background: #f9f9f9;
-  border-radius: 10px;
-  padding: 15px;
-  box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.1);
+.chat-wrap {
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
 }
-.chat-title {
-  text-align: center;
-  margin-bottom: 10px;
-  color: #333;
-}
-.user-select {
+.chat-header {
   display: flex;
   align-items: center;
-  justify-content: center;
-  margin-bottom: 10px;
+  justify-content: space-between;
 }
-.user-dropdown {
-  margin-left: 10px;
-  padding: 5px;
-  border-radius: 5px;
+.header-left .title {
+  font-size: 18px;
+  font-weight: 600;
 }
-.message-container {
-  padding: 10px;
-  background: #fff;
-  border-radius: 10px;
-  height: 400px;
-  overflow-y: auto;
-}
-.message-bubble {
-  max-width: 80%;
-  padding: 8px 12px;
-  border-radius: 10px;
-  margin: 5px 0;
-  word-wrap: break-word;
-}
-.my-message {
-  background: #007bff;
-  color: white;
-  align-self: flex-end;
-  text-align: right;
-}
-.other-message {
-  background: #e5e5e5;
-  color: black;
-  align-self: flex-start;
-}
-.message-user {
+.header-left .subtitle {
   font-size: 12px;
-  font-weight: bold;
+  color: #888;
+  margin-top: 2px;
 }
-.input-container {
+.header-right {
   display: flex;
-  margin-top: 10px;
+  align-items: center;
+  gap: 8px;
 }
-.input-box {
-  flex: 1;
+.label {
+  font-size: 12px;
+  color: #666;
+}
+.user-select {
+  width: 160px;
+}
+.chat-body {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.messages {
+  height: 420px;
   padding: 8px;
-  border-radius: 5px;
-  border: 1px solid #ccc;
+  background: #fafafa;
+  border-radius: 8px;
 }
-.send-button {
-  margin-left: 10px;
-  background: #007bff;
-  color: white;
-  border-radius: 5px;
+.message {
+  display: flex;
+  margin-bottom: 8px;
+}
+.message.user {
+  justify-content: flex-end;
+}
+.message.other {
+  justify-content: flex-start;
+}
+.bubble {
+  max-width: 70%;
+  padding: 10px 12px;
+  border-radius: 10px;
+  background: #fff;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+}
+.message.other .bubble {
+  background: #eaf6f1;
+}
+.message.user .bubble {
+  background: #e9f1ff;
+}
+.meta {
+  font-size: 12px;
+  color: #666;
+  margin-bottom: 4px;
+}
+.text {
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+.composer {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.actions {
+  display: flex;
+  gap: 8px;
+  justify-content: flex-end;
 }
 </style>

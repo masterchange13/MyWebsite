@@ -50,6 +50,11 @@ const routes = [
                 component: () => import('@/Components/chatVue.vue')
             },
             {
+                path: '/agent',
+                name: 'agent',
+                component: () => import('@/Components/agentVue.vue')
+            },
+            {
                 path: '/documentDetail/:id',
                 name: 'documentDetail',
                 component: () => import('@/Components/documentDetailVue.vue')
