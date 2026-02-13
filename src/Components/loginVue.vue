@@ -60,7 +60,15 @@
       }
     };
 
-    const toDashboard = () => {
+    const ensureCsrf = async () => {
+      const has = document.cookie.includes('csrftoken=')
+      if (!has) {
+        try { await request.get('/csrf/') } catch(e) { console.error(e) }
+      }
+    }
+
+    const toDashboard = async () => {
+      await ensureCsrf()
       request({
         url: '/users/login/',
         method: 'post',
@@ -87,7 +95,7 @@
       });
     };
 
-    // ⭐ 页面加载时获取 CSRF Cookie
+    // ⭐ 页面加载时获取 CSRF Cookie（相对 baseURL）
     onMounted(async () => {
       try {
         await request.get('/csrf/')
