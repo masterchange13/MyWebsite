@@ -55,6 +55,11 @@ const routes = [
                 component: () => import('@/Components/agentVue.vue')
             },
             {
+                path: '/profile',
+                name: 'profile',
+                component: () => import('@/Components/profileVue.vue')
+            },
+            {
                 path: '/documentDetail/:id',
                 name: 'documentDetail',
                 component: () => import('@/Components/documentDetailVue.vue')

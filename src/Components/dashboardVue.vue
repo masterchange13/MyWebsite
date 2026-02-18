@@ -2,17 +2,22 @@
   <el-container>
     <!-- 美化后的 el-header -->
     <el-header class="header">
-      <h1 class="title">Raspberry Pi</h1>
+      <div class="left">
+        <el-button class="menu-btn" text @click="showMenuDrawer = true">
+          <el-icon><icon-menu /></el-icon>
+        </el-button>
+      </div>
+      <h1 class="title title-center">Raspberry Pi</h1>
 
       <div class="user-info">
-        <el-avatar class="avatar" :size="40" src="https://api.dicebear.com/7.x/identicon/svg?seed=vue" />
+        <el-avatar class="avatar clickable" :size="40" src="https://api.dicebear.com/7.x/identicon/svg?seed=vue" @click="toProfile" />
         <span class="username">Hello, {{ username }}</span>
         <el-button @click="logout" class="logout-button">Logout</el-button>
       </div>
     </el-header>
 
     <el-row class="tac" style="flex: 1; min-height: 0; overflow: hidden; display: flex;">
-      <el-col :span="2" style="height: 100%; overflow: hidden;">
+      <el-col v-if="!isMobile" :span="2" style="height: 100%; overflow: hidden;">
         <el-menu default-active="4" class="el-menu-vertical-demo" @open="handleOpen" @close="handleClose" style="height: 100%; overflow-y: auto;">
           <el-sub-menu index="1">
             <template #title>
@@ -57,12 +62,51 @@
         </el-menu>
       </el-col>
 
-      <el-col :span="22" style="height: 100%; overflow: hidden; display: flex; flex-direction: column;">
+      <el-col :span="isMobile ? 24 : 22" style="height: 100%; overflow: hidden; display: flex; flex-direction: column;">
         <el-main style="flex: 1; overflow: auto; padding: 0;">
           <router-view></router-view>
         </el-main>
       </el-col>
     </el-row>
+
+    <el-drawer v-model="showMenuDrawer" :with-header="false" size="240px">
+      <el-menu default-active="4" class="el-menu-vertical-demo" @open="handleOpen" @close="handleClose" style="height: 100%;">
+        <el-sub-menu index="1">
+          <template #title>
+            <el-icon><location /></el-icon>
+            <span>Navigator One</span>
+          </template>
+          <el-menu-item-group title="Group One">
+            <el-menu-item index="1-1" @click="toVideo(); showMenuDrawer=false">video</el-menu-item>
+            <el-menu-item index="1-2" @click="toDocument(); showMenuDrawer=false">document</el-menu-item>
+            <el-menu-item index="1-3" @click="toMusic(); showMenuDrawer=false">music</el-menu-item>
+          </el-menu-item-group>
+          <el-menu-item-group title="Group Two">
+            <el-menu-item index="1-3" @click="toTransfer(); showMenuDrawer=false">transfer</el-menu-item>
+            <el-menu-item index="1-3-2" @click="getDocument(); showMenuDrawer=false">getDocument</el-menu-item>
+            <el-menu-item index="1-3-3" @click="toDoList(); showMenuDrawer=false">to do list</el-menu-item>
+          </el-menu-item-group>
+        </el-sub-menu>
+        <el-sub-menu index="2">
+          <template #title>
+            <el-icon><icon-menu /></el-icon>
+            <span>Navigator Two</span>
+          </template>
+          <el-menu-item index="2-1" @click="toAgent(); showMenuDrawer=false">
+            <el-icon><icon-menu /></el-icon>
+            <span>agent</span>
+          </el-menu-item>
+        </el-sub-menu>
+        <el-menu-item index="3" @click="toChat(); showMenuDrawer=false">
+          <el-icon><document /></el-icon>
+          <span>Chat</span>
+        </el-menu-item>
+        <el-menu-item index="4" @click="toNavigator(); showMenuDrawer=false">
+          <el-icon><setting /></el-icon>
+          <span>Navigator Four</span>
+        </el-menu-item>
+      </el-menu>
+    </el-drawer>
 
     <el-footer class="footer">
       <div class="mini-player">
@@ -122,8 +166,9 @@ const getDocument = () => router.push("/getDocument");
 const toChat = () => router.push("/chat");
 const toDoList = () => router.push("/todoList");
 const toMusic = () => router.push("/music");
+const toProfile = () => router.push("/profile");
 
-import { ref, computed, onMounted, watch } from "vue";
+import { ref, computed, onMounted, onUnmounted, watch } from "vue";
 const audioRef = ref<HTMLAudioElement | null>(null);
 const trackRef = ref<HTMLElement | null>(null);
 const isPlaying = ref(false);
@@ -150,6 +195,8 @@ const progress = computed(() =>
 );
 
 onMounted(() => {
+  updateIsMobile()
+  window.addEventListener('resize', updateIsMobile)
   audioRef.value = document.getElementById("globalAudio") as HTMLAudioElement | null;
   if (!audioRef.value) return;
   audioRef.value.volume = volume.value / 100;
@@ -173,6 +220,10 @@ onMounted(() => {
     cover.value = detail.cover || "";
   });
 });
+
+onUnmounted(() => {
+  window.removeEventListener('resize', updateIsMobile)
+})
 
 watch(volume, (val) => {
   if (audioRef.value) audioRef.value.volume = val / 100;
@@ -201,6 +252,12 @@ const clickProgress = (e: MouseEvent) => {
   if ((audioRef.value as any).fastSeek) (audioRef.value as any).fastSeek(target);
   else audioRef.value.currentTime = target;
 };
+
+const isMobile = ref(false)
+const showMenuDrawer = ref(false)
+const updateIsMobile = () => {
+  isMobile.value = window.innerWidth < 768
+}
 </script>
 
 <style scoped>
@@ -220,11 +277,27 @@ const clickProgress = (e: MouseEvent) => {
   color: white;
   font-size: 18px;
   box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+  position: relative;
+}
+
+.left {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.menu-btn {
+  display: none;
 }
 
 .title {
   font-size: 24px;
   font-weight: bold;
+}
+.title-center {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  margin: 0;
 }
 
 .user-info {
@@ -235,6 +308,9 @@ const clickProgress = (e: MouseEvent) => {
 
 .avatar {
   border: 2px solid white;
+}
+.clickable {
+  cursor: pointer;
 }
 
 .username {
@@ -307,5 +383,35 @@ const clickProgress = (e: MouseEvent) => {
 }
 .volume {
   width: 140px;
+}
+
+@media (max-width: 768px) {
+  .menu-btn {
+    display: inline-flex;
+    color: #fff;
+  }
+  .title {
+    font-size: 18px;
+  }
+  .header {
+    padding: 10px 14px;
+  }
+  .username {
+    display: none;
+  }
+  .mini-player {
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+  .info {
+    min-width: 180px;
+  }
+  .track .bar {
+    width: 60vw;
+    max-width: none;
+  }
+  .volume {
+    width: 120px;
+  }
 }
 </style>

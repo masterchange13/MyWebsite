@@ -24,7 +24,7 @@
     import { useRouter } from 'vue-router';
     // pinia
     import { useUserStore } from '@/stores/userStore';
-    import { request } from '@/utils/request';
+    import { userApi } from '@/api/userApi';
     import Message from '@/utils/message';
 
     const router = useRouter();
@@ -61,22 +61,14 @@
     };
 
     const ensureCsrf = async () => {
-      const has = document.cookie.includes('csrftoken=')
-      if (!has) {
-        try { await request.get('/csrf/') } catch(e) { console.error(e) }
-      }
+      try { await userApi.ensureCsrf() } catch(e) { console.error(e) }
     }
 
     const toDashboard = async () => {
       await ensureCsrf()
-      request({
-        url: '/users/login/',
-        method: 'post',
-        withCredentials: true,   // ⭐ 必须
-        data: {
-          username: username.value,
-          password: password.value,
-        },
+      userApi.login({
+        username: username.value,
+        password: password.value,
       })
       .then((res) => {
         console.log(res);
@@ -98,7 +90,7 @@
     // ⭐ 页面加载时获取 CSRF Cookie（相对 baseURL）
     onMounted(async () => {
       try {
-        await request.get('/csrf/')
+        await userApi.ensureCsrf()
         console.log('CSRF cookie ready')
       } catch (e) {
         console.error('CSRF 获取失败', e)
