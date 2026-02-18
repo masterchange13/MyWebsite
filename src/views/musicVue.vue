@@ -129,7 +129,7 @@ const {
 
 const getAllMusic = async () => {
   const res = await musicApi.getAllMusic();
-  state.songList = res.data;
+  state.songList = Array.isArray(res.data) ? res.data : [];
   console.log("all music's res.data", res.data);
 };
 
@@ -148,9 +148,11 @@ const PlayHistoryMusic = (song) => {
 onMounted(async () => {
   audioRef.value = document.getElementById('globalAudio')
   await getAllMusic();
-  state.progressL = trackRef.value.offsetWidth;
+  if (trackRef.value) state.progressL = trackRef.value.offsetWidth;
   if (!audioRef.value || !audioRef.value.src) {
-    loadSong(state.songList[0]);
+    if (state.songList.length > 0) {
+      loadSong(state.songList[0]);
+    }
   } else {
     state.playing = !audioRef.value.paused;
     state.audioTime = TimeToString(audioRef.value.duration);
@@ -233,19 +235,21 @@ const playMusic = () => {
 
 /* 切歌 */
 const prevSong = () => {
-  state.playIndex =
-    (state.playIndex - 1 + state.songList.length) % state.songList.length;
+  if (!state.songList.length) return;
+  state.playIndex = (state.playIndex - 1 + state.songList.length) % state.songList.length;
   loadSong(state.songList[state.playIndex]);
 };
 
 const nextSong = () => {
+  if (!state.songList.length) return;
   state.playIndex = (state.playIndex + 1) % state.songList.length;
   loadSong(state.songList[state.playIndex]);
 };
 
 const loadSong = async (song) => {
+  if (!song) return;
   state.songInfo = song;
-  state.backgroundUrl = song.cover;
+  state.backgroundUrl = song.cover || '';
   await nextTick();
   if (audioRef.value) {
     if (audioRef.value.src !== song.url) {
@@ -254,12 +258,14 @@ const loadSong = async (song) => {
   }
   state.playing = audioRef.value ? !audioRef.value.paused : false;
   GetLyric(song.id);
-  window.dispatchEvent(new CustomEvent('global-player-song', {
-    detail: {
-      title: song.name || song.title || '',
-      cover: song.cover || ''
-    }
-  }));
+  try {
+    window.dispatchEvent(new CustomEvent('global-player-song', {
+      detail: {
+        title: song.name || song.title || '',
+        cover: song.cover || ''
+      }
+    }));
+  } catch {}
 };
 
 /* 歌词 */
