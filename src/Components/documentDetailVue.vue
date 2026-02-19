@@ -41,7 +41,7 @@
 import '@wangeditor/editor/dist/css/style.css'
 import { onBeforeUnmount, ref, shallowRef, onMounted } from 'vue'
 import { Editor, Toolbar } from '@wangeditor/editor-for-vue'
-import { request } from '@/utils/request'
+import { documentApi } from '@/api/documentApi'
 import { ElMessage } from 'element-plus'
 import { useRoute, useRouter } from 'vue-router'
 import { ArrowLeft } from '@element-plus/icons-vue' // 引入图标
@@ -60,7 +60,7 @@ const isEditing = ref(false)
 
 onMounted(async () => {
   try {
-    const res = await request.get(`/document/detail?id=${id}`)
+    const res = await documentApi.detail(id)
     if (res.code === 200) {
       console.log(res.data);
       valueHtml.value = res.data.content || '<p>暂无内容</p>'
@@ -89,7 +89,7 @@ onBeforeUnmount(() => {
 
 const publish = async () => {
   try {
-    const res = await request.post('/publish', { content: valueHtml.value })
+    const res = await documentApi.publish({ content: valueHtml.value })
     if (res.code === 200) {
       ElMessage.success(res.message)
     } else {

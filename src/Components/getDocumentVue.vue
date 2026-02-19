@@ -44,7 +44,7 @@
 <script setup>
     import { ref, onMounted, computed } from 'vue'
     import {useRouter} from 'vue-router'
-    import { request } from '@/utils/request';
+    import { documentApi } from '@/api/documentApi';
     import { ElMessage } from 'element-plus';
     import dayjs from 'dayjs'
 
@@ -62,7 +62,7 @@
     const getAllFile = async () => {
         // get all the file in the server
         try{
-            const res = await request.get('/document/getAll/')
+            const res = await documentApi.getAll()
             if(res.code === 200){
                 files.value = res.data
                 ElMessage.success(res.message)

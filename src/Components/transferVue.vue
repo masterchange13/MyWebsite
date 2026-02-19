@@ -48,7 +48,6 @@
 
 <script setup>
 import { ref } from "vue";
-import { request } from "@/utils/request";
 import { ElMessage } from "element-plus";
 import { musicApi } from "@/api/musicApi";
 

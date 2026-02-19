@@ -36,7 +36,7 @@
 <script setup>
 import { ref, nextTick } from 'vue'
 import { ElMessage } from 'element-plus'
-import { request } from '@/utils/request'
+import { agentApi } from '@/api/agentApi'
 
 const messages = ref([
   { role: 'assistant', content: '你好！我是你的 Agent，有什么可以帮你？', time: Date.now() }
@@ -67,7 +67,7 @@ const send = async () => {
   await scrollToBottom()
 
   try {
-    const res = await request.post('/agent/ask', { message: text })
+    const res = await agentApi.ask({ message: text })
     const reply = res?.data?.answer || '后端暂未配置，我先给出占位回复：收到你的问题。'
     messages.value.push({ role: 'assistant', content: reply, time: Date.now() })
   } catch (e) {
