@@ -16,13 +16,16 @@
 </template>
 
 <script setup>
-import { onMounted, ref } from 'vue'
-import request from '@/utils/request'
+import { onMounted, ref, computed } from 'vue'
+import { useUserStore } from '@/stores/userStore'
+import { musicApi } from '@/api/musicApi'
 
 const datas = ref([])
+const userStore = useUserStore()
+const username = computed(() => userStore.getUsername())
 
 const getAllMusic = async () => {
-    const res = await request.get('/music/getAllMusic')
+    const res = await musicApi.getAllUserMusic({ username: username.value })
     if (res.code === 200) {
         datas.value = res.data.map(item => ({
             ...item,

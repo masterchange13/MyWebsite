@@ -27,13 +27,16 @@
 </template>
 
 <script setup>
-import { onMounted, ref } from 'vue';
+import { onMounted, ref, computed } from 'vue';
 import addIconVue from './addIcon.vue';
 import { navigatorApi } from '@/api/navigatorApi'
 import { ElMessage } from 'element-plus'
+import { useUserStore } from '@/stores/userStore'
 
 // 数据
 const icons = ref([]);
+const userStore = useUserStore()
+const username = computed(() => userStore.getUsername())
 
 // 打开链接
 const openLink = (url) => {
@@ -49,7 +52,7 @@ const addIcon = () => {
 
 // 获取导航数据
 const getIcons = async () => {
-  const response = await navigatorApi.getAllNavigators()
+  const response = await navigatorApi.getAllNavigators({ username: username.value })
   icons.value = response.data || [];
 }
 
@@ -65,7 +68,7 @@ const onAdded = async () => {
 
 const remove = async (icon) => {
   try {
-    const res = await navigatorApi.removeNavigator(icon)
+    const res = await navigatorApi.removeNavigator({ ...icon, username: username.value })
     if (res.code === 200) {
       ElMessage.success('已删除')
       await getIcons()

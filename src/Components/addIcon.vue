@@ -18,9 +18,10 @@
 </template>
  
 <script setup>
-import { ref } from 'vue';
+import { ref, computed } from 'vue';
 import Message from '@/utils/message'
 import { navigatorApi } from '@/api/navigatorApi'
+import { useUserStore } from '@/stores/userStore'
 const emit = defineEmits(['added'])
 
 const website = ref({
@@ -28,6 +29,9 @@ const website = ref({
     url: '',
     img: ''
 });    
+
+const userStore = useUserStore()
+const username = computed(() => userStore.getUsername())
 
 const resetForm = () => {
     website.value.name = '';
@@ -37,7 +41,7 @@ const resetForm = () => {
 
 const submitForm = async () => {
     try {
-        const res = await navigatorApi.addNavigator(website.value)
+        const res = await navigatorApi.addNavigator({ ...website.value, username: username.value })
         if (res && res.code === 200) {
             Message.success('Icon added successfully!')
             emit('added')

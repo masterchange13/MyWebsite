@@ -1,161 +1,96 @@
 <template>
-  <div class="login-container">
-    <h2>登录</h2>
-    <form @submit.prevent="handleLogin">
-      <div class="form-group">
-        <label for="username">用户名</label>
-        <input type="text" id="username" v-model="username" placeholder="请输入用户名" />
-        <p v-if="errors.username" class="error">{{ errors.username }}</p>
-      </div>
-
-      <div class="form-group">
-        <label for="password">密码</label>
-        <input type="password" id="password" v-model="password" placeholder="请输入密码" />
-        <p v-if="errors.password" class="error">{{ errors.password }}</p>
-      </div>
-
-      <button class="login-button" @click="toDashboard()">登录</button>
-    </form>
+  <div class="auth-page">
+    <el-card class="auth-card" shadow="always">
+      <div class="auth-title">登录</div>
+      <el-form :model="form" :rules="rules" ref="formRef" label-width="88px" class="auth-form">
+        <el-form-item label="用户名" prop="username">
+          <el-input v-model="form.username" placeholder="请输入用户名" />
+        </el-form-item>
+        <el-form-item label="密码" prop="password">
+          <el-input v-model="form.password" type="password" placeholder="请输入密码" show-password />
+        </el-form-item>
+        <div class="actions">
+          <el-button type="primary" :loading="loading" @click="submitLogin">登录</el-button>
+          <el-button text @click="toRegister">去注册</el-button>
+        </div>
+      </el-form>
+    </el-card>
   </div>
 </template>
-  
+
 <script setup>
-    import { ref, onMounted } from 'vue';
-    import { useRouter } from 'vue-router';
-    // pinia
-    import { useUserStore } from '@/stores/userStore';
-    import { userApi } from '@/api/userApi';
-    import Message from '@/utils/message';
+import { ref, onMounted } from 'vue'
+import { useRouter } from 'vue-router'
+import { useUserStore } from '@/stores/userStore'
+import { userApi } from '@/api/userApi'
+import { ElMessage } from 'element-plus'
 
-    const router = useRouter();
-    const userStore = useUserStore(); // 在这里获取 store 实例
+const router = useRouter()
+const userStore = useUserStore()
 
-    const username = ref('');
-    const password = ref('');
-    const errors = ref({
-      username: '',
-      password: '',
-    });
+const formRef = ref()
+const loading = ref(false)
+const form = ref({
+  username: '',
+  password: ''
+})
 
-    const handleLogin = () => {
-      // 重置错误信息
-      errors.value.username = '';
-      errors.value.password = '';
+const rules = {
+  username: [{ required: true, message: '请输入用户名', trigger: ['blur','change'] }],
+  password: [{ required: true, message: '请输入密码', trigger: ['blur','change'] }]
+}
 
-      // 校验用户名
-      if (!username.value) {
-        errors.value.username = '用户名不能为空';
-      }
-
-      // 校验密码
-      if (!password.value) {
-        errors.value.password = '密码不能为空';
-      }
-
-      // 如果没有错误，提交表单
-      if (!errors.value.username && !errors.value.password) {
-        // alert(`登录成功！用户名: ${username.value}`);
-        // 在这里调用 toDashboard 方法
-        toDashboard();
-      }
-    };
-
-    const ensureCsrf = async () => {
-      try { await userApi.ensureCsrf() } catch(e) { console.error(e) }
-    }
-
-    const toDashboard = async () => {
-      await ensureCsrf()
-      userApi.login({
-        username: username.value,
-        password: password.value,
-      })
+const submitLogin = () => {
+  formRef.value.validate(async (valid) => {
+    if (!valid) return
+    loading.value = true
+    userApi.login({ username: form.value.username, password: form.value.password })
       .then((res) => {
-        console.log(res);
-
-        if (res.success) {   // ⭐ 注意这里
-          userStore.setUsername(username.value);
-          router.push('/navigator');
-          Message.success('登录成功');
+        if (res?.success ?? res?.code === 200) {
+          userStore.setUsername(form.value.username)
+          router.push('/navigator')
+          ElMessage.success('登录成功')
         } else {
-          Message.error(res.msg || 'Login failed');
+          ElMessage.error(res.msg || '登录失败')
         }
       })
       .catch((err) => {
-        Message.error(err.message);
-        console.error(err);
-      });
-    };
+        ElMessage.error(err.message || '请求失败')
+      })
+      .finally(() => {
+        loading.value = false
+      })
+  })
+}
 
-    // ⭐ 页面加载时获取 CSRF Cookie（相对 baseURL）
-    onMounted(async () => {
-      try {
-        await userApi.ensureCsrf()
-        console.log('CSRF cookie ready')
-      } catch (e) {
-        console.error('CSRF 获取失败', e)
-      }
-    })
+const toRegister = () => router.push('/register')
+
+onMounted(() => {})
 </script>
-  
+
 <style scoped>
-.login-container {
-  max-width: 400px;
-  margin: 50px auto;
-  padding: 20px;
-  border: 1px solid #ddd;
-  border-radius: 8px;
-  background: #f9f9f9;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+.auth-page {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(180deg, #eef5ff 0%, #f8fbff 100%);
+  padding: 24px;
 }
-
-h2 {
+.auth-card {
+  width: 420px;
+  border-radius: 12px;
+}
+.auth-title {
+  font-size: 20px;
+  font-weight: 600;
+  margin-bottom: 12px;
   text-align: center;
-  margin-bottom: 20px;
 }
-
-.form-group {
-  margin-bottom: 15px;
-}
-
-label {
-  display: block;
-  font-weight: bold;
-  margin-bottom: 5px;
-}
-
-input {
-  width: 100%;
-  padding: 10px;
-  border: 1px solid #ccc;
-  border-radius: 4px;
-  box-sizing: border-box;
-}
-
-input:focus {
-  outline: none;
-  border-color: #007bff;
-}
-
-.error {
-  color: red;
-  font-size: 14px;
-  margin-top: 5px;
-}
-
-.login-button {
-  width: 100%;
-  padding: 10px;
-  background: #007bff;
-  color: white;
-  border: none;
-  border-radius: 4px;
-  cursor: pointer;
-  font-size: 16px;
-}
-
-.login-button:hover {
-  background: #0056b3;
+.auth-form .actions {
+  display: flex;
+  justify-content: center;
+  gap: 12px;
 }
 </style>
   

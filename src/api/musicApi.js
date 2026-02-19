@@ -8,7 +8,9 @@ export const musicApi = {
     // 修改音乐
     updateMusic: (data) => request.post('/music/update', data),
     removeMusic: (data) => request.delete('/music/remove', { data }),
-    getAllMusic: () => request.get('/music/get_all'),
+    getAllMusic: (params) => request.get('/music/get_all', { params }),
+    // 用户个人音乐库
+    getAllUserMusic: (params) => request.get('/music/getAllMusic', { params }),
     updateMusicStatus: (data) => request.post('/music/update_music_status', data),
     uploadMusic: (data) => request.post('/music/upload', data),
     SearchSongs: (params) => request.get('/music/search', {params}),

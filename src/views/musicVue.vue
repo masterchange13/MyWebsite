@@ -79,6 +79,8 @@ import LoveMusic from "@/Components/music/love.vue";
 import liricApi from "../api/liric/index";
 import { musicApi } from '@/api/musicApi'
 import { watch } from 'vue'
+import { useUserStore } from '@/stores/userStore'
+import { computed as vComputed } from 'vue'
 
 /* refs */
 const audioRef = ref(null);
@@ -127,8 +129,11 @@ const {
   playStatus,
 } = toRefs(state);
 
+const userStore = useUserStore()
+const uname = vComputed(() => userStore.getUsername())
+
 const getAllMusic = async () => {
-  const res = await musicApi.getAllMusic();
+  const res = await musicApi.getAllMusic({ username: uname.value });
   state.songList = Array.isArray(res.data) ? res.data : [];
   console.log("all music's res.data", res.data);
 };

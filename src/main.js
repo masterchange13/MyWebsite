@@ -7,7 +7,6 @@ import 'element-plus/dist/index.css';
 import * as ElementPlusIconsVue from '@element-plus/icons-vue';
 import { createPinia } from 'pinia'; // 导入 createPinia
 import piniaPersist from 'pinia-plugin-persistedstate'
-import { userApi } from '@/api/userApi'
 
 
 const app = createApp(App);
@@ -27,8 +26,6 @@ app.use(elementPlus);
 for (const [key, component] of Object.entries(ElementPlusIconsVue)) {
     app.component(key, component);
 }
-
-userApi.ensureCsrf()   // 领 CSRF 身份证
 
 // 挂载应用
 app.mount('#app');

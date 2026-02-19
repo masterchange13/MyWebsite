@@ -1,12 +1,5 @@
 import request from '@/utils/request'
 
-const ensureCsrf = async () => {
-  const has = document.cookie.includes('csrftoken=')
-  if (!has) {
-    try { await request.get('/csrf/') } catch {}
-  }
-}
-
 const login = ({ username, password }) => {
   return request({
     url: '/users/login/',
@@ -37,7 +30,6 @@ const logout = () => {
 }
 
 export const userApi = {
-  ensureCsrf,
   login,
   register,
   getCurrentUser,

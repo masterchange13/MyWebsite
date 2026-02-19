@@ -105,30 +105,15 @@ function showError(message) {
   ElMessage.error(message || '发生未知错误，请稍后重试。')
 }
 
-// 读取 csrftoken
-function getCookie(name) {
-  const value = `; ${document.cookie}`
-  const parts = value.split(`; ${name}=`)
-  if (parts.length === 2) return parts.pop().split(';').shift()
-}
-
 export const request = axios.create({
   baseURL: '/api',
   timeout: 10000,
   withCredentials: true,
-  xsrfCookieName: 'csrftoken',
-  xsrfHeaderName: 'X-CSRFToken'
 })
 
 // ================= 请求拦截器 =================
 request.interceptors.request.use(
   config => {
-    const csrfToken = getCookie('csrftoken')
-
-    if (csrfToken) {
-      config.headers['X-CSRFToken'] = csrfToken   // ⭐ 自动带 CSRF
-    }
-
     loadingInstance = ElLoading.service({
       lock: true,
       text: '加载中...',
@@ -160,7 +145,7 @@ request.interceptors.response.use(
         // window.location.href = '/login'
         break
       case 403:
-        showError('权限不足或 CSRF 校验失败')
+        showError('权限不足')
         break
       case 404:
         showError('请求资源不存在')
