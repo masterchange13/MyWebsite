@@ -74,6 +74,11 @@ const routes = [
                 path: '/music',
                 name: 'music',
                 component: () => import('@/views/musicVue.vue')
+            },
+            {
+                path: '/qiMen',
+                name: 'qiMen',
+                component: () => import('@/Components/qiMenVue.vue')
             }
         ]
     },

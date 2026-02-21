@@ -46,7 +46,12 @@
               <el-icon><icon-menu /></el-icon>
               <span>agent</span>
             </el-menu-item>
+            <el-menu-item index="2-2" @click="toQiMen()">
+              <el-icon><icon-menu /></el-icon>
+              <span>QiMenDunJia</span>
+            </el-menu-item>
           </el-sub-menu>
+
           <el-menu-item index="3">
             <el-icon>
               <document />
@@ -167,6 +172,7 @@ const toChat = () => router.push("/chat");
 const toDoList = () => router.push("/todoList");
 const toMusic = () => router.push("/music");
 const toProfile = () => router.push("/profile");
+const toQiMen = () => router.push("/qiMen");
 
 import { ref, computed, onMounted, onUnmounted, watch } from "vue";
 const audioRef = ref<HTMLAudioElement | null>(null);
