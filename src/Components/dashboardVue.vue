@@ -32,9 +32,9 @@
               <el-menu-item index="1-3" @click="toMusic()">music</el-menu-item>
             </el-menu-item-group>
             <el-menu-item-group title="Group Two">
-              <el-menu-item index="1-3" @click="toTransfer()">transfer</el-menu-item>
-              <el-menu-item index="1-3-2" @click="getDocument()">getDocument</el-menu-item>
-              <el-menu-item index="1-3-3" @click="toDoList()">to do list</el-menu-item>
+            <el-menu-item index="1-4" @click="toTransfer()">transfer</el-menu-item>
+            <el-menu-item index="1-5" @click="getDocument()">getDocument</el-menu-item>
+            <el-menu-item index="1-6" @click="toDoList()">to do list</el-menu-item>
             </el-menu-item-group>
           </el-sub-menu>
           <el-sub-menu index="2">
@@ -87,9 +87,9 @@
             <el-menu-item index="1-3" @click="toMusic(); showMenuDrawer=false">music</el-menu-item>
           </el-menu-item-group>
           <el-menu-item-group title="Group Two">
-            <el-menu-item index="1-3" @click="toTransfer(); showMenuDrawer=false">transfer</el-menu-item>
-            <el-menu-item index="1-3-2" @click="getDocument(); showMenuDrawer=false">getDocument</el-menu-item>
-            <el-menu-item index="1-3-3" @click="toDoList(); showMenuDrawer=false">to do list</el-menu-item>
+            <el-menu-item index="1-4" @click="toTransfer(); showMenuDrawer=false">transfer</el-menu-item>
+            <el-menu-item index="1-5" @click="getDocument(); showMenuDrawer=false">getDocument</el-menu-item>
+            <el-menu-item index="1-6" @click="toDoList(); showMenuDrawer=false">to do list</el-menu-item>
           </el-menu-item-group>
         </el-sub-menu>
         <el-sub-menu index="2">
@@ -278,12 +278,22 @@ const updateIsMobile = () => {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 15px 30px;
-  background-color: #409eff;
-  color: white;
+  padding: 16px 28px;
+  background: linear-gradient(90deg, #4f80ff 0%, #80c2ff 100%);
+  color: #fff;
   font-size: 18px;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 8px 24px rgba(79, 128, 255, 0.25);
   position: relative;
+  border-bottom: 1px solid rgba(255,255,255,0.25);
+}
+.header::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(600px 280px at -120px -120px, rgba(255,255,255,0.18) 0%, rgba(255,255,255,0) 70%),
+    radial-gradient(360px 200px at 110% 10%, rgba(255,255,255,0.12) 0%, rgba(255,255,255,0) 70%);
+  pointer-events: none;
 }
 
 .left {
@@ -295,9 +305,46 @@ const updateIsMobile = () => {
   display: none;
 }
 
+:deep(.el-menu-vertical-demo) {
+  background: linear-gradient(180deg, #f6f9ff 0%, #eef5ff 100%);
+  border-right: 1px solid #e6edf7;
+  padding: 8px;
+}
+:deep(.el-menu-vertical-demo .el-sub-menu__title),
+:deep(.el-menu-vertical-demo .el-menu-item) {
+  border-radius: 10px;
+  margin: 4px 6px;
+  padding-left: 14px;
+  transition: background 0.15s ease, color 0.15s ease, transform 0.12s ease;
+}
+:deep(.el-menu-vertical-demo .el-sub-menu__title:hover),
+:deep(.el-menu-vertical-demo .el-menu-item:hover) {
+  background: #e9f1ff;
+  color: #2b4eff;
+  transform: translateX(2px);
+}
+:deep(.el-menu-vertical-demo .el-menu-item.is-active) {
+  background: linear-gradient(90deg, #e9f1ff 0%, #dbe8ff 100%);
+  color: #1d3ee6;
+  font-weight: 600;
+  box-shadow: inset 0 0 0 1px #cfe0ff;
+}
+:deep(.el-menu-vertical-demo .el-icon) {
+  color: #5a7bd6;
+}
+:deep(.el-menu-vertical-demo .el-sub-menu.is-opened > .el-sub-menu__title) {
+  background: #f2f7ff;
+}
+
 .title {
-  font-size: 24px;
-  font-weight: bold;
+  font-size: 26px;
+  font-weight: 800;
+  letter-spacing: 0.5px;
+  background: linear-gradient(180deg, #ffffff 0%, #e9f1ff 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  text-shadow: 0 1px 1px rgba(0,0,0,0.1);
 }
 .title-center {
   position: absolute;
@@ -309,18 +356,21 @@ const updateIsMobile = () => {
 .user-info {
   display: flex;
   align-items: center;
-  gap: 15px;
+  gap: 16px;
 }
 
 .avatar {
-  border: 2px solid white;
+  border: 2px solid rgba(255,255,255,0.9);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
 }
 .clickable {
   cursor: pointer;
 }
 
 .username {
-  font-size: 16px;
+  font-size: 15px;
+  font-weight: 600;
+  color: rgba(255,255,255,0.92);
 }
 
 .logout-button {
@@ -330,6 +380,7 @@ const updateIsMobile = () => {
   padding: 8px 16px;
   font-size: 14px;
   transition: background 0.3s;
+  box-shadow: 0 4px 10px rgba(255, 77, 79, 0.35);
 }
 
 .logout-button:hover {
@@ -397,10 +448,10 @@ const updateIsMobile = () => {
     color: #fff;
   }
   .title {
-    font-size: 18px;
+    font-size: 20px;
   }
   .header {
-    padding: 10px 14px;
+    padding: 12px 16px;
   }
   .username {
     display: none;

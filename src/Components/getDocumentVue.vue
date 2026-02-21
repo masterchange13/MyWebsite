@@ -20,7 +20,7 @@
             @click="showDocument(file.create_time)"
           >
             <div class="doc-item-left">
-              <el-avatar :size="48" :src="getAvatar(file.author)" />
+              <img class="thumb" :src="getCover(file)" />
             </div>
             <div class="doc-item-center">
               <div class="doc-item-title">{{ getTitle(file.content) }}</div>
@@ -119,12 +119,19 @@
       const text = stripHtml(html)
       return text.length > 140 ? text.slice(0, 140) + '…' : text
     }
+    const getCover = (file) => {
+      const seed = encodeURIComponent(getTitle(file.content) || file.author || 'doc')
+      return `https://picsum.photos/seed/${seed}/300/200`
+    }
 
 </script>
 
 <style scoped>
 .doc-page {
-  background: linear-gradient(180deg, #eef5ff 0%, #f8fbff 100%);
+  background:
+    radial-gradient(1200px 600px at -200px -200px, rgba(79, 160, 255, 0.15) 0%, rgba(79, 160, 255, 0) 60%),
+    radial-gradient(800px 400px at 120% 20%, rgba(86, 220, 160, 0.12) 0%, rgba(86, 220, 160, 0) 60%),
+    linear-gradient(180deg, #eef5ff 0%, #f8fbff 100%);
   height: 100%;
   display: flex;
   flex-direction: column;
@@ -133,12 +140,13 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 12px 20px;
-  background-color: #96c2ee;
+  padding: 16px 24px;
+  background: linear-gradient(90deg, #4f80ff 0%, #80c2ff 100%);
   color: #fff;
+  border-bottom: 1px solid rgba(255,255,255,0.25);
 }
 .doc-title {
-  font-size: 18px;
+  font-size: 22px;
   font-weight: 600;
 }
 .doc-tools {
@@ -146,7 +154,7 @@
   gap: 8px;
 }
 .tool-input {
-  width: 240px;
+  width: 300px;
 }
 .tool-select {
   width: 160px;
@@ -171,18 +179,27 @@
   cursor: pointer;
   border-radius: 12px;
   border: 1px solid #edf2f7;
+  background:
+    linear-gradient(0deg, rgba(255,255,255,0.9), rgba(255,255,255,0.9));
+  overflow: hidden;
 }
 .doc-item:hover {
   transform: translateY(-1px);
   box-shadow: 0 10px 24px rgba(0,0,0,0.12);
   border-color: #dfe7f3;
 }
+.doc-item-left .thumb {
+  width: 160px;
+  height: 110px;
+  border-radius: 10px;
+  object-fit: cover;
+}
 .doc-item-center {
   flex: 1;
   min-width: 0;
 }
 .doc-item-title {
-  font-size: 16px;
+  font-size: 18px;
   font-weight: 600;
   color: #1f2d3d;
 }
@@ -196,7 +213,7 @@
 }
 .doc-item-excerpt {
   margin-top: 8px;
-  font-size: 14px;
+  font-size: 15px;
   line-height: 1.7;
   color: #4a5568;
   display: -webkit-box;

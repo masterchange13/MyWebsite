@@ -1,6 +1,6 @@
 <template>
   <div class="navigator">
-    <el-drawer v-model="showAddIcon" title="添加导航">
+    <el-drawer v-model="showAddIcon" title="添加导航" size="640px" class="add-drawer">
       <addIconVue v-if="showAddIcon" @added="onAdded" />
     </el-drawer>
 
@@ -83,6 +83,24 @@ const remove = async (icon) => {
 
 <style scoped>
 .navigator {
+  padding: 20px;
+}
+.add-drawer :deep(.el-drawer__header) {
+  background: linear-gradient(90deg, #4f80ff 0%, #80c2ff 100%);
+  color: #fff;
+  padding: 18px 22px;
+  margin-bottom: 0;
+  border-bottom: 1px solid rgba(255,255,255,0.25);
+}
+.add-drawer :deep(.el-drawer__header .el-drawer__title) {
+  font-size: 18px;
+  font-weight: 700;
+}
+.add-drawer :deep(.el-drawer__body) {
+  background:
+    radial-gradient(900px 400px at -120px -120px, rgba(79, 160, 255, 0.12) 0%, rgba(79, 160, 255, 0) 60%),
+    radial-gradient(600px 300px at 110% 0%, rgba(86, 220, 160, 0.10) 0%, rgba(86, 220, 160, 0) 60%),
+    linear-gradient(180deg, #f6f9ff 0%, #eef5ff 100%);
   padding: 20px;
 }
 .header {
