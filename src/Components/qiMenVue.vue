@@ -79,7 +79,7 @@ const form = reactive({
   location: '',
   topic: '',
   solar: true,
-  analyze: false
+  analyze: true
 })
 
 const palaces = ref([
@@ -100,25 +100,78 @@ const analyzing = ref(false)
 const escapeHtml = (s) => String(s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
 const renderMarkdown = (src) => {
   let text = String(src || '')
-  text = text.replace(/```([\s\S]*?)```/g, (_, code) => `<pre><code>${escapeHtml(code)}</code></pre>`)
+  text = text.replace(/```(\w+)?\n([\s\S]*?)```/g, (_, lang, code) => `<pre><code class="language-${lang || ''}">${escapeHtml(code)}</code></pre>`)
   const lines = text.split(/\r?\n/)
   let html = ''
   let ul = false
+  let ol = false
+  let bq = false
+  let inTable = false
+  let tableRows = []
   for (let i = 0; i < lines.length; i++) {
     let line = lines[i]
+    if (/^\s*(?:---|\*\*\*|___)\s*$/.test(line)) {
+      if (ul) { html += '</ul>'; ul = false }
+      if (ol) { html += '</ol>'; ol = false }
+      if (bq) { html += '</blockquote>'; bq = false }
+      html += '<hr/>'
+      continue
+    }
+    if (/^\s*\d+\.\s+/.test(line)) {
+      if (!ol) { if (ul) { html += '</ul>'; ul = false } html += '<ol>'; ol = true }
+      html += `<li>${line.replace(/^\s*\d+\.\s+/, '')}</li>`
+      continue
+    } else if (ol) {
+      html += '</ol>'
+      ol = false
+    }
     if (/^\s*[-*]\s+/.test(line)) {
       if (!ul) { html += '<ul>' ; ul = true }
-      html += `<li>${line.replace(/^\s*[-*]\s+/, '')}</li>`
+      const taskMatch = line.match(/^\s*-\s+\[( |x|X)\]\s+(.*)$/)
+      if (taskMatch) {
+        const checked = /x/i.test(taskMatch[1])
+        html += `<li><input type="checkbox" disabled ${checked ? 'checked' : ''}/> ${taskMatch[2]}</li>`
+      } else {
+        html += `<li>${line.replace(/^\s*[-*]\s+/, '')}</li>`
+      }
       continue
     } else if (ul) {
       html += '</ul>'
       ul = false
     }
-    if (/^\s*#\s+/.test(line)) html += `<h1>${line.replace(/^\s*#\s+/, '')}</h1>`
-    else if (/^\s*##\s+/.test(line)) html += `<h2>${line.replace(/^\s*##\s+/, '')}</h2>`
-    else if (/^\s*###\s+/.test(line)) html += `<h3>${line.replace(/^\s*###\s+/, '')}</h3>`
-    else if (line.trim() === '') html += '<br/>'
-    else {
+    const bqMatch = line.match(/^\s*>\s?(.*)$/)
+    if (bqMatch) {
+      if (!bq) { html += '<blockquote>'; bq = true }
+      html += `<p>${bqMatch[1]}</p>`
+      continue
+    } else if (bq) {
+      html += '</blockquote>'
+      bq = false
+    }
+    if (/^\s*#{1}\s+/.test(line)) html += `<h1>${line.replace(/^\s*#\s+/, '')}</h1>`
+    else if (/^\s*#{2}\s+/.test(line)) html += `<h2>${line.replace(/^\s*##\s+/, '')}</h2>`
+    else if (/^\s*#{3}\s+/.test(line)) html += `<h3>${line.replace(/^\s*###\s+/, '')}</h3>`
+    else if (/^\s*#{4}\s+/.test(line)) html += `<h4>${line.replace(/^\s*####\s+/, '')}</h4>`
+    else if (/^\s*#{5}\s+/.test(line)) html += `<h5>${line.replace(/^\s*#####\s+/, '')}</h5>`
+    else if (/^\s*#{6}\s+/.test(line)) html += `<h6>${line.replace(/^\s*######\s+/, '')}</h6>`
+    else if (/\|/.test(line)) {
+      const parts = line.split('|').map(s => s.trim())
+      if (!inTable) { inTable = true; tableRows = []; }
+      tableRows.push(parts)
+      const next = lines[i+1] || ''
+      if (!/\|/.test(next)) {
+        let tHtml = '<table><tbody>'
+        for (let r = 0; r < tableRows.length; r++) {
+          tHtml += '<tr>' + tableRows[r].map(cell => `<td>${cell}</td>`).join('') + '</tr>'
+        }
+        tHtml += '</tbody></table>'
+        html += tHtml
+        inTable = false
+        tableRows = []
+      }
+    } else if (line.trim() === '') {
+      html += '<br/>'
+    } else {
       let l = line
       l = l.replace(/\[([^\]]+)\]\((https?:\/\/[^\s)]+)\)/g, '<a href="$2" target="_blank" rel="noopener noreferrer">$1</a>')
       l = l.replace(/\*\*([^*]+?)\*\*/g, '<strong>$1</strong>')
@@ -128,6 +181,8 @@ const renderMarkdown = (src) => {
     }
   }
   if (ul) html += '</ul>'
+  if (ol) html += '</ol>'
+  if (bq) html += '</blockquote>'
   return html
 }
 const analysisHtml = computed(() => renderMarkdown(analysis.value?.text))
@@ -223,6 +278,9 @@ const reset = () => {
   padding: 12px;
   height: 100%;
 }
+.qimen-form { grid-column: 1; }
+.qimen-result { grid-column: 2; }
+.qimen-analysis { grid-column: 1 / -1; }
 .qimen-form .title {
   font-weight: 600;
   margin-bottom: 8px;
@@ -249,7 +307,7 @@ const reset = () => {
 }
 .a-title {
   font-weight: 600;
-  font-size: 18px;
+  font-size: 20px;
 }
 .a-meta {
   font-size: 12px;
@@ -264,11 +322,11 @@ const reset = () => {
   color: #888;
 }
 .a-text {
-  max-height: 420px;
+  max-height: 70vh;
 }
 .a-text .md {
   word-break: break-word;
-  font-size: 16px;
+  font-size: 18px;
   line-height: 1.75;
 }
 .a-text .md h1, .a-text .md h2, .a-text .md h3 {
@@ -284,6 +342,28 @@ const reset = () => {
   background: #f0f0f0;
   border-radius: 4px;
   padding: 0 4px;
+}
+.a-text .md blockquote {
+  margin: 8px 0;
+  padding: 8px 12px;
+  background: #f9fafb;
+  border-left: 4px solid #a0c4ff;
+  color: #444;
+}
+.a-text .md table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 8px 0;
+}
+.a-text .md td, .a-text .md th {
+  border: 1px solid #e5e7eb;
+  padding: 6px 8px;
+  text-align: left;
+}
+.a-text .md hr {
+  border: none;
+  border-top: 1px solid #e5e7eb;
+  margin: 10px 0;
 }
 .result-header {
   display: flex;
