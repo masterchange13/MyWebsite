@@ -35,20 +35,44 @@
       </div>
 
       <el-card class="right-panel" shadow="always">
-        <div class="panel-title">账号登录</div>
-        <div class="avatar">
-          <img :src="avatarUrl" alt="avatar" />
+        <div class="characters-container">
+          <div v-for="i in 3" :key="i" 
+                :ref="el => { if (el) characterRefs[i-1] = el }"
+                class="character" 
+                :class="['c' + i, { 'eyes-closed': isPasswordFocused, 'staring': isUsernameFocused }]"
+           >
+            <div class="face">
+              <div class="eye left" :style="getEyeStyle(i-1)"></div>
+              <div class="eye right" :style="getEyeStyle(i-1)"></div>
+              <div class="mouth"></div>
+            </div>
+          </div>
         </div>
+        <div class="panel-title">账号登录</div>
         <el-form :model="form" :rules="rules" ref="formRef" label-width="96px" class="login-form">
           <el-row :gutter="12">
             <el-col :span="24">
               <el-form-item label="用户名" prop="username">
-                <el-input v-model="form.username" placeholder="请输入用户名" @keyup.enter="submitLogin" />
+                <el-input 
+                  v-model="form.username" 
+                  placeholder="请输入用户名" 
+                  @keyup.enter="submitLogin" 
+                  @focus="isUsernameFocused = true"
+                  @blur="isUsernameFocused = false"
+                />
               </el-form-item>
             </el-col>
             <el-col :span="24">
               <el-form-item label="密码" prop="password">
-                <el-input v-model="form.password" type="password" placeholder="请输入密码" show-password @keyup.enter="submitLogin" />
+                <el-input 
+                  v-model="form.password" 
+                  type="password" 
+                  placeholder="请输入密码" 
+                  show-password 
+                  @keyup.enter="submitLogin"
+                  @focus="isPasswordFocused = true"
+                  @blur="isPasswordFocused = false"
+                />
               </el-form-item>
             </el-col>
             <el-col :span="24">
@@ -94,7 +118,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted, computed } from 'vue'
+import { ref, onMounted, onUnmounted, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import { useUserStore } from '@/stores/userStore'
 import { userApi } from '@/api/userApi'
@@ -104,7 +128,49 @@ const router = useRouter()
 const userStore = useUserStore()
 
 const formRef = ref()
+const characterRefs = ref([])
 const loading = ref(false)
+const isPasswordFocused = ref(false)
+const isUsernameFocused = ref(false)
+const eyeOffsets = ref([
+  { x: 0, y: 0 },
+  { x: 0, y: 0 },
+  { x: 0, y: 0 }
+])
+
+const handleMouseMove = (e) => {
+  if (isPasswordFocused.value) return
+  
+  characterRefs.value.forEach((el, index) => {
+    if (!el) return
+    const rect = el.getBoundingClientRect()
+    const centerX = rect.left + rect.width / 2
+    const centerY = rect.top + rect.height / 2
+    
+    const dx = e.clientX - centerX
+    const dy = e.clientY - centerY
+    const angle = Math.atan2(dy, dx)
+    
+    // Max movement distance
+    const distance = Math.min(6, Math.sqrt(dx * dx + dy * dy) / 15)
+    
+    eyeOffsets.value[index] = {
+      x: Math.cos(angle) * distance,
+      y: Math.sin(angle) * distance
+    }
+  })
+}
+
+const getEyeStyle = (index) => {
+  if (isPasswordFocused.value) return {}
+  const offset = eyeOffsets.value[index]
+  const baseScale = isUsernameFocused.value ? 1.2 : 1
+  const baseY = isUsernameFocused.value ? 4 : 0
+  return {
+    transform: `translate(${offset.x}px, ${offset.y + baseY}px) scale(${baseScale})`
+  }
+}
+
 const form = ref({
   username: '',
   password: '',
@@ -141,7 +207,6 @@ const strengthStatus = computed(() => {
   if (p < 70) return 'warning'
   return 'success'
 })
-const avatarUrl = computed(() => `https://api.dicebear.com/7.x/identicon/svg?seed=${form.value.username || 'user'}`)
 
 const submitLogin = () => {
   formRef.value.validate(async (valid) => {
@@ -174,14 +239,103 @@ const submitLogin = () => {
 const toRegister = () => router.push('/register')
 
 onMounted(() => {
+  window.addEventListener('mousemove', handleMouseMove)
   try {
     const saved = localStorage.getItem('remember_username')
     if (saved) form.value.username = saved
   } catch {}
 })
+
+onUnmounted(() => {
+  window.removeEventListener('mousemove', handleMouseMove)
+})
 </script>
 
 <style scoped>
+.characters-container {
+  display: flex;
+  justify-content: center;
+  gap: 20px;
+  margin-bottom: 20px;
+}
+.character {
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+  animation: float 3s ease-in-out infinite;
+}
+.c1 { background-color: #ff9a9e; animation-delay: 0s; }
+.c2 { background-color: #a18cd1; animation-delay: 0.5s; }
+.c3 { background-color: #fad0c4; animation-delay: 1s; }
+
+@keyframes float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-10px); }
+}
+
+.face {
+  position: relative;
+  width: 100%;
+  height: 100%;
+}
+.eye {
+  position: absolute;
+  top: 35%;
+  width: 10px;
+  height: 10px;
+  background-color: #333;
+  border-radius: 50%;
+  transition: all 0.3s ease;
+}
+.eye.left { left: 25%; }
+.eye.right { right: 25%; }
+
+.mouth {
+  position: absolute;
+  bottom: 25%;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 12px;
+  height: 6px;
+  border: 2px solid #333;
+  border-top: none;
+  border-radius: 0 0 10px 10px;
+}
+
+/* Eyes closed state */
+.eyes-closed .eye {
+  height: 2px;
+  width: 12px;
+  border-radius: 0;
+  top: 45%;
+}
+.eyes-closed .mouth {
+  width: 8px;
+  height: 4px;
+  border-radius: 50%;
+  border-bottom: none;
+  border-top: 2px solid #333;
+  bottom: 20%;
+}
+
+/* Staring state */
+.staring .eye {
+  background-color: #000;
+}
+.staring .mouth {
+  width: 14px;
+  height: 8px;
+  border-radius: 50%;
+  border: 2px solid #333;
+  background-color: #ff9a9e; /* Cute little mouth */
+}
+
 .login-page {
   min-height: 100vh;
   display: flex;
@@ -245,18 +399,6 @@ onMounted(() => {
   font-size: 12px;
   color: #888;
   margin-bottom: 4px;
-}
-.avatar {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  margin-bottom: 8px;
-}
-.avatar img {
-  width: 56px;
-  height: 56px;
-  border-radius: 50%;
-  border: 1px solid #eee;
 }
 .links {
   display: flex;
