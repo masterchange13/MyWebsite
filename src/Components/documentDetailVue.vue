@@ -25,7 +25,7 @@
     </div>
 
     <!-- 文章展示（阅读模式） -->
-    <div v-else class="article-container" v-html="valueHtml"></div>
+    <div v-else class="article-container markdown-body" v-html="renderedContent"></div>
 
     <!-- 切换编辑模式按钮 -->
     <div style="margin-top: 20px;">
@@ -36,15 +36,15 @@
   </div>
 </template>
 
-
 <script setup>
 import '@wangeditor/editor/dist/css/style.css'
-import { onBeforeUnmount, ref, shallowRef, onMounted } from 'vue'
+import { onBeforeUnmount, ref, shallowRef, onMounted, computed } from 'vue'
 import { Editor, Toolbar } from '@wangeditor/editor-for-vue'
 import { documentApi } from '@/api/documentApi'
 import { ElMessage } from 'element-plus'
 import { useRoute, useRouter } from 'vue-router'
 import { ArrowLeft } from '@element-plus/icons-vue' // 引入图标
+import { marked } from 'marked'
 
 const route = useRoute()
 const router = useRouter()
@@ -55,15 +55,29 @@ const articleTitle = ref('文章标题加载中...')
 const articleAuthor = ref('未知作者')
 
 const editorRef = shallowRef()
-const valueHtml = ref('<p>加载中...</p>')
+const valueHtml = ref('')
 const isEditing = ref(false)
+
+const renderedContent = computed(() => {
+  // If we are in editing mode, we use HTML from wangeditor
+  // If we are in viewing mode, we render it as markdown if possible
+  // Many rich text editors output HTML, so we check if it's HTML or Markdown
+  const content = valueHtml.value
+  if (!content) return ''
+  
+  // If it's HTML, we might just want to show it. 
+  // But the user specifically asked for MD format.
+  // If the content is raw MD, marked will handle it.
+  // If it's HTML, marked will also handle it (often just rendering as is).
+  return marked.parse(content)
+})
 
 onMounted(async () => {
   try {
     const res = await documentApi.detail(id)
     if (res.code === 200) {
       console.log(res.data);
-      valueHtml.value = res.data.content || '<p>暂无内容</p>'
+      valueHtml.value = res.data.content || ''
       articleTitle.value = res.data.title || '未命名文章'
       articleAuthor.value = res.data.author || '匿名'
     } else {
@@ -108,12 +122,57 @@ const goBack = () => {
 
 <style scoped>
 .article-container {
-  padding: 20px;
-  border: 1px solid #ddd;
-  border-radius: 8px;
+  padding: 40px;
+  border: 1px solid #e1e4e8;
+  border-radius: 12px;
   background: #fff;
-  line-height: 1.8;
+  line-height: 1.6;
   font-size: 16px;
+  max-width: 900px;
+  margin: 0 auto;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.05);
+}
+
+/* Basic Markdown Styles */
+:deep(.markdown-body) h1, 
+:deep(.markdown-body) h2, 
+:deep(.markdown-body) h3 {
+  border-bottom: 1px solid #eaecef;
+  padding-bottom: .3em;
+  margin-top: 24px;
+  margin-bottom: 16px;
+  font-weight: 600;
+  line-height: 1.25;
+}
+:deep(.markdown-body) p {
+  margin-top: 0;
+  margin-bottom: 16px;
+}
+:deep(.markdown-body) code {
+  padding: .2em .4em;
+  margin: 0;
+  font-size: 85%;
+  background-color: rgba(27,31,35,.05);
+  border-radius: 3px;
+}
+:deep(.markdown-body) pre {
+  padding: 16px;
+  overflow: auto;
+  font-size: 85%;
+  line-height: 1.45;
+  background-color: #f6f8fa;
+  border-radius: 6px;
+  margin-bottom: 16px;
+}
+:deep(.markdown-body) blockquote {
+  padding: 0 1em;
+  color: #6a737d;
+  border-left: .25em solid #dfe2e5;
+  margin: 0 0 16px 0;
+}
+:deep(.markdown-body) img {
+  max-width: 100%;
+  box-sizing: content-box;
 }
 
 .header {

@@ -1,7 +1,7 @@
 <template>
     <div class="song-search-list">
         <div class="search-box">
-            <el-input v-model="keyWords" @change="SearchSongs" class="search-input" placeholder="请输入"
+            <el-input v-model="keyWords" @keyup.enter="SearchSongs" class="search-input" placeholder="请输入"
                 :suffix-icon="Search" />
         </div>
         <div class="list-box" @scroll="ScrollPage($event)">

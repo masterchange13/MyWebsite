@@ -17,7 +17,7 @@
             :key="file.create_time"
             shadow="hover"
             class="doc-item"
-            @click="showDocument(file.create_time)"
+            @click="showDocument(file.id)"
           >
             <div class="doc-item-left">
               <img class="thumb" :src="getCover(file)" />
@@ -32,7 +32,7 @@
               <div class="doc-item-excerpt">{{ getExcerpt(file.content) }}</div>
             </div>
             <div class="doc-item-right">
-              <el-button type="primary" text @click.stop="showDocument(file.create_time)">查看详情</el-button>
+              <el-button type="primary" text @click.stop="showDocument(file.id)">查看详情</el-button>
             </div>
           </el-card>
         </div>

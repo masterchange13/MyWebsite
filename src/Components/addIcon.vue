@@ -8,13 +8,13 @@
       <div class="left">
         <el-form :model="website" label-width="100px">
           <el-form-item label="Name" prop="name">
-            <el-input v-model="website.name" placeholder="如：GitHub" />
+            <el-input v-model="website.name" placeholder="如：GitHub" @keyup.enter="submitForm" />
           </el-form-item>
           <el-form-item label="URL" prop="url">
-            <el-input v-model="website.url" placeholder="如：https://github.com" />
+            <el-input v-model="website.url" placeholder="如：https://github.com" @keyup.enter="submitForm" />
           </el-form-item>
           <el-form-item label="Image" prop="img">
-            <el-input v-model="website.img" placeholder="图片链接，可留空自动生成" />
+            <el-input v-model="website.img" placeholder="图片链接，可留空自动生成" @keyup.enter="submitForm" />
           </el-form-item>
           <el-form-item>
             <el-button @click="resetForm">Reset</el-button>

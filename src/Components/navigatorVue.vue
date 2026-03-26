@@ -150,21 +150,22 @@ const remove = async (icon) => {
 }
 .floating-add {
   position: fixed;
-  right: 24px;
-  bottom: 24px;
-  width: 48px;
-  height: 48px;
+  right: 32px;
+  bottom: 32px;
+  width: 64px;
+  height: 64px;
   border-radius: 50%;
   background: #fff;
-  box-shadow: 0 6px 20px rgba(0,0,0,0.15);
+  box-shadow: 0 8px 24px rgba(0,0,0,0.2);
   display: flex;
   align-items: center;
   justify-content: center;
   z-index: 1000;
+  cursor: pointer;
 }
 .floating-add img {
-  width: 28px;
-  height: 28px;
+  width: 36px;
+  height: 36px;
 }
 .floating-add:hover {
   transform: translateY(-1px);
