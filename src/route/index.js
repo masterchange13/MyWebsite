@@ -79,6 +79,11 @@ const routes = [
                 path: '/qiMen',
                 name: 'qiMen',
                 component: () => import('@/Components/qiMenVue.vue')
+            },
+            {
+                path: '/timer',
+                name: 'timer',
+                component: () => import('@/Components/timerVue.vue')
             }
         ]
     },

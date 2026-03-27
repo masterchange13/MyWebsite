@@ -50,6 +50,11 @@
               <el-icon><icon-menu /></el-icon>
               <span>QiMenDunJia</span>
             </el-menu-item>
+            <!-- 定时器 -->
+            <el-menu-item index="2-3" @click="toTimer()">
+              <el-icon><icon-menu /></el-icon>
+              <span>Timer</span>
+            </el-menu-item>
           </el-sub-menu>
 
           <el-menu-item index="3">
@@ -101,6 +106,14 @@
             <el-icon><icon-menu /></el-icon>
             <span>agent</span>
           </el-menu-item>
+          <el-menu-item index="2-2" @click="toQiMen(); showMenuDrawer=false">
+            <el-icon><icon-menu /></el-icon>
+            <span>QiMenDunJia</span>
+          </el-menu-item>
+          <el-menu-item index="2-3" @click="toTimer(); showMenuDrawer=false">
+            <el-icon><icon-menu /></el-icon>
+            <span>Timer</span>
+          </el-menu-item>
         </el-sub-menu>
         <el-menu-item index="3" @click="toChat(); showMenuDrawer=false">
           <el-icon><document /></el-icon>
@@ -142,7 +155,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed } from "vue";
+import { computed, ref, onMounted, onUnmounted, watch } from "vue";
 import { useRouter } from "vue-router";
 import { useUserStore } from "@/stores/userStore";
 
@@ -173,8 +186,8 @@ const toDoList = () => router.push("/todoList");
 const toMusic = () => router.push("/music");
 const toProfile = () => router.push("/profile");
 const toQiMen = () => router.push("/qiMen");
+const toTimer = () => router.push("/timer");
 
-import { ref, computed, onMounted, onUnmounted, watch } from "vue";
 const audioRef = ref<HTMLAudioElement | null>(null);
 const trackRef = ref<HTMLElement | null>(null);
 const isPlaying = ref(false);
