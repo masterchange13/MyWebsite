@@ -10,11 +10,11 @@
         <div class="time-inputs">
           <div class="field">
             <div class="label">分钟</div>
-            <el-input-number v-model="minutes" :min="0" :max="999" @keyup.enter="start" />
+            <el-input-number v-model="durationMinutes" :min="0" :max="999" :disabled="isRunning" @keyup.enter="start" />
           </div>
           <div class="field">
             <div class="label">秒</div>
-            <el-input-number v-model="seconds" :min="0" :max="59" @keyup.enter="start" />
+            <el-input-number v-model="durationSecondsPart" :min="0" :max="59" :disabled="isRunning" @keyup.enter="start" />
           </div>
         </div>
 
@@ -30,7 +30,7 @@
 
         <div class="source">
           <div class="label">提醒音频链接</div>
-          <el-input v-model="audioUrl" placeholder="粘贴音频链接（支持 mp3/ogg/opus）" @keyup.enter="previewSound" />
+          <el-input v-model="alarmUrl" placeholder="粘贴音频链接（支持 mp3/ogg/opus）" @keyup.enter="previewSound" />
         </div>
 
         <div class="volume">
@@ -48,168 +48,46 @@
 </template>
 
 <script setup>
-import { computed, onBeforeUnmount, ref, watch } from 'vue'
-import { ElMessage } from 'element-plus'
+import { computed, onMounted } from 'vue'
+import { storeToRefs } from 'pinia'
+import { useTimerStore } from '@/stores/timerStore'
 
-const minutes = ref(0)
-const seconds = ref(10)
-const soundVolume = ref(50)
-const audioUrl = ref('https://upload.wikimedia.org/wikipedia/commons/c/c6/%E8%8C%89%E8%8E%89%E8%8A%B1-KS%E6%BC%94%E7%A4%BA.opus')
+const timerStore = useTimerStore()
+const { remainingSeconds, isRunning, isAlarmPlaying } = storeToRefs(timerStore)
 
-const totalSeconds = computed(() => (minutes.value || 0) * 60 + (seconds.value || 0))
-const remainingSeconds = ref(totalSeconds.value)
-const isRunning = ref(false)
-const timerId = ref(null)
-const endAtMs = ref(0)
+const totalSeconds = computed(() => timerStore.durationSeconds || 0)
+const formattedRemaining = computed(() => timerStore.formattedRemaining)
+const progressPercent = computed(() => timerStore.progressPercent)
 
-const alarmAudio = ref(null)
-const isAlarmPlaying = ref(false)
-
-watch(totalSeconds, (val) => {
-  if (isRunning.value) return
-  remainingSeconds.value = Math.max(0, val || 0)
-})
-
-watch(soundVolume, (val) => {
-  const a = alarmAudio.value
-  if (!a) return
-  a.volume = Math.max(0, Math.min(1, (val || 0) / 100))
-})
-
-watch(audioUrl, () => {
-  stopAlarm()
-  if (alarmAudio.value) {
-    alarmAudio.value.src = audioUrl.value || ''
-    alarmAudio.value.load()
+const durationMinutes = computed({
+  get: () => Math.floor((timerStore.durationSeconds || 0) / 60),
+  set: (v) => {
+    timerStore.setDurationSeconds((Math.max(0, Math.floor(v || 0)) * 60) + durationSecondsPart.value)
   }
 })
-
-const formattedRemaining = computed(() => {
-  const s = Math.max(0, Math.floor(remainingSeconds.value || 0))
-  const m = Math.floor(s / 60)
-  const sec = s % 60
-  return `${String(m).padStart(2, '0')}:${String(sec).padStart(2, '0')}`
+const durationSecondsPart = computed({
+  get: () => (timerStore.durationSeconds || 0) % 60,
+  set: (v) => {
+    timerStore.setDurationSeconds((durationMinutes.value * 60) + Math.max(0, Math.min(59, Math.floor(v || 0))))
+  }
+})
+const soundVolume = computed({
+  get: () => Math.round((timerStore.volume || 0) * 100),
+  set: (v) => timerStore.setVolume(v)
+})
+const alarmUrl = computed({
+  get: () => timerStore.audioUrl || '',
+  set: (v) => timerStore.setAudioUrl(v)
 })
 
-const progressPercent = computed(() => {
-  const total = Math.max(0, totalSeconds.value || 0)
-  if (!total) return 0
-  const done = Math.max(0, Math.min(total, total - (remainingSeconds.value || 0)))
-  return Math.round((done / total) * 100)
-})
+const start = () => timerStore.start()
+const pause = () => timerStore.pause()
+const reset = () => timerStore.reset()
+const previewSound = () => timerStore.preview()
+const stopAlarm = () => timerStore.stopAlarm()
 
-const ensureAlarmAudio = () => {
-  if (alarmAudio.value) return alarmAudio.value
-  const a = new Audio()
-  a.preload = 'auto'
-  a.loop = true
-  a.volume = Math.max(0, Math.min(1, (soundVolume.value || 0) / 100))
-  a.src = audioUrl.value || ''
-  a.addEventListener('ended', () => {
-    isAlarmPlaying.value = false
-  })
-  alarmAudio.value = a
-  return a
-}
-
-const primeAudio = async () => {
-  const a = ensureAlarmAudio()
-  try {
-    a.currentTime = 0
-    const prevVolume = a.volume
-    a.volume = 0
-    await a.play()
-    window.setTimeout(() => {
-      a.pause()
-      a.currentTime = 0
-      a.volume = prevVolume
-    }, 120)
-  } catch {}
-}
-
-const startAlarm = async () => {
-  const a = ensureAlarmAudio()
-  a.loop = true
-  a.volume = Math.max(0, Math.min(1, (soundVolume.value || 0) / 100))
-  a.currentTime = 0
-  try {
-    await a.play()
-    isAlarmPlaying.value = true
-  } catch (e) {
-    isAlarmPlaying.value = false
-    ElMessage.warning('浏览器限制自动播放声音，可先点击“试听”启用音频播放权限')
-  }
-}
-
-const stopAlarm = () => {
-  const a = alarmAudio.value
-  if (!a) return
-  a.pause()
-  try { a.currentTime = 0 } catch {}
-  isAlarmPlaying.value = false
-}
-
-const tick = () => {
-  const leftMs = endAtMs.value - Date.now()
-  const left = Math.max(0, Math.ceil(leftMs / 1000))
-  remainingSeconds.value = left
-  if (left <= 0) {
-    stopTimer()
-    ElMessage.success('倒计时结束')
-    startAlarm()
-  }
-}
-
-const startTimer = () => {
-  stopTimer()
-  isRunning.value = true
-  endAtMs.value = Date.now() + Math.max(0, remainingSeconds.value || 0) * 1000
-  timerId.value = window.setInterval(tick, 200)
-  tick()
-}
-
-const stopTimer = () => {
-  if (timerId.value != null) {
-    window.clearInterval(timerId.value)
-    timerId.value = null
-  }
-  isRunning.value = false
-}
-
-const start = async () => {
-  if (isRunning.value) return
-  stopAlarm()
-  if ((remainingSeconds.value || 0) <= 0) {
-    remainingSeconds.value = Math.max(0, totalSeconds.value || 0)
-  }
-  if ((remainingSeconds.value || 0) <= 0) {
-    ElMessage.warning('请先设置倒计时时间')
-    return
-  }
-  await primeAudio()
-  startTimer()
-}
-
-const pause = () => {
-  if (!isRunning.value) return
-  const leftMs = endAtMs.value - Date.now()
-  remainingSeconds.value = Math.max(0, Math.ceil(leftMs / 1000))
-  stopTimer()
-}
-
-const reset = () => {
-  stopTimer()
-  stopAlarm()
-  remainingSeconds.value = Math.max(0, totalSeconds.value || 0)
-}
-
-const previewSound = () => {
-  startAlarm()
-}
-
-onBeforeUnmount(() => {
-  stopTimer()
-  stopAlarm()
+onMounted(() => {
+  timerStore.hydrate()
 })
 </script>
 

@@ -12,6 +12,8 @@
       <div class="user-info">
         <el-avatar class="avatar clickable" :size="40" src="https://api.dicebear.com/7.x/identicon/svg?seed=vue" @click="toProfile" />
         <span class="username">Hello, {{ username }}</span>
+        <el-button v-if="timerIsAlarmPlaying" type="danger" class="timer-stop" @click="stopTimerAlarm">停止提醒</el-button>
+        <el-button v-else-if="timerIsRunning" class="timer-pill" @click="toTimer">Timer {{ timerFormatted }}</el-button>
         <el-button @click="logout" class="logout-button">Logout</el-button>
       </div>
     </el-header>
@@ -156,12 +158,18 @@
 
 <script setup lang="ts">
 import { computed, ref, onMounted, onUnmounted, watch } from "vue";
+import { storeToRefs } from "pinia";
 import { useRouter } from "vue-router";
 import { useUserStore } from "@/stores/userStore";
+import { useTimerStore } from "@/stores/timerStore";
 
 const userStore = useUserStore();
 const username = computed(() => userStore.getUsername());
 const router = useRouter();
+const timerStore = useTimerStore();
+const { isRunning: timerIsRunning, isAlarmPlaying: timerIsAlarmPlaying } = storeToRefs(timerStore);
+const timerFormatted = computed(() => timerStore.formattedRemaining);
+const stopTimerAlarm = () => timerStore.stopAlarm();
 
 const logout = () => {
   router.push("/");
@@ -216,6 +224,7 @@ const progress = computed(() =>
 onMounted(() => {
   updateIsMobile()
   window.addEventListener('resize', updateIsMobile)
+  timerStore.hydrate()
   audioRef.value = document.getElementById("globalAudio") as HTMLAudioElement | null;
   if (!audioRef.value) return;
   audioRef.value.volume = volume.value / 100;
@@ -398,6 +407,21 @@ const updateIsMobile = () => {
 
 .logout-button:hover {
   background-color: #d9363e;
+}
+
+.timer-pill {
+  border-radius: 999px;
+  padding: 8px 12px;
+  font-size: 13px;
+  background: rgba(255,255,255,0.18);
+  color: rgba(255,255,255,0.95);
+  border: 1px solid rgba(255,255,255,0.35);
+}
+.timer-pill:hover {
+  background: rgba(255,255,255,0.26);
+}
+.timer-stop {
+  border-radius: 8px;
 }
 
 .footer {
