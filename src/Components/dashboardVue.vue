@@ -57,6 +57,10 @@
               <el-icon><icon-menu /></el-icon>
               <span>Timer</span>
             </el-menu-item>
+            <el-menu-item index="2-4" @click="toCalculator()">
+              <el-icon><icon-menu /></el-icon>
+              <span>Calculator</span>
+            </el-menu-item>
           </el-sub-menu>
 
           <el-menu-item index="3">
@@ -115,6 +119,10 @@
           <el-menu-item index="2-3" @click="toTimer(); showMenuDrawer=false">
             <el-icon><icon-menu /></el-icon>
             <span>Timer</span>
+          </el-menu-item>
+          <el-menu-item index="2-4" @click="toCalculator(); showMenuDrawer=false">
+            <el-icon><icon-menu /></el-icon>
+            <span>Calculator</span>
           </el-menu-item>
         </el-sub-menu>
         <el-menu-item index="3" @click="toChat(); showMenuDrawer=false">
@@ -195,6 +203,7 @@ const toMusic = () => router.push("/music");
 const toProfile = () => router.push("/profile");
 const toQiMen = () => router.push("/qiMen");
 const toTimer = () => router.push("/timer");
+const toCalculator = () => router.push("/calculator");
 
 const audioRef = ref<HTMLAudioElement | null>(null);
 const trackRef = ref<HTMLElement | null>(null);

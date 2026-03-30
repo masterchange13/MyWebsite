@@ -84,6 +84,11 @@ const routes = [
                 path: '/timer',
                 name: 'timer',
                 component: () => import('@/Components/timerVue.vue')
+            },
+            {
+                path: '/calculator',
+                name: 'calculator',
+                component: () => import('@/Components/calculatorVue.vue')
             }
         ]
     },
