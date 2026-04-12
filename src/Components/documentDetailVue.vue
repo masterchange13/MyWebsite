@@ -74,7 +74,9 @@ const renderedContent = computed(() => {
 
 onMounted(async () => {
   try {
+    console.log("id  is ", id)
     const res = await documentApi.detail(id)
+    console.log("res  is ", res)
     if (res.code === 200) {
       console.log(res.data);
       valueHtml.value = res.data.content || ''
