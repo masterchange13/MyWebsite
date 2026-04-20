@@ -1,89 +1,65 @@
 <template>
   <el-container>
-    <!-- 美化后的 el-header -->
     <el-header class="header">
-      <div class="left">
-        <el-button class="menu-btn" text @click="showMenuDrawer = true">
-          <el-icon><icon-menu /></el-icon>
-        </el-button>
+      <div class="top-bar">
+        <div class="left">
+          <el-button class="menu-btn" text @click="showMenuDrawer = true">
+            <el-icon><icon-menu /></el-icon>
+          </el-button>
+          <h1 class="brand-title">Neon Console</h1>
+        </div>
+        <div class="user-info">
+          <el-avatar class="avatar clickable" :size="40" src="https://api.dicebear.com/7.x/identicon/svg?seed=vue" @click="toProfile" />
+          <span class="username">Hello, {{ username }}</span>
+          <el-button v-if="timerIsAlarmPlaying" type="danger" class="timer-stop" @click="stopTimerAlarm">停止提醒</el-button>
+          <el-button v-else-if="timerIsRunning" class="timer-pill" @click="toTimer">Timer {{ timerFormatted }}</el-button>
+          <el-button @click="logout" class="logout-button">Logout</el-button>
+        </div>
       </div>
-      <h1 class="title title-center">Raspberry Pi</h1>
 
-      <div class="user-info">
-        <el-avatar class="avatar clickable" :size="40" src="https://api.dicebear.com/7.x/identicon/svg?seed=vue" @click="toProfile" />
-        <span class="username">Hello, {{ username }}</span>
-        <el-button v-if="timerIsAlarmPlaying" type="danger" class="timer-stop" @click="stopTimerAlarm">停止提醒</el-button>
-        <el-button v-else-if="timerIsRunning" class="timer-pill" @click="toTimer">Timer {{ timerFormatted }}</el-button>
-        <el-button @click="logout" class="logout-button">Logout</el-button>
-      </div>
+      <el-menu
+        v-if="!isMobile"
+        mode="horizontal"
+        menu-trigger="hover"
+        class="cyber-menu"
+        :ellipsis="false"
+      >
+        <el-sub-menu index="1">
+          <template #title>
+            <el-icon><location /></el-icon>
+            <span>Media Hub</span>
+          </template>
+          <el-menu-item index="1-1" @click="toVideo()">video</el-menu-item>
+          <el-menu-item index="1-2" @click="toDocument()">document</el-menu-item>
+          <el-menu-item index="1-3" @click="toMusic()">music</el-menu-item>
+          <el-menu-item index="1-4" @click="toTransfer()">transfer</el-menu-item>
+          <el-menu-item index="1-5" @click="getDocument()">getDocument</el-menu-item>
+          <el-menu-item index="1-6" @click="toDoList()">to do list</el-menu-item>
+        </el-sub-menu>
+        <el-sub-menu index="2">
+          <template #title>
+            <el-icon><icon-menu /></el-icon>
+            <span>Tools</span>
+          </template>
+          <el-menu-item index="2-1" @click="toAgent()">agent</el-menu-item>
+          <el-menu-item index="2-2" @click="toQiMen()">QiMenDunJia</el-menu-item>
+          <el-menu-item index="2-3" @click="toTimer()">Timer</el-menu-item>
+          <el-menu-item index="2-4" @click="toCalculator()">Calculator</el-menu-item>
+        </el-sub-menu>
+        <el-menu-item index="3" @click="toChat()">
+          <el-icon><document /></el-icon>
+          <span>Chat</span>
+        </el-menu-item>
+        <el-menu-item index="4" @click="toNavigator()">
+          <el-icon><setting /></el-icon>
+          <span>Navigator</span>
+        </el-menu-item>
+      </el-menu>
     </el-header>
 
-    <el-row class="tac" style="flex: 1; min-height: 0; overflow: hidden; display: flex;">
-      <el-col v-if="!isMobile" :span="2" style="height: 100%; overflow: hidden;">
-        <el-menu default-active="4" class="el-menu-vertical-demo" @open="handleOpen" @close="handleClose" style="height: 100%; overflow-y: auto;">
-          <el-sub-menu index="1">
-            <template #title>
-              <el-icon>
-                <location />
-              </el-icon>
-              <span>Navigator One</span>
-            </template>
-            <el-menu-item-group title="Group One">
-              <el-menu-item index="1-1" @click="toVideo()">video</el-menu-item>
-              <el-menu-item index="1-2" @click="toDocument()">document</el-menu-item>
-              <el-menu-item index="1-3" @click="toMusic()">music</el-menu-item>
-            </el-menu-item-group>
-            <el-menu-item-group title="Group Two">
-            <el-menu-item index="1-4" @click="toTransfer()">transfer</el-menu-item>
-            <el-menu-item index="1-5" @click="getDocument()">getDocument</el-menu-item>
-            <el-menu-item index="1-6" @click="toDoList()">to do list</el-menu-item>
-            </el-menu-item-group>
-          </el-sub-menu>
-          <el-sub-menu index="2">
-            <template #title>
-              <el-icon><icon-menu /></el-icon>
-              <span>Navigator Two</span>
-            </template>
-            <el-menu-item index="2-1" @click="toAgent()">
-              <el-icon><icon-menu /></el-icon>
-              <span>agent</span>
-            </el-menu-item>
-            <el-menu-item index="2-2" @click="toQiMen()">
-              <el-icon><icon-menu /></el-icon>
-              <span>QiMenDunJia</span>
-            </el-menu-item>
-            <!-- 定时器 -->
-            <el-menu-item index="2-3" @click="toTimer()">
-              <el-icon><icon-menu /></el-icon>
-              <span>Timer</span>
-            </el-menu-item>
-            <el-menu-item index="2-4" @click="toCalculator()">
-              <el-icon><icon-menu /></el-icon>
-              <span>Calculator</span>
-            </el-menu-item>
-          </el-sub-menu>
-
-          <el-menu-item index="3">
-            <el-icon>
-              <document />
-            </el-icon>
-            <span @click="toChat()">Chat</span>
-          </el-menu-item>
-          <el-menu-item index="4">
-            <el-icon>
-              <setting />
-            </el-icon>
-            <span @click="toNavigator()">Navigator Four</span>
-          </el-menu-item>
-        </el-menu>
-      </el-col>
-
-      <el-col :span="isMobile ? 24 : 22" style="height: 100%; overflow: hidden; display: flex; flex-direction: column;">
-        <el-main style="flex: 1; overflow: auto; padding: 0;">
-          <router-view></router-view>
-        </el-main>
-      </el-col>
-    </el-row>
+    <el-main class="content-main">
+      <router-view></router-view>
+    </el-main>
 
     <el-drawer v-model="showMenuDrawer" :with-header="false" size="240px">
       <el-menu default-active="4" class="el-menu-vertical-demo" @open="handleOpen" @close="handleClose" style="height: 100%;">
@@ -303,30 +279,40 @@ const updateIsMobile = () => {
   display: flex;
   flex-direction: column;
   overflow: hidden;
+  background:
+    radial-gradient(1000px 420px at -10% -20%, rgba(0, 255, 255, 0.12) 0%, rgba(0, 255, 255, 0) 65%),
+    radial-gradient(860px 420px at 110% 0%, rgba(255, 0, 204, 0.10) 0%, rgba(255, 0, 204, 0) 60%),
+    linear-gradient(180deg, #060710 0%, #090a1a 100%);
 }
 
 .header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 16px 28px;
-  background: linear-gradient(90deg, #4f80ff 0%, #80c2ff 100%);
-  color: #fff;
-  font-size: 18px;
-  box-shadow: 0 8px 24px rgba(79, 128, 255, 0.25);
+  height: auto;
+  padding: 12px 18px 0;
+  background: rgba(8, 10, 25, 0.85);
+  border-bottom: 1px solid rgba(0, 255, 255, 0.25);
+  box-shadow: 0 12px 28px rgba(0, 255, 255, 0.08), inset 0 -1px 0 rgba(255, 0, 204, 0.18);
+  backdrop-filter: blur(10px);
   position: relative;
-  border-bottom: 1px solid rgba(255,255,255,0.25);
+  overflow: hidden;
 }
 .header::before {
   content: "";
   position: absolute;
   inset: 0;
   background:
-    radial-gradient(600px 280px at -120px -120px, rgba(255,255,255,0.18) 0%, rgba(255,255,255,0) 70%),
-    radial-gradient(360px 200px at 110% 10%, rgba(255,255,255,0.12) 0%, rgba(255,255,255,0) 70%);
+    radial-gradient(520px 220px at -5% -25%, rgba(0, 255, 255, 0.16) 0%, rgba(0, 255, 255, 0) 70%),
+    radial-gradient(480px 220px at 105% -20%, rgba(255, 0, 204, 0.15) 0%, rgba(255, 0, 204, 0) 70%);
   pointer-events: none;
 }
 
+.top-bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+  position: relative;
+  z-index: 1;
+}
 .left {
   display: flex;
   align-items: center;
@@ -334,11 +320,63 @@ const updateIsMobile = () => {
 }
 .menu-btn {
   display: none;
+  color: #70f6ff;
 }
 
+.brand-title {
+  margin: 0;
+  font-size: 24px;
+  font-weight: 800;
+  letter-spacing: 1px;
+  color: #80f8ff;
+  text-shadow: 0 0 12px rgba(0, 255, 255, 0.65), 0 0 24px rgba(0, 255, 255, 0.25);
+}
+
+.cyber-menu {
+  position: relative;
+  z-index: 1;
+  margin-top: 10px;
+  border-bottom: none;
+  background: transparent;
+  --el-menu-bg-color: transparent;
+  --el-menu-text-color: #9ee8ff;
+  --el-menu-hover-text-color: #ff7de7;
+  --el-menu-active-color: #00f5ff;
+}
+:deep(.cyber-menu.el-menu--horizontal > .el-menu-item),
+:deep(.cyber-menu.el-menu--horizontal > .el-sub-menu .el-sub-menu__title) {
+  height: 46px;
+  line-height: 46px;
+  border-bottom: none !important;
+  color: #9ee8ff;
+  transition: all 0.15s ease;
+}
+:deep(.cyber-menu.el-menu--horizontal > .el-menu-item.is-active),
+:deep(.cyber-menu.el-menu--horizontal > .el-sub-menu.is-active .el-sub-menu__title) {
+  color: #00f5ff;
+  text-shadow: 0 0 10px rgba(0, 245, 255, 0.7);
+}
+:deep(.cyber-menu.el-menu--horizontal > .el-menu-item:hover),
+:deep(.cyber-menu.el-menu--horizontal > .el-sub-menu .el-sub-menu__title:hover) {
+  color: #ff7de7;
+  text-shadow: 0 0 10px rgba(255, 125, 231, 0.65);
+}
+
+:deep(.el-menu--popup) {
+  background: rgba(8, 10, 25, 0.95);
+  border: 1px solid rgba(0, 255, 255, 0.28);
+  box-shadow: 0 0 18px rgba(0, 255, 255, 0.18), 0 0 32px rgba(255, 0, 204, 0.12);
+}
+:deep(.el-menu--popup .el-menu-item) {
+  color: #9ee8ff;
+}
+:deep(.el-menu--popup .el-menu-item:hover) {
+  background: rgba(255, 0, 204, 0.12);
+  color: #ff7de7;
+}
 :deep(.el-menu-vertical-demo) {
-  background: linear-gradient(180deg, #f6f9ff 0%, #eef5ff 100%);
-  border-right: 1px solid #e6edf7;
+  background: linear-gradient(180deg, #0a0f20 0%, #10162b 100%);
+  border-right: 1px solid rgba(0, 255, 255, 0.2);
   padding: 8px;
 }
 :deep(.el-menu-vertical-demo .el-sub-menu__title),
@@ -350,38 +388,21 @@ const updateIsMobile = () => {
 }
 :deep(.el-menu-vertical-demo .el-sub-menu__title:hover),
 :deep(.el-menu-vertical-demo .el-menu-item:hover) {
-  background: #e9f1ff;
-  color: #2b4eff;
+  background: rgba(255, 0, 204, 0.16);
+  color: #ff7de7;
   transform: translateX(2px);
 }
 :deep(.el-menu-vertical-demo .el-menu-item.is-active) {
-  background: linear-gradient(90deg, #e9f1ff 0%, #dbe8ff 100%);
-  color: #1d3ee6;
+  background: rgba(0, 255, 255, 0.16);
+  color: #00f5ff;
   font-weight: 600;
-  box-shadow: inset 0 0 0 1px #cfe0ff;
+  box-shadow: inset 0 0 0 1px rgba(0, 255, 255, 0.35);
 }
 :deep(.el-menu-vertical-demo .el-icon) {
-  color: #5a7bd6;
+  color: #80f8ff;
 }
 :deep(.el-menu-vertical-demo .el-sub-menu.is-opened > .el-sub-menu__title) {
-  background: #f2f7ff;
-}
-
-.title {
-  font-size: 26px;
-  font-weight: 800;
-  letter-spacing: 0.5px;
-  background: linear-gradient(180deg, #ffffff 0%, #e9f1ff 100%);
-  -webkit-background-clip: text;
-  background-clip: text;
-  color: transparent;
-  text-shadow: 0 1px 1px rgba(0,0,0,0.1);
-}
-.title-center {
-  position: absolute;
-  left: 50%;
-  transform: translateX(-50%);
-  margin: 0;
+  background: rgba(0, 255, 255, 0.08);
 }
 
 .user-info {
@@ -401,44 +422,51 @@ const updateIsMobile = () => {
 .username {
   font-size: 15px;
   font-weight: 600;
-  color: rgba(255,255,255,0.92);
+  color: #cbf7ff;
 }
 
 .logout-button {
-  background-color: #ff4d4f;
-  color: white;
-  border-radius: 6px;
+  background: linear-gradient(90deg, #ff007f 0%, #6f00ff 100%);
+  color: #fff;
+  border-radius: 8px;
   padding: 8px 16px;
   font-size: 14px;
-  transition: background 0.3s;
-  box-shadow: 0 4px 10px rgba(255, 77, 79, 0.35);
+  border: none;
+  box-shadow: 0 0 14px rgba(255, 0, 127, 0.45);
 }
 
 .logout-button:hover {
-  background-color: #d9363e;
+  filter: brightness(1.12);
 }
 
 .timer-pill {
   border-radius: 999px;
   padding: 8px 12px;
   font-size: 13px;
-  background: rgba(255,255,255,0.18);
-  color: rgba(255,255,255,0.95);
-  border: 1px solid rgba(255,255,255,0.35);
+  background: rgba(0, 255, 255, 0.12);
+  color: #8ff5ff;
+  border: 1px solid rgba(0, 255, 255, 0.45);
 }
 .timer-pill:hover {
-  background: rgba(255,255,255,0.26);
+  background: rgba(0, 255, 255, 0.2);
 }
 .timer-stop {
   border-radius: 8px;
 }
 
+.content-main {
+  flex: 1;
+  overflow: auto;
+  padding: 0;
+  min-height: 0;
+}
+
 .footer {
   text-align: center;
-  background-color: #f5f5f5;
-  color: #333;
+  background: rgba(8, 10, 25, 0.86);
+  color: #9ee8ff;
   padding: 20px 0;
-  border-top: 1px solid #eaeaea;
+  border-top: 1px solid rgba(0, 255, 255, 0.25);
   flex-shrink: 0;
 }
 
@@ -465,18 +493,18 @@ const updateIsMobile = () => {
 }
 .time {
   font-size: 12px;
-  color: #666;
+  color: #8dbad1;
 }
 .track .bar {
   width: 280px;
   height: 4px;
-  background: #ddd;
+  background: rgba(110, 160, 220, 0.35);
   border-radius: 4px;
   position: relative;
 }
 .track .bar-progress {
   height: 100%;
-  background: #40ce8f;
+  background: linear-gradient(90deg, #00f5ff 0%, #ff00cc 100%);
   border-radius: 4px;
 }
 .controls {
@@ -491,15 +519,18 @@ const updateIsMobile = () => {
 @media (max-width: 768px) {
   .menu-btn {
     display: inline-flex;
-    color: #fff;
+    color: #8ff5ff;
   }
-  .title {
+  .brand-title {
     font-size: 20px;
   }
   .header {
-    padding: 12px 16px;
+    padding: 10px 12px 0;
   }
   .username {
+    display: none;
+  }
+  .timer-pill {
     display: none;
   }
   .mini-player {
