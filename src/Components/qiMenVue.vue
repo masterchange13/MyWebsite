@@ -275,14 +275,18 @@ const reset = () => {
   display: grid;
   grid-template-columns: 360px 1fr;
   gap: 12px;
-  padding: 12px;
+  padding: 14px;
   height: 100%;
+  box-sizing: border-box;
 }
 .qimen-form { grid-column: 1; }
 .qimen-result { grid-column: 2; }
 .qimen-analysis { grid-column: 1 / -1; }
 .qimen-form .title {
-  font-weight: 600;
+  font-weight: 700;
+  font-size: 20px;
+  color: #a6f9ff;
+  text-shadow: 0 0 10px rgba(0, 245, 255, 0.4);
   margin-bottom: 8px;
 }
 .form-grid {
@@ -299,6 +303,7 @@ const reset = () => {
   display: flex;
   flex-direction: column;
   gap: 10px;
+  min-height: 0;
 }
 .qimen-analysis {
   display: flex;
@@ -306,12 +311,14 @@ const reset = () => {
   gap: 8px;
 }
 .a-title {
-  font-weight: 600;
-  font-size: 20px;
+  font-weight: 700;
+  font-size: 22px;
+  color: #a6f9ff;
+  text-shadow: 0 0 10px rgba(0, 245, 255, 0.35);
 }
 .a-meta {
   font-size: 12px;
-  color: #666;
+  color: #9dc5de;
   display: flex;
   gap: 8px;
 }
@@ -319,36 +326,45 @@ const reset = () => {
   content: attr(data-status);
   margin-left: 8px;
   font-size: 12px;
-  color: #888;
+  color: #f5a6eb;
 }
 .a-text {
   max-height: 70vh;
+  border: 1px solid rgba(0, 255, 255, 0.18);
+  border-radius: 10px;
+  background: rgba(10, 16, 35, 0.7);
+  padding: 10px;
 }
 .a-text .md {
   word-break: break-word;
-  font-size: 18px;
+  font-size: 17px;
   line-height: 1.75;
+  color: #e2fbff;
 }
 .a-text .md h1, .a-text .md h2, .a-text .md h3 {
   margin: 8px 0;
+  color: #9ef7ff;
 }
 .a-text .md pre {
-  background: #f7f7f7;
+  background: rgba(6, 12, 28, 0.9);
+  border: 1px solid rgba(0, 255, 255, 0.22);
+  color: #bff9ff;
   border-radius: 8px;
   padding: 10px;
   overflow: auto;
 }
 .a-text .md code {
-  background: #f0f0f0;
+  background: rgba(0, 245, 255, 0.12);
+  color: #95f4ff;
   border-radius: 4px;
   padding: 0 4px;
 }
 .a-text .md blockquote {
   margin: 8px 0;
   padding: 8px 12px;
-  background: #f9fafb;
-  border-left: 4px solid #a0c4ff;
-  color: #444;
+  background: rgba(255, 0, 204, 0.08);
+  border-left: 4px solid rgba(255, 0, 204, 0.45);
+  color: #ffd2f5;
 }
 .a-text .md table {
   width: 100%;
@@ -356,30 +372,36 @@ const reset = () => {
   margin: 8px 0;
 }
 .a-text .md td, .a-text .md th {
-  border: 1px solid #e5e7eb;
+  border: 1px solid rgba(0, 255, 255, 0.24);
   padding: 6px 8px;
   text-align: left;
 }
 .a-text .md hr {
   border: none;
-  border-top: 1px solid #e5e7eb;
+  border-top: 1px solid rgba(0, 255, 255, 0.22);
   margin: 10px 0;
 }
 .result-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
+  gap: 10px;
+}
+.meta {
+  color: #b8f8ff;
+  line-height: 1.7;
 }
 .legend .lg {
   display: inline-block;
   margin-left: 8px;
-  padding: 2px 6px;
+  padding: 3px 8px;
   border-radius: 6px;
   font-size: 12px;
+  border: 1px solid transparent;
 }
-.legend .gate { background: #e9f1ff; }
-.legend .star { background: #eaf6f1; }
-.legend .god { background: #fff3e6; }
+.legend .gate { background: rgba(0, 245, 255, 0.12); color: #8cf5ff; border-color: rgba(0, 245, 255, 0.35); }
+.legend .star { background: rgba(62, 224, 151, 0.12); color: #8ef8cb; border-color: rgba(62, 224, 151, 0.35); }
+.legend .god { background: rgba(255, 0, 204, 0.12); color: #ff9de9; border-color: rgba(255, 0, 204, 0.35); }
 .palace-grid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
@@ -388,33 +410,57 @@ const reset = () => {
   min-height: 0;
 }
 .palace {
-  border: 1px solid #eee;
+  border: 1px solid rgba(0, 255, 255, 0.2);
+  background: rgba(9, 15, 34, 0.82);
   border-radius: 10px;
   padding: 10px;
   display: flex;
   flex-direction: column;
   gap: 8px;
+  box-shadow: 0 0 10px rgba(0, 245, 255, 0.08);
 }
 .p-head {
   display: flex;
   justify-content: space-between;
   font-weight: 600;
+  color: #b7f8ff;
 }
 .row {
   display: flex;
   align-items: center;
   gap: 8px;
+  flex-wrap: wrap;
 }
 .tag {
   border-radius: 6px;
-  padding: 2px 6px;
+  padding: 3px 8px;
   font-size: 12px;
+  border: 1px solid transparent;
 }
-.tag.gate { background: #e9f1ff; }
-.tag.star { background: #eaf6f1; }
-.tag.god { background: #fff3e6; }
+.tag.gate { background: rgba(0, 245, 255, 0.12); color: #8cf5ff; border-color: rgba(0, 245, 255, 0.35); }
+.tag.star { background: rgba(62, 224, 151, 0.12); color: #8ef8cb; border-color: rgba(62, 224, 151, 0.35); }
+.tag.god { background: rgba(255, 0, 204, 0.12); color: #ff9de9; border-color: rgba(255, 0, 204, 0.35); }
 .tips {
-  color: #666;
-  font-size: 12px;
+  color: #9dc5de;
+  font-size: 13px;
+}
+
+@media (max-width: 1100px) {
+  .qimen-page {
+    grid-template-columns: 1fr;
+  }
+  .qimen-form, .qimen-result {
+    grid-column: 1;
+  }
+  .palace-grid {
+    grid-template-columns: repeat(2, 1fr);
+    grid-template-rows: auto;
+  }
+}
+
+@media (max-width: 720px) {
+  .palace-grid {
+    grid-template-columns: 1fr;
+  }
 }
 </style>

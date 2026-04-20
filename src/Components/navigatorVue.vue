@@ -83,14 +83,17 @@ const remove = async (icon) => {
 
 <style scoped>
 .navigator {
-  padding: 20px;
+  padding: 16px;
+  height: 100%;
+  box-sizing: border-box;
+  overflow: auto;
 }
 .add-drawer :deep(.el-drawer__header) {
-  background: linear-gradient(90deg, #4f80ff 0%, #80c2ff 100%);
-  color: #fff;
+  background: linear-gradient(90deg, rgba(0, 245, 255, 0.25) 0%, rgba(255, 0, 204, 0.22) 100%);
+  color: #dffbff;
   padding: 18px 22px;
   margin-bottom: 0;
-  border-bottom: 1px solid rgba(255,255,255,0.25);
+  border-bottom: 1px solid rgba(0, 255, 255, 0.25);
 }
 .add-drawer :deep(.el-drawer__header .el-drawer__title) {
   font-size: 18px;
@@ -98,9 +101,9 @@ const remove = async (icon) => {
 }
 .add-drawer :deep(.el-drawer__body) {
   background:
-    radial-gradient(900px 400px at -120px -120px, rgba(79, 160, 255, 0.12) 0%, rgba(79, 160, 255, 0) 60%),
-    radial-gradient(600px 300px at 110% 0%, rgba(86, 220, 160, 0.10) 0%, rgba(86, 220, 160, 0) 60%),
-    linear-gradient(180deg, #f6f9ff 0%, #eef5ff 100%);
+    radial-gradient(900px 400px at -120px -120px, rgba(0, 245, 255, 0.12) 0%, rgba(0, 245, 255, 0) 60%),
+    radial-gradient(600px 300px at 110% 0%, rgba(255, 0, 204, 0.10) 0%, rgba(255, 0, 204, 0) 60%),
+    linear-gradient(180deg, #0a0f20 0%, #10162b 100%);
   padding: 20px;
 }
 .header {
@@ -108,12 +111,14 @@ const remove = async (icon) => {
 }
 .title {
   margin: 0;
-  font-size: 20px;
-  font-weight: 600;
+  font-size: 22px;
+  font-weight: 700;
+  color: #9ef7ff;
+  text-shadow: 0 0 10px rgba(0, 245, 255, 0.35);
 }
 .subtitle {
   margin: 4px 0 0;
-  color: #888;
+  color: #88a7bf;
   font-size: 12px;
 }
 .grid {
@@ -123,6 +128,8 @@ const remove = async (icon) => {
   text-align: center;
   cursor: pointer;
   position: relative;
+  border: 1px solid rgba(0, 255, 255, 0.18);
+  background: rgba(9, 15, 34, 0.88);
 }
 .card-img {
   width: 72px;
@@ -133,6 +140,7 @@ const remove = async (icon) => {
 .card-name {
   margin-top: 8px;
   font-size: 14px;
+  color: #d6fbff;
 }
 .card-remove {
   position: absolute;
@@ -142,8 +150,8 @@ const remove = async (icon) => {
   height: 22px;
   border: none;
   border-radius: 11px;
-  background: #ffecec;
-  color: #d9363e;
+  background: rgba(255, 0, 204, 0.2);
+  color: #ff92e7;
   font-size: 16px;
   line-height: 22px;
   cursor: pointer;
@@ -155,8 +163,8 @@ const remove = async (icon) => {
   width: 64px;
   height: 64px;
   border-radius: 50%;
-  background: #fff;
-  box-shadow: 0 8px 24px rgba(0,0,0,0.2);
+  background: linear-gradient(180deg, #00f5ff 0%, #ff00cc 100%);
+  box-shadow: 0 0 18px rgba(0, 245, 255, 0.38), 0 0 26px rgba(255, 0, 204, 0.22);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -166,6 +174,7 @@ const remove = async (icon) => {
 .floating-add img {
   width: 36px;
   height: 36px;
+  filter: brightness(0) invert(1);
 }
 .floating-add:hover {
   transform: translateY(-1px);

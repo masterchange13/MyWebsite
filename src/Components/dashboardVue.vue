@@ -6,7 +6,7 @@
           <el-button class="menu-btn" text @click="showMenuDrawer = true">
             <el-icon><icon-menu /></el-icon>
           </el-button>
-          <h1 class="brand-title">Neon Console</h1>
+          <h1 class="brand-title">Raspberrypi Console</h1>
         </div>
         <div class="user-info">
           <el-avatar class="avatar clickable" :size="40" src="https://api.dicebear.com/7.x/identicon/svg?seed=vue" @click="toProfile" />

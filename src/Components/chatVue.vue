@@ -156,11 +156,12 @@ onUnmounted(() => {
 
 <style scoped>
 .chat-layout {
-  padding: 12px;
+  padding: 14px;
   display: grid;
   grid-template-columns: 280px 1fr;
   gap: 12px;
   height: 100%;
+  box-sizing: border-box;
 }
 .sidebar {
   display: flex;
@@ -177,6 +178,8 @@ onUnmounted(() => {
   font-size: 16px;
   font-weight: 600;
   margin-bottom: 8px;
+  color: #9ef7ff;
+  text-shadow: 0 0 10px rgba(0, 245, 255, 0.35);
 }
 .user-list {
   flex: 1;
@@ -189,15 +192,20 @@ onUnmounted(() => {
   padding: 8px;
   border-radius: 8px;
   cursor: pointer;
+  border: 1px solid transparent;
 }
 .user-item.active {
-  background: #e9f1ff;
+  background: rgba(0, 255, 255, 0.10);
+  border-color: rgba(0, 255, 255, 0.28);
 }
 .user-item .avatar {
   width: 28px;
   height: 28px;
   border-radius: 50%;
-  border: 1px solid #eee;
+  border: 1px solid rgba(0, 255, 255, 0.28);
+}
+.uname {
+  color: #d7f8ff;
 }
 .chat-window {
   display: flex;
@@ -227,14 +235,16 @@ onUnmounted(() => {
   width: 32px;
   height: 32px;
   border-radius: 50%;
-  border: 1px solid #eee;
+  border: 1px solid rgba(0, 255, 255, 0.3);
 }
 .peer .name {
   font-weight: 600;
+  color: #b9f6ff;
 }
 .messages {
   padding: 8px;
-  background: #fafafa;
+  background: rgba(10, 16, 35, 0.82);
+  border: 1px solid rgba(0, 255, 255, 0.18);
   border-radius: 8px;
   flex: 1;
   min-height: 0;
@@ -253,35 +263,46 @@ onUnmounted(() => {
   max-width: 70%;
   padding: 10px 12px;
   border-radius: 10px;
-  background: #fff;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+  background: rgba(16, 23, 48, 0.92);
+  box-shadow: 0 0 12px rgba(0, 255, 255, 0.08);
+  border: 1px solid rgba(0, 255, 255, 0.18);
 }
 .message.other .bubble {
-  background: #eaf6f1;
+  background: rgba(12, 40, 46, 0.86);
 }
 .message.user .bubble {
-  background: #e9f1ff;
+  background: rgba(40, 15, 52, 0.86);
 }
 .meta {
   font-size: 12px;
-  color: #666;
+  color: #88b3c9;
   margin-bottom: 4px;
 }
 .text {
   white-space: pre-wrap;
   word-break: break-word;
+  color: #e0fbff;
 }
 .composer {
   display: flex;
   flex-direction: column;
   gap: 8px;
-  background: #fff;
-  border-top: 1px solid #eee;
+  background: transparent;
+  border-top: 1px solid rgba(0, 255, 255, 0.14);
   padding-top: 8px;
 }
 .actions {
   display: flex;
   gap: 8px;
   justify-content: flex-end;
+}
+
+@media (max-width: 900px) {
+  .chat-layout {
+    grid-template-columns: 1fr;
+  }
+  .sidebar {
+    height: 240px;
+  }
 }
 </style>

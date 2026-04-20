@@ -113,89 +113,41 @@ const uploadMusic = async () => {
 </script>
 
 <style scoped>
-body {
-  background: linear-gradient(135deg, #f5f7fa, #e4ecf5);
-}
-
-.upload-container {
-  width: 400px;
-  margin: 50px auto;
-  padding: 20px;
-  text-align: center;
-  background: #fff;
-  border-radius: 10px;
-  box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.1);
-}
-
-.header {
-  font-size: 18px;
-  font-weight: bold;
-  margin-bottom: 15px;
-  color: #333;
-}
-
-.upload-box {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 10px;
-}
-
-.file-input {
-  width: 80%;
-  padding: 8px;
-  border-radius: 5px;
-  border: 1px solid #ccc;
-}
-
-.upload-button {
-  background-color: #007bff;
-  color: white;
-  border-radius: 5px;
-  padding: 10px 20px;
-  cursor: pointer;
-}
-
-.upload-button:hover {
-  background-color: #0056b3;
-}
-
-.message-title {
-  margin-top: 15px;
-  font-size: 16px;
-  color: #666;
-}
-
-.message-text {
-  font-size: 14px;
-  color: #333;
-}
-
 .page {
-  max-width: 720px;
-  margin: 40px auto;
+  height: 100%;
+  max-width: 840px;
+  margin: 0 auto;
+  padding: 16px;
+  box-sizing: border-box;
   display: flex;
   flex-direction: column;
-  gap: 30px;
+  gap: 16px;
 }
 
 .card {
-  border-radius: 12px;
+  border-radius: 14px;
 }
 
 .card-header {
-  font-size: 18px;
+  font-size: 20px;
   font-weight: 600;
+  color: #9ef7ff;
+  text-shadow: 0 0 10px rgba(0, 245, 255, 0.35);
 }
 
 .upload-box {
   display: flex;
-  gap: 15px;
+  gap: 12px;
   align-items: center;
 }
 
 .file-input {
   flex: 1;
+  padding: 10px;
+  border-radius: 8px;
+  border: 1px solid rgba(0, 255, 255, 0.24);
+  background: rgba(8, 14, 32, 0.88);
+  color: #d6fbff;
 }
 
 .msg {
@@ -212,13 +164,24 @@ body {
   display: flex;
   align-items: center;
   gap: 10px;
+  color: #9ec2da;
 }
 
 .music-btn {
   margin-top: 10px;
   width: 100%;
-  border-radius: 8px;
+  border-radius: 10px;
   font-size: 16px;
+}
+
+@media (max-width: 768px) {
+  .page {
+    padding: 10px;
+  }
+  .upload-box {
+    flex-direction: column;
+    align-items: stretch;
+  }
 }
 
 </style>

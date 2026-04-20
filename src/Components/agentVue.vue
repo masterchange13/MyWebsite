@@ -86,30 +86,52 @@ const clear = () => {
 
 <style scoped>
 .agent-container {
-  padding: 16px;
+  padding: 20px;
+  height: 100%;
+  box-sizing: border-box;
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 14px;
+  max-width: 1280px;
+  width: 100%;
+  margin: 0 auto;
+}
+.agent-header {
+  border: 1px solid rgba(0, 255, 255, 0.22);
 }
 .agent-header .title {
   font-size: 18px;
   font-weight: 600;
+  color: #9ef7ff;
+  text-shadow: 0 0 10px rgba(0, 245, 255, 0.35);
 }
 .agent-header .subtitle {
   font-size: 12px;
-  color: #888;
+  color: #88a7bf;
   margin-top: 4px;
 }
 .agent-body {
   display: flex;
   flex-direction: column;
   gap: 12px;
+  flex: 1;
+  min-height: 0;
+  height: 100%;
+}
+.agent-body :deep(.el-card__body) {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  height: 100%;
+  min-height: 0;
 }
 .messages {
-  height: 420px;
-  padding: 8px;
-  background: #fafafa;
-  border-radius: 8px;
+  flex: 1;
+  min-height: 0;
+  padding: 12px;
+  background: rgba(10, 16, 35, 0.82);
+  border: 1px solid rgba(0, 255, 255, 0.18);
+  border-radius: 10px;
 }
 .message {
   display: flex;
@@ -122,41 +144,55 @@ const clear = () => {
   justify-content: flex-start;
 }
 .bubble {
-  max-width: 70%;
-  padding: 10px 12px;
+  max-width: 78%;
+  padding: 12px 14px;
   border-radius: 10px;
-  background: #fff;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+  background: rgba(16, 23, 48, 0.92);
+  box-shadow: 0 0 12px rgba(0, 255, 255, 0.08);
+  border: 1px solid rgba(0, 255, 255, 0.18);
 }
 .assistant .bubble {
-  background: #eaf6f1;
+  background: rgba(12, 40, 46, 0.86);
 }
 .user .bubble {
-  background: #e9f1ff;
+  background: rgba(40, 15, 52, 0.86);
 }
 .role {
   font-size: 12px;
-  color: #666;
+  color: #88b3c9;
   margin-bottom: 4px;
 }
 .content {
   white-space: pre-wrap;
   word-break: break-word;
+  color: #e0fbff;
+  font-size: 15px;
+  line-height: 1.75;
 }
 .time {
   font-size: 12px;
-  color: #999;
+  color: #7ea6be;
   margin-top: 6px;
   text-align: right;
 }
 .composer {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 10px;
+  padding-top: 4px;
 }
 .actions {
   display: flex;
   gap: 8px;
   justify-content: flex-end;
+}
+
+@media (max-width: 900px) {
+  .agent-container {
+    padding: 12px;
+  }
+  .bubble {
+    max-width: 90%;
+  }
 }
 </style>
