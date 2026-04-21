@@ -24,7 +24,7 @@
         class="cyber-menu"
         :ellipsis="false"
       >
-        <el-sub-menu index="1">
+        <el-sub-menu index="1" popper-class="cyber-menu-popper">
           <template #title>
             <el-icon><location /></el-icon>
             <span>Media Hub</span>
@@ -36,7 +36,7 @@
           <el-menu-item index="1-5" @click="getDocument()">getDocument</el-menu-item>
           <el-menu-item index="1-6" @click="toDoList()">to do list</el-menu-item>
         </el-sub-menu>
-        <el-sub-menu index="2">
+        <el-sub-menu index="2" popper-class="cyber-menu-popper">
           <template #title>
             <el-icon><icon-menu /></el-icon>
             <span>Tools</span>
@@ -288,9 +288,9 @@ const updateIsMobile = () => {
 .header {
   height: auto;
   padding: 12px 18px 0;
-  background: rgba(8, 10, 25, 0.85);
-  border-bottom: 1px solid rgba(0, 255, 255, 0.25);
-  box-shadow: 0 12px 28px rgba(0, 255, 255, 0.08), inset 0 -1px 0 rgba(255, 0, 204, 0.18);
+  background: rgba(6, 8, 20, 0.9);
+  border-bottom: 1px solid rgba(0, 220, 230, 0.16);
+  box-shadow: 0 10px 24px rgba(0, 220, 230, 0.05), inset 0 -1px 0 rgba(180, 0, 145, 0.12);
   backdrop-filter: blur(10px);
   position: relative;
   overflow: hidden;
@@ -300,8 +300,8 @@ const updateIsMobile = () => {
   position: absolute;
   inset: 0;
   background:
-    radial-gradient(520px 220px at -5% -25%, rgba(0, 255, 255, 0.16) 0%, rgba(0, 255, 255, 0) 70%),
-    radial-gradient(480px 220px at 105% -20%, rgba(255, 0, 204, 0.15) 0%, rgba(255, 0, 204, 0) 70%);
+    radial-gradient(520px 220px at -5% -25%, rgba(0, 210, 220, 0.09) 0%, rgba(0, 210, 220, 0) 70%),
+    radial-gradient(480px 220px at 105% -20%, rgba(170, 0, 135, 0.08) 0%, rgba(170, 0, 135, 0) 70%);
   pointer-events: none;
 }
 
@@ -328,8 +328,8 @@ const updateIsMobile = () => {
   font-size: 24px;
   font-weight: 800;
   letter-spacing: 1px;
-  color: #80f8ff;
-  text-shadow: 0 0 12px rgba(0, 255, 255, 0.65), 0 0 24px rgba(0, 255, 255, 0.25);
+  color: #8ed9de;
+  text-shadow: 0 0 8px rgba(0, 220, 230, 0.3);
 }
 
 .cyber-menu {
@@ -339,40 +339,59 @@ const updateIsMobile = () => {
   border-bottom: none;
   background: transparent;
   --el-menu-bg-color: transparent;
-  --el-menu-text-color: #9ee8ff;
-  --el-menu-hover-text-color: #ff7de7;
-  --el-menu-active-color: #00f5ff;
+  --el-menu-text-color: #8dbec8;
+  --el-menu-hover-text-color: #cc79be;
+  --el-menu-active-color: #65d5dc;
 }
 :deep(.cyber-menu.el-menu--horizontal > .el-menu-item),
 :deep(.cyber-menu.el-menu--horizontal > .el-sub-menu .el-sub-menu__title) {
   height: 46px;
   line-height: 46px;
   border-bottom: none !important;
-  color: #9ee8ff;
+  color: #8dbec8;
   transition: all 0.15s ease;
 }
 :deep(.cyber-menu.el-menu--horizontal > .el-menu-item.is-active),
 :deep(.cyber-menu.el-menu--horizontal > .el-sub-menu.is-active .el-sub-menu__title) {
-  color: #00f5ff;
-  text-shadow: 0 0 10px rgba(0, 245, 255, 0.7);
+  color: #65d5dc;
+  text-shadow: 0 0 6px rgba(101, 213, 220, 0.35);
 }
 :deep(.cyber-menu.el-menu--horizontal > .el-menu-item:hover),
 :deep(.cyber-menu.el-menu--horizontal > .el-sub-menu .el-sub-menu__title:hover) {
-  color: #ff7de7;
-  text-shadow: 0 0 10px rgba(255, 125, 231, 0.65);
+  color: #cc79be;
+  text-shadow: 0 0 6px rgba(204, 121, 190, 0.35);
 }
 
 :deep(.el-menu--popup) {
-  background: rgba(8, 10, 25, 0.95);
-  border: 1px solid rgba(0, 255, 255, 0.28);
-  box-shadow: 0 0 18px rgba(0, 255, 255, 0.18), 0 0 32px rgba(255, 0, 204, 0.12);
+  background: rgba(7, 9, 22, 0.96);
+  border: 1px solid rgba(0, 220, 230, 0.2);
+  box-shadow: 0 0 12px rgba(0, 220, 230, 0.1), 0 0 20px rgba(170, 0, 135, 0.08);
 }
 :deep(.el-menu--popup .el-menu-item) {
-  color: #9ee8ff;
+  color: #8dbec8;
 }
 :deep(.el-menu--popup .el-menu-item:hover) {
-  background: rgba(255, 0, 204, 0.12);
-  color: #ff7de7;
+  background: rgba(170, 0, 135, 0.1);
+  color: #cc79be;
+}
+:global(.cyber-menu-popper) {
+  background: rgba(7, 9, 22, 0.97) !important;
+  border: 1px solid rgba(0, 220, 230, 0.24) !important;
+  box-shadow: 0 0 12px rgba(0, 220, 230, 0.12), 0 0 22px rgba(170, 0, 135, 0.1) !important;
+}
+:global(.cyber-menu-popper .el-menu) {
+  background: transparent !important;
+}
+:global(.cyber-menu-popper .el-menu-item) {
+  color: #8dbec8 !important;
+}
+:global(.cyber-menu-popper .el-menu-item:hover) {
+  background: rgba(170, 0, 135, 0.12) !important;
+  color: #cc79be !important;
+}
+:global(.cyber-menu-popper .el-menu-item.is-active) {
+  background: rgba(0, 220, 230, 0.12) !important;
+  color: #65d5dc !important;
 }
 :deep(.el-menu-vertical-demo) {
   background: linear-gradient(180deg, #0a0f20 0%, #10162b 100%);

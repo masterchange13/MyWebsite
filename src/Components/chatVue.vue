@@ -30,6 +30,7 @@
           <div class="bubble">
             <div class="meta">
               <span class="user">{{ getUsername(msg) }}</span>
+              <span class="time">{{ getMessageTime(msg) }}</span>
             </div>
             <div class="text">{{ getMessageText(msg) }}</div>
           </div>
@@ -47,7 +48,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted, onUnmounted, nextTick, watch, computed } from "vue";
+import { ref, onMounted, onUnmounted, nextTick, computed } from "vue";
 import { useUserStore } from "@/stores/userStore";
 import { chatApi } from "@/api/chatApi";
 
@@ -85,7 +86,7 @@ const connectWebSocket = () => {
   socket.value.onopen = () => console.log("WebSocket 连接成功");
   socket.value.onmessage = async (event) => {
     const msgData = JSON.parse(event.data);
-    messages.value.push(`${msgData.sendUsername}: ${msgData.data}`);
+    messages.value.push(normalizeMessage(msgData));
     await scrollToBottom();
   };
   socket.value.onclose = () => console.log("WebSocket 连接关闭");
@@ -93,7 +94,7 @@ const connectWebSocket = () => {
 };
 
 const sendMessage = () => {
-  if (socket.value && message.value.trim()) {
+  if (socket.value && selectedUser.value && message.value.trim()) {
     const data = {
       type: "message",
       data: message.value,
@@ -101,7 +102,6 @@ const sendMessage = () => {
       sendUsername: userStore.getUsername()
     };
     chatApi.sendMessage(socket.value, data);
-    messages.value.push(`${data.sendUsername}: ${data.data}`);
     message.value = "";
     scrollToBottom();
   }
@@ -124,7 +124,7 @@ const getHistory = async () => {
     const to = selectedUser.value
     const res = await chatApi.getHistory({ from, to })
     const list = res?.data || res || []
-    messages.value = list.map(item => `${item.sendUsername}: ${item.data}`)
+    messages.value = list.map(item => normalizeMessage(item))
     await scrollToBottom()
   } catch (e) {
     console.error('加载历史失败', e)
@@ -133,9 +133,35 @@ const getHistory = async () => {
   }
 }
 
-const isMyMessage = (msg) => msg.startsWith(userStore.getUsername() + ":");
-const getUsername = (msg) => msg.slice(0, msg.indexOf(":"));
-const getMessageText = (msg) => msg.slice(msg.indexOf(":") + 2);
+const formatTime = (value) => {
+  if (!value) return '--:--'
+  const d = new Date(value)
+  if (Number.isNaN(d.getTime())) return '--:--'
+  return `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`
+}
+
+const normalizeMessage = (raw) => {
+  if (typeof raw === 'string') {
+    const splitIdx = raw.indexOf(':')
+    const username = splitIdx > -1 ? raw.slice(0, splitIdx) : 'unknown'
+    const text = splitIdx > -1 ? raw.slice(splitIdx + 1).trim() : raw
+    return {
+      sendUsername: username,
+      data: text,
+      time: new Date().toISOString()
+    }
+  }
+  return {
+    sendUsername: raw?.sendUsername || raw?.from || 'unknown',
+    data: raw?.data ?? raw?.message ?? '',
+    time: raw?.create_time || raw?.time || raw?.createdAt || new Date().toISOString()
+  }
+}
+
+const isMyMessage = (msg) => getUsername(msg) === userStore.getUsername();
+const getUsername = (msg) => msg?.sendUsername || 'unknown';
+const getMessageText = (msg) => msg?.data || '';
+const getMessageTime = (msg) => formatTime(msg?.time);
 
 const scrollToBottom = async () => {
   await nextTick();
@@ -161,6 +187,7 @@ onUnmounted(() => {
   grid-template-columns: 280px 1fr;
   gap: 12px;
   height: 100%;
+  min-height: 0;
   box-sizing: border-box;
 }
 .sidebar {
@@ -219,7 +246,8 @@ onUnmounted(() => {
   display: flex;
   flex-direction: column;
   height: 100%;
-  padding-bottom: 100px;
+  min-height: 0;
+  padding: 12px;
 }
 .window-header {
   display: flex;
@@ -242,7 +270,7 @@ onUnmounted(() => {
   color: #b9f6ff;
 }
 .messages {
-  padding: 8px;
+  padding: 12px;
   background: rgba(10, 16, 35, 0.82);
   border: 1px solid rgba(0, 255, 255, 0.18);
   border-radius: 8px;
@@ -277,6 +305,14 @@ onUnmounted(() => {
   font-size: 12px;
   color: #88b3c9;
   margin-bottom: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+.meta .time {
+  color: #7fa4bd;
+  font-variant-numeric: tabular-nums;
 }
 .text {
   white-space: pre-wrap;
@@ -289,12 +325,17 @@ onUnmounted(() => {
   gap: 8px;
   background: transparent;
   border-top: 1px solid rgba(0, 255, 255, 0.14);
-  padding-top: 8px;
+  padding-top: 10px;
+  width: 100%;
 }
 .actions {
   display: flex;
   gap: 8px;
   justify-content: flex-end;
+}
+
+.composer :deep(.el-textarea__inner) {
+  min-height: 92px !important;
 }
 
 @media (max-width: 900px) {

@@ -137,6 +137,9 @@ request.interceptors.response.use(
   },
   error => {
     if (loadingInstance) loadingInstance.close()
+    if (error?.config?.silentError) {
+      return Promise.reject(error)
+    }
     const status = error.response?.status
 
     switch (status) {

@@ -18,7 +18,10 @@ const getCurrentUser = () => {
 }
 
 const getUserDetail = ({ username }) => {
-  return request.get('/users/detail/', { params: { username } })
+  return request.get('/users/detail', {
+    params: { username },
+    silentError: true
+  })
 }
 
 const updateUser = (payload) => {

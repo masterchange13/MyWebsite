@@ -96,7 +96,7 @@
                 <el-select v-model="form.region" placeholder="可选">
                   <el-option label="中国大陆" value="cn" />
                   <el-option label="中国香港" value="hk" />
-                  <el-option label="其他" value="other" />
+                  <el-option label="其他" vloginalue="other" />
                 </el-select>
               </el-form-item>
             </el-col>
