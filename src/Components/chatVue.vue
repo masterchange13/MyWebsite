@@ -12,7 +12,7 @@
           :class="['user-item', selectedUser === u.username ? 'active' : '']"
           @click="chooseUser(u.username)"
         >
-          <img class="avatar" :src="getAvatar(u.username)" />
+          <img class="avatar clickable" :src="getAvatar(u.username)" @click.stop="toProfile" />
           <div class="uname">{{ u.username }}</div>
         </div>
       </el-scrollbar>
@@ -21,7 +21,7 @@
     <el-card class="chat-window" shadow="always">
       <div class="window-header">
         <div class="peer">
-          <img class="avatar" :src="getAvatar(selectedUser)" />
+          <img class="avatar clickable" :src="getAvatar(selectedUser)" @click.stop="toProfile" />
           <div class="name">{{ selectedUser || '未选择' }}</div>
         </div>
       </div>
@@ -49,6 +49,7 @@
 
 <script setup>
 import { ref, onMounted, onUnmounted, nextTick, computed } from "vue";
+import { useRouter } from "vue-router";
 import { useUserStore } from "@/stores/userStore";
 import { chatApi } from "@/api/chatApi";
 
@@ -58,6 +59,7 @@ const messages = ref([]);
 const users = ref([]);
 const selectedUser = ref("");
 const userStore = useUserStore();
+const router = useRouter();
 const scrollRef = ref(null);
 let loadingHistory = false;
 const filter = ref('');
@@ -70,6 +72,7 @@ const chooseUser = async (name) => {
   selectedUser.value = name
   await getHistory()
 }
+const toProfile = () => router.push('/profile')
 
 const closeSocket = () => {
   if (socket.value) {
@@ -230,6 +233,9 @@ onUnmounted(() => {
   height: 28px;
   border-radius: 50%;
   border: 1px solid rgba(0, 255, 255, 0.28);
+}
+.clickable {
+  cursor: pointer;
 }
 .uname {
   color: #d7f8ff;
