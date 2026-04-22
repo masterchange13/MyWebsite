@@ -13,15 +13,15 @@
 </template>
 
 <script setup>
-const petals = Array.from({ length: 32 }, (_, i) => i + 1)
+const petals = Array.from({ length: 14 }, (_, i) => i + 1)
 
 const getPetalStyle = (i) => {
   const left = (i * 11) % 100
   const delay = -((i * 2.1) % 18)
-  const dur = 10 + ((i * 1.6) % 12)
-  const size = 10 + ((i * 2.8) % 16)
-  const drift = 15 + ((i * 4.5) % 32)
-  const opacity = 0.18 + ((i % 6) * 0.06)
+  const dur = 14 + ((i * 1.2) % 10)
+  const size = 10 + ((i * 2.2) % 10)
+  const drift = 10 + ((i * 3.4) % 18)
+  const opacity = 0.14 + ((i % 5) * 0.05)
   return {
     '--x': `${left}vw`,
     '--delay': `${delay}s`,
@@ -68,9 +68,8 @@ html, body {
   opacity: var(--opa);
   border-radius: 70% 30% 70% 30%;
   background:
-    radial-gradient(circle at 28% 30%, rgba(255, 255, 255, 0.95) 0 34%, rgba(255, 255, 255, 0.1) 75%),
-    linear-gradient(145deg, rgba(255, 182, 223, 0.95), rgba(255, 245, 255, 0.68));
-  box-shadow: 0 0 8px rgba(255, 195, 235, 0.32);
+    radial-gradient(circle at 28% 30%, rgba(255, 255, 255, 0.9) 0 34%, rgba(255, 255, 255, 0.08) 75%),
+    linear-gradient(145deg, rgba(255, 200, 231, 0.82), rgba(255, 245, 255, 0.5));
   animation: globalPetalFall var(--dur) linear infinite;
   animation-delay: var(--delay);
   transform-origin: center;
@@ -78,11 +77,8 @@ html, body {
 
 @keyframes globalPetalFall {
   0% { transform: translate3d(0, -8vh, 0) rotate(0deg); }
-  20% { transform: translate3d(calc(var(--drift) * 0.8), 18vh, 0) rotate(80deg); }
-  40% { transform: translate3d(calc(var(--drift) * -0.6), 40vh, 0) rotate(160deg); }
-  65% { transform: translate3d(calc(var(--drift) * 0.9), 72vh, 0) rotate(250deg); }
-  85% { transform: translate3d(calc(var(--drift) * -0.4), 96vh, 0) rotate(320deg); }
-  100% { transform: translate3d(calc(var(--drift) * 0.5), 112vh, 0) rotate(360deg); }
+  50% { transform: translate3d(calc(var(--drift) * 0.8), 52vh, 0) rotate(180deg); }
+  100% { transform: translate3d(calc(var(--drift) * -0.5), 112vh, 0) rotate(360deg); }
 }
 
 :root {
@@ -99,15 +95,14 @@ html, body {
 body {
   color: var(--cyber-text);
   background:
-    radial-gradient(1200px 520px at -240px -240px, rgba(0, 245, 255, 0.12) 0%, rgba(0, 245, 255, 0) 60%),
-    radial-gradient(900px 520px at 120% 0, rgba(255, 0, 204, 0.10) 0%, rgba(255, 0, 204, 0) 60%),
+    radial-gradient(1100px 500px at -260px -240px, rgba(0, 245, 255, 0.07) 0%, rgba(0, 245, 255, 0) 60%),
     linear-gradient(180deg, var(--cyber-bg-1) 0%, var(--cyber-bg-2) 100%);
 }
 
 .el-card {
   border-color: var(--cyber-border) !important;
   background: var(--cyber-panel) !important;
-  box-shadow: 0 0 18px rgba(0, 245, 255, 0.10), 0 0 34px rgba(255, 0, 204, 0.06) !important;
+  box-shadow: 0 0 10px rgba(0, 245, 255, 0.06) !important;
 }
 
 .el-card__header {
@@ -129,5 +124,11 @@ body {
 
 .el-button:not(.is-text):not(.is-link) {
   border-radius: 10px !important;
+}
+
+@media (max-width: 900px) {
+  .global-petal:nth-child(n+9) {
+    display: none;
+  }
 }
 </style>
