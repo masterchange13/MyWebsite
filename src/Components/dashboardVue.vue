@@ -33,8 +33,7 @@
           <el-menu-item index="1-2" @click="toDocument()">document</el-menu-item>
           <el-menu-item index="1-3" @click="toMusic()">music</el-menu-item>
           <el-menu-item index="1-4" @click="toTransfer()">transfer</el-menu-item>
-          <el-menu-item index="1-5" @click="getDocument()">getDocument</el-menu-item>
-          <el-menu-item index="1-6" @click="toDoList()">to do list</el-menu-item>
+          <el-menu-item index="1-5" @click="toDoList()">to do list</el-menu-item>
         </el-sub-menu>
         <el-sub-menu index="2" popper-class="cyber-menu-popper">
           <template #title>
@@ -53,6 +52,10 @@
         <el-menu-item index="4" @click="toNavigator()">
           <el-icon><setting /></el-icon>
           <span>Navigator</span>
+        </el-menu-item>
+        <el-menu-item index="5" @click="getDocument()">
+          <el-icon><document /></el-icon>
+          <span>blog</span>
         </el-menu-item>
       </el-menu>
     </el-header>
@@ -75,8 +78,7 @@
           </el-menu-item-group>
           <el-menu-item-group title="Group Two">
             <el-menu-item index="1-4" @click="toTransfer(); showMenuDrawer=false">transfer</el-menu-item>
-            <el-menu-item index="1-5" @click="getDocument(); showMenuDrawer=false">getDocument</el-menu-item>
-            <el-menu-item index="1-6" @click="toDoList(); showMenuDrawer=false">to do list</el-menu-item>
+            <el-menu-item index="1-5" @click="toDoList(); showMenuDrawer=false">to do list</el-menu-item>
           </el-menu-item-group>
         </el-sub-menu>
         <el-sub-menu index="2">
@@ -108,6 +110,10 @@
         <el-menu-item index="4" @click="toNavigator(); showMenuDrawer=false">
           <el-icon><setting /></el-icon>
           <span>Navigator Four</span>
+        </el-menu-item>
+        <el-menu-item index="5" @click="getDocument(); showMenuDrawer=false">
+          <el-icon><document /></el-icon>
+          <span>blog</span>
         </el-menu-item>
       </el-menu>
     </el-drawer>

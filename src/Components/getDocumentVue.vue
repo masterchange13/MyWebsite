@@ -76,11 +76,6 @@
         }
     }
 
-    // 获取头像（这里使用默认头像）
-    const getAvatar = (author) => {
-    return `https://api.dicebear.com/7.x/identicon/svg?seed=${author}`
-    }
-
     // 格式化时间
     const formatTime = (time) => {
         return dayjs(time).format('YYYY-MM-DD')
@@ -129,9 +124,9 @@
 <style scoped>
 .doc-page {
   background:
-    radial-gradient(1200px 600px at -200px -200px, rgba(79, 160, 255, 0.15) 0%, rgba(79, 160, 255, 0) 60%),
-    radial-gradient(800px 400px at 120% 20%, rgba(86, 220, 160, 0.12) 0%, rgba(86, 220, 160, 0) 60%),
-    linear-gradient(180deg, #eef5ff 0%, #f8fbff 100%);
+    radial-gradient(1200px 620px at -200px -220px, rgba(0, 245, 255, 0.12) 0%, rgba(0, 245, 255, 0) 62%),
+    radial-gradient(900px 460px at 120% 20%, rgba(255, 0, 204, 0.10) 0%, rgba(255, 0, 204, 0) 60%),
+    linear-gradient(180deg, #090a1a 0%, #0d1022 100%);
   height: 100%;
   display: flex;
   flex-direction: column;
@@ -141,13 +136,16 @@
   align-items: center;
   justify-content: space-between;
   padding: 16px 24px;
-  background: linear-gradient(90deg, #4f80ff 0%, #80c2ff 100%);
-  color: #fff;
-  border-bottom: 1px solid rgba(255,255,255,0.25);
+  background: linear-gradient(90deg, rgba(0, 245, 255, 0.18) 0%, rgba(255, 0, 204, 0.16) 100%);
+  color: #dffbff;
+  border-bottom: 1px solid rgba(0, 255, 255, 0.24);
+  box-shadow: 0 10px 24px rgba(0, 245, 255, 0.08);
 }
 .doc-title {
   font-size: 22px;
-  font-weight: 600;
+  font-weight: 700;
+  color: #a8f8ff;
+  text-shadow: 0 0 10px rgba(0, 245, 255, 0.35);
 }
 .doc-tools {
   display: flex;
@@ -178,15 +176,16 @@
   transition: transform 0.12s ease, box-shadow 0.12s ease, border-color 0.12s ease;
   cursor: pointer;
   border-radius: 12px;
-  border: 1px solid #edf2f7;
+  border: 1px solid rgba(0, 255, 255, 0.24);
   background:
-    linear-gradient(0deg, rgba(255,255,255,0.9), rgba(255,255,255,0.9));
+    linear-gradient(135deg, rgba(9, 15, 34, 0.86), rgba(17, 22, 45, 0.86));
   overflow: hidden;
+  backdrop-filter: blur(6px);
 }
 .doc-item:hover {
   transform: translateY(-1px);
-  box-shadow: 0 10px 24px rgba(0,0,0,0.12);
-  border-color: #dfe7f3;
+  box-shadow: 0 10px 26px rgba(0, 245, 255, 0.18), 0 0 24px rgba(255, 0, 204, 0.10);
+  border-color: rgba(255, 0, 204, 0.42);
 }
 .doc-item-left .thumb {
   width: 160px;
@@ -201,7 +200,7 @@
 .doc-item-title {
   font-size: 18px;
   font-weight: 600;
-  color: #1f2d3d;
+  color: #d6fbff;
 }
 .doc-item-meta {
   display: flex;
@@ -209,20 +208,28 @@
   gap: 6px;
   margin-top: 4px;
   font-size: 12px;
-  color: #657788;
+  color: #8bb2ca;
 }
 .doc-item-excerpt {
   margin-top: 8px;
   font-size: 15px;
   line-height: 1.7;
-  color: #4a5568;
+  color: #aac6d8;
   display: -webkit-box;
   -webkit-line-clamp: 3;
+  line-clamp: 3;
   -webkit-box-orient: vertical;
   overflow: hidden;
 }
 .doc-item-right {
   display: flex;
   align-items: center;
+}
+
+:deep(.doc-item-right .el-button.is-text) {
+  color: #8ff4ff;
+}
+:deep(.doc-item-right .el-button.is-text:hover) {
+  color: #ff95ec;
 }
 </style>

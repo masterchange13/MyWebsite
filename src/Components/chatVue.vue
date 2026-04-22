@@ -29,7 +29,6 @@
         <div v-for="(msg, idx) in messages" :key="idx" :class="['message', isMyMessage(msg) ? 'user' : 'other']">
           <div class="bubble">
             <div class="meta">
-              <span class="user">{{ getUsername(msg) }}</span>
               <span class="time">{{ getMessageTime(msg) }}</span>
             </div>
             <div class="text">{{ getMessageText(msg) }}</div>
@@ -37,6 +36,28 @@
         </div>
       </el-scrollbar>
       <div class="composer">
+        <div class="symbol-tools" ref="symbolToolsRef">
+          <button
+            class="symbol-toggle"
+            type="button"
+            @click="showSymbolPanel = !showSymbolPanel"
+            :aria-expanded="showSymbolPanel"
+            title="表情符号"
+          >
+            😊
+          </button>
+          <div v-if="showSymbolPanel" class="symbol-panel" @click.stop>
+            <button
+              v-for="s in quickSymbols"
+              :key="s"
+              class="symbol-chip"
+              type="button"
+              @click="insertSymbol(s)"
+            >
+              {{ s }}
+            </button>
+          </div>
+        </div>
         <el-input v-model="message" type="textarea" :rows="2" placeholder="输入消息，按 Enter 发送" @keyup.enter="sendMessage" />
         <div class="actions">
           <el-button type="primary" @click="sendMessage" :disabled="!selectedUser">发送</el-button>
@@ -63,6 +84,21 @@ const router = useRouter();
 const scrollRef = ref(null);
 let loadingHistory = false;
 const filter = ref('');
+const showSymbolPanel = ref(false);
+const symbolToolsRef = ref(null);
+const quickSymbols = ['😀', '😂', '😍', '🥳', '👍', '👏', '🙏', '❤️', '✨', '🔥', '🌸', '🍀', '(＾▽＾)', 'QAQ', 'OTZ', '→', '←', '✓', '★', '※'];
+
+const insertSymbol = (symbol) => {
+  message.value = `${message.value || ''}${symbol}`
+}
+const handleOutsideClick = (event) => {
+  if (!showSymbolPanel.value) return
+  const root = symbolToolsRef.value
+  const target = event.target
+  if (root && target && !root.contains(target)) {
+    showSymbolPanel.value = false
+  }
+}
 const filteredUsers = computed(() => {
   const f = filter.value.trim().toLowerCase()
   return f ? users.value.filter(u => u.username.toLowerCase().includes(f)) : users.value
@@ -176,10 +212,12 @@ onMounted(async () => {
   connectWebSocket();
   await getUsers();
   if (selectedUser.value) await getHistory()
+  document.addEventListener('mousedown', handleOutsideClick)
 });
 
 onUnmounted(() => {
   if (socket.value) socket.value.close();
+  document.removeEventListener('mousedown', handleOutsideClick)
 });
 </script>
 
@@ -334,6 +372,58 @@ onUnmounted(() => {
   padding-top: 10px;
   width: 100%;
 }
+.symbol-tools {
+  position: relative;
+  width: 44px;
+  height: 44px;
+}
+.symbol-toggle {
+  width: 44px;
+  height: 44px;
+  border-radius: 10px;
+  border: 1px solid rgba(0, 255, 255, 0.26);
+  background: rgba(8, 14, 32, 0.8);
+  color: #d9f9ff;
+  font-size: 22px;
+  cursor: pointer;
+  box-shadow: 0 0 10px rgba(0, 245, 255, 0.1);
+}
+.symbol-toggle:hover {
+  border-color: rgba(255, 0, 204, 0.32);
+  color: #ff9be9;
+}
+.symbol-panel {
+  position: absolute;
+  left: 0;
+  bottom: 52px;
+  width: 320px;
+  min-height: 220px;
+  display: grid;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  gap: 8px;
+  padding: 12px;
+  border: 1px solid rgba(0, 255, 255, 0.24);
+  border-radius: 12px;
+  background: rgba(8, 14, 32, 0.92);
+  box-shadow: 0 0 16px rgba(0, 245, 255, 0.14), 0 0 26px rgba(255, 0, 204, 0.1);
+  z-index: 20;
+}
+.symbol-chip {
+  width: 100%;
+  height: 38px;
+  border: 1px solid rgba(0, 255, 255, 0.22);
+  background: rgba(0, 245, 255, 0.08);
+  color: #d9f9ff;
+  border-radius: 8px;
+  padding: 0;
+  cursor: pointer;
+  font-size: 16px;
+}
+.symbol-chip:hover {
+  border-color: rgba(255, 0, 204, 0.36);
+  color: #ff9be9;
+  background: rgba(255, 0, 204, 0.12);
+}
 .actions {
   display: flex;
   gap: 8px;
@@ -350,6 +440,11 @@ onUnmounted(() => {
   }
   .sidebar {
     height: 240px;
+  }
+  .symbol-panel {
+    width: 280px;
+    min-height: 200px;
+    grid-template-columns: repeat(5, minmax(0, 1fr));
   }
 }
 </style>

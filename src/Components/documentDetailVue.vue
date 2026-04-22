@@ -1,5 +1,8 @@
 <template>
-  <div>
+  <div class="detail-page">
+    <div class="jasmine jasmine-left"></div>
+    <div class="jasmine jasmine-right"></div>
+    <div class="jasmine-bottom"></div>
     <!-- 顶部栏：返回按钮 + 文章标题 + 作者 -->
     <div class="header">
       <el-button text @click="goBack" type="primary" class="back-button">
@@ -27,8 +30,8 @@
     <!-- 文章展示（阅读模式） -->
     <div v-else class="article-container markdown-body" v-html="renderedContent"></div>
 
-    <!-- 切换编辑模式按钮 -->
-    <div style="margin-top: 20px;">
+    <!-- 切换编辑模式按钮（固定位置） -->
+    <div class="switch-wrap">
       <el-button @click="isEditing = !isEditing">
         {{ isEditing ? "预览文章" : "返回编辑" }}
       </el-button>
@@ -123,23 +126,143 @@ const goBack = () => {
 </script>
 
 <style scoped>
+.detail-page {
+  position: relative;
+  height: 100%;
+  box-sizing: border-box;
+  padding: 16px;
+  overflow: hidden;
+  background:
+    radial-gradient(1200px 520px at -240px -240px, rgba(0, 245, 255, 0.10) 0%, rgba(0, 245, 255, 0) 60%),
+    radial-gradient(900px 520px at 120% 0, rgba(255, 0, 204, 0.08) 0%, rgba(255, 0, 204, 0) 60%),
+    linear-gradient(180deg, #090a1a 0%, #0d1022 100%);
+}
+.jasmine {
+  position: absolute;
+  width: 120px;
+  height: 120px;
+  opacity: 0.34;
+  pointer-events: none;
+  filter: drop-shadow(0 0 8px rgba(255, 255, 255, 0.18));
+  animation: jasmineFloat 6.2s ease-in-out infinite;
+}
+.jasmine::before,
+.jasmine::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  background:
+    radial-gradient(circle at 50% 16%, rgba(255, 255, 255, 0.9) 0 10px, transparent 11px),
+    radial-gradient(circle at 82% 38%, rgba(255, 255, 255, 0.9) 0 10px, transparent 11px),
+    radial-gradient(circle at 72% 76%, rgba(255, 255, 255, 0.9) 0 10px, transparent 11px),
+    radial-gradient(circle at 28% 76%, rgba(255, 255, 255, 0.9) 0 10px, transparent 11px),
+    radial-gradient(circle at 18% 38%, rgba(255, 255, 255, 0.9) 0 10px, transparent 11px),
+    radial-gradient(circle at 50% 50%, rgba(255, 236, 163, 0.95) 0 8px, transparent 9px);
+}
+.jasmine::after {
+  transform: scale(0.62) translate(42px, 42px);
+  opacity: 0.72;
+}
+.jasmine-left {
+  left: 16px;
+  top: 76px;
+  animation-delay: 0s;
+}
+.jasmine-right {
+  right: 16px;
+  top: 76px;
+  animation-delay: 1.3s;
+}
+.jasmine-bottom {
+  position: absolute;
+  left: 50%;
+  bottom: 10px;
+  transform: translateX(-50%);
+  width: min(92%, 980px);
+  height: 68px;
+  border-radius: 999px;
+  opacity: 0.45;
+  pointer-events: none;
+  animation: jasmineGlow 5.4s ease-in-out infinite;
+  background:
+    radial-gradient(circle at 8% 56%, rgba(255, 255, 255, 0.85) 0 8px, transparent 9px),
+    radial-gradient(circle at 14% 42%, rgba(255, 255, 255, 0.8) 0 7px, transparent 8px),
+    radial-gradient(circle at 24% 56%, rgba(255, 255, 255, 0.85) 0 8px, transparent 9px),
+    radial-gradient(circle at 30% 42%, rgba(255, 255, 255, 0.8) 0 7px, transparent 8px),
+    radial-gradient(circle at 42% 56%, rgba(255, 255, 255, 0.85) 0 8px, transparent 9px),
+    radial-gradient(circle at 48% 42%, rgba(255, 255, 255, 0.8) 0 7px, transparent 8px),
+    radial-gradient(circle at 58% 56%, rgba(255, 255, 255, 0.85) 0 8px, transparent 9px),
+    radial-gradient(circle at 64% 42%, rgba(255, 255, 255, 0.8) 0 7px, transparent 8px),
+    radial-gradient(circle at 74% 56%, rgba(255, 255, 255, 0.85) 0 8px, transparent 9px),
+    radial-gradient(circle at 80% 42%, rgba(255, 255, 255, 0.8) 0 7px, transparent 8px),
+    radial-gradient(circle at 90% 56%, rgba(255, 255, 255, 0.85) 0 8px, transparent 9px),
+    linear-gradient(90deg, rgba(0, 245, 255, 0.16), rgba(255, 0, 204, 0.16));
+  box-shadow: 0 0 14px rgba(0, 245, 255, 0.18), 0 0 20px rgba(255, 0, 204, 0.12);
+}
+
+@keyframes jasmineFloat {
+  0%, 100% {
+    transform: translateY(0) rotate(0deg);
+    opacity: 0.34;
+  }
+  50% {
+    transform: translateY(-8px) rotate(1.5deg);
+    opacity: 0.45;
+  }
+}
+
+@keyframes jasmineGlow {
+  0%, 100% {
+    opacity: 0.36;
+    filter: saturate(0.95);
+  }
+  50% {
+    opacity: 0.52;
+    filter: saturate(1.12);
+  }
+}
 .article-container {
+  position: relative;
   padding: 40px;
-  border: 1px solid #e1e4e8;
+  border: 1px solid rgba(0, 255, 255, 0.22);
   border-radius: 12px;
-  background: #fff;
+  background: linear-gradient(135deg, rgba(8, 14, 32, 0.9), rgba(12, 18, 40, 0.86));
   line-height: 1.6;
   font-size: 16px;
   max-width: 900px;
   margin: 0 auto;
-  box-shadow: 0 4px 20px rgba(0,0,0,0.05);
+  z-index: 2;
+  box-shadow: 0 0 16px rgba(0, 245, 255, 0.12), 0 0 28px rgba(255, 0, 204, 0.08);
+  overflow: visible;
+}
+.article-container::before,
+.article-container::after {
+  content: "";
+  position: absolute;
+  top: 30px;
+  width: 8px;
+  height: calc(100% - 60px);
+  border-radius: 999px;
+  pointer-events: none;
+}
+.article-container::before {
+  left: -18px;
+  background: linear-gradient(180deg, rgba(0, 245, 255, 0.85) 0%, rgba(0, 245, 255, 0.15) 100%);
+  box-shadow: 0 0 14px rgba(0, 245, 255, 0.5);
+}
+.article-container::after {
+  right: -18px;
+  background: linear-gradient(180deg, rgba(255, 0, 204, 0.82) 0%, rgba(255, 0, 204, 0.15) 100%);
+  box-shadow: 0 0 14px rgba(255, 0, 204, 0.45);
 }
 
 /* Basic Markdown Styles */
 :deep(.markdown-body) h1, 
 :deep(.markdown-body) h2, 
 :deep(.markdown-body) h3 {
-  border-bottom: 1px solid #eaecef;
+  border-bottom: 1px solid rgba(0, 255, 255, 0.26);
+  color: #aef9ff;
   padding-bottom: .3em;
   margin-top: 24px;
   margin-bottom: 16px;
@@ -149,12 +272,14 @@ const goBack = () => {
 :deep(.markdown-body) p {
   margin-top: 0;
   margin-bottom: 16px;
+  color: #d8f8ff;
 }
 :deep(.markdown-body) code {
   padding: .2em .4em;
   margin: 0;
   font-size: 85%;
-  background-color: rgba(27,31,35,.05);
+  color: #94f5ff;
+  background-color: rgba(0, 245, 255, 0.12);
   border-radius: 3px;
 }
 :deep(.markdown-body) pre {
@@ -162,14 +287,17 @@ const goBack = () => {
   overflow: auto;
   font-size: 85%;
   line-height: 1.45;
-  background-color: #f6f8fa;
+  color: #d8f8ff;
+  background-color: rgba(6, 12, 28, 0.92);
+  border: 1px solid rgba(0, 255, 255, 0.2);
   border-radius: 6px;
   margin-bottom: 16px;
 }
 :deep(.markdown-body) blockquote {
   padding: 0 1em;
-  color: #6a737d;
-  border-left: .25em solid #dfe2e5;
+  color: #bfefff;
+  border-left: .25em solid rgba(255, 0, 204, 0.5);
+  background: rgba(255, 0, 204, 0.08);
   margin: 0 0 16px 0;
 }
 :deep(.markdown-body) img {
@@ -181,6 +309,8 @@ const goBack = () => {
   display: flex;
   align-items: center;
   margin-bottom: 20px;
+  position: relative;
+  z-index: 2;
 }
 
 .back-button {
@@ -200,12 +330,58 @@ const goBack = () => {
 .title {
   font-size: 22px;
   font-weight: bold;
-  color: #333;
+  color: #abf7ff;
+  text-shadow: 0 0 10px rgba(0, 245, 255, 0.35);
 }
 
 .author {
   font-size: 14px;
-  color: #999;
+  color: #8fb2c9;
   margin-left: 16px;
+}
+.switch-wrap {
+  position: fixed;
+  right: 28px;
+  top: 148px;
+  z-index: 30;
+}
+.switch-wrap :deep(.el-button) {
+  border-radius: 999px;
+  border: 1px solid rgba(0, 255, 255, 0.3);
+  background: rgba(8, 16, 36, 0.82);
+  color: #9ef7ff;
+  box-shadow: 0 0 12px rgba(0, 245, 255, 0.14), 0 0 18px rgba(255, 0, 204, 0.08);
+}
+.switch-wrap :deep(.el-button:hover) {
+  border-color: rgba(255, 0, 204, 0.35);
+  color: #ff9dec;
+  background: rgba(24, 10, 38, 0.85);
+}
+
+@media (max-width: 900px) {
+  .jasmine {
+    width: 90px;
+    height: 90px;
+    opacity: 0.26;
+    animation-duration: 7s;
+  }
+  .jasmine-left {
+    left: 8px;
+    top: 92px;
+  }
+  .jasmine-right {
+    right: 8px;
+    top: 92px;
+  }
+  .jasmine-bottom {
+    height: 56px;
+    opacity: 0.34;
+  }
+  .switch-wrap {
+    right: 50%;
+    top: auto;
+    bottom: 74px;
+    transform: translateX(50%);
+  }
 }
 </style>
