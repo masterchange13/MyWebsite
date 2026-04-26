@@ -1,6 +1,9 @@
 import { request } from '@/utils/request'
 
-const wsBase = 'ws://localhost:8084/chat/ws'
+// const wsBase = 'ws://localhost:8083/chat/ws'
+
+const wsProtocol = window.location.protocol === 'https:' ? 'wss' : 'ws'
+const wsBase = `${wsProtocol}://${window.location.host}/chat/ws`
 
 export const chatApi = {
   getUsers: () => request.get('/chat/getUsers'),
