@@ -152,6 +152,7 @@ import { storeToRefs } from "pinia";
 import { useRouter } from "vue-router";
 import { useUserStore } from "@/stores/userStore";
 import { useTimerStore } from "@/stores/timerStore";
+import { userApi } from "@/api/userApi";
 
 const userStore = useUserStore();
 const username = computed(() => userStore.getUsername());
@@ -182,7 +183,19 @@ const getDocument = () => router.push("/getDocument");
 const toChat = () => router.push("/chat");
 const toDoList = () => router.push("/todoList");
 const toMusic = () => router.push("/music");
-const toProfile = () => router.push("/profile");
+const toProfile = async () => {
+  try {
+    const res = await userApi.getCurrentUser()
+    const data = res?.data ?? res
+    const id = data?.id ?? data?.user_id
+    if (id != null) {
+      router.push(`/profile/${encodeURIComponent(String(id))}`)
+      return
+    }
+  } catch {}
+  const fallback = username.value ? encodeURIComponent(username.value) : 'me'
+  router.push(`/profile/${fallback}`)
+};
 const toQiMen = () => router.push("/qiMen");
 const toTimer = () => router.push("/timer");
 const toCalculator = () => router.push("/calculator");
@@ -383,7 +396,7 @@ const updateIsMobile = () => {
 :global(.cyber-menu-popper) {
   background: rgba(7, 9, 22, 0.97) !important;
   border: 1px solid rgba(0, 220, 230, 0.24) !important;
-  box-shadow: 0 0 12px rgba(0, 220, 230, 0.12), 0 0 22px rgba(170, 0, 135, 0.1) !important;
+  box-shadow: 0 0 8px rgba(0, 220, 230, 0.08), 0 0 14px rgba(170, 0, 135, 0.07) !important;
 }
 :global(.cyber-menu-popper .el-menu) {
   background: transparent !important;
@@ -392,11 +405,11 @@ const updateIsMobile = () => {
   color: #8dbec8 !important;
 }
 :global(.cyber-menu-popper .el-menu-item:hover) {
-  background: rgba(170, 0, 135, 0.12) !important;
+  background: rgba(170, 0, 135, 0.09) !important;
   color: #cc79be !important;
 }
 :global(.cyber-menu-popper .el-menu-item.is-active) {
-  background: rgba(0, 220, 230, 0.12) !important;
+  background: rgba(0, 220, 230, 0.1) !important;
   color: #65d5dc !important;
 }
 :deep(.el-menu-vertical-demo) {

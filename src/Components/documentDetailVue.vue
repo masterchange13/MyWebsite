@@ -3,35 +3,74 @@
     <div class="jasmine jasmine-left"></div>
     <div class="jasmine jasmine-right"></div>
     <div class="jasmine-bottom"></div>
-    <!-- 顶部栏：返回按钮 + 文章标题 + 作者 -->
-    <div class="header">
-      <el-button text @click="goBack" type="primary" class="back-button">
-        <el-icon>
-          <ArrowLeft />
-        </el-icon>
-      </el-button>
-      <div class="title-box">
-        <div class="title">{{ articleTitle }}</div>
-        <div class="author">作者：{{ articleAuthor }}</div>
+
+    <div class="content-shell">
+      <div class="header">
+        <div class="header-left">
+          <el-button text @click="goBack" type="primary" class="back-button">
+            <el-icon><ArrowLeft /></el-icon>
+            <span>返回</span>
+          </el-button>
+          <div class="header-title-wrap">
+            <div v-if="!isEditing" class="title">{{ articleTitle }}</div>
+            <el-input
+              v-else
+              v-model="articleTitle"
+              class="title-edit-input"
+              maxlength="80"
+              show-word-limit
+              placeholder="请输入标题"
+            />
+            <div class="author">作者：{{ articleAuthor }}</div>
+          </div>
+        </div>
+        <div class="header-right">
+          <div class="meta-pill">字数：{{ wordCount }}</div>
+          <div class="meta-pill">预计阅读：{{ readingMinutes }} 分钟</div>
+          <div class="meta-pill">状态：{{ isEditing ? '编辑中' : '阅读中' }}</div>
+          <div class="meta-pill permission-pill" :class="{ readonly: !isOwner }">
+            权限：{{ isOwner ? '可编辑' : '仅查看' }}
+          </div>
+        </div>
       </div>
+
+      <div v-if="isOwner" class="meta-strip">
+        <div class="strip-item">
+          <div class="strip-label">标题完整度</div>
+          <div class="strip-value">{{ titleLength >= 6 ? '良好' : '建议补充' }}</div>
+        </div>
+        <div class="strip-item">
+          <div class="strip-label">正文完整度</div>
+          <div class="strip-value">{{ wordCount >= 120 ? '良好' : '可再丰富' }}</div>
+        </div>
+        <div class="strip-item">
+          <div class="strip-label">操作权限</div>
+          <div class="strip-value">{{ isOwner ? (isEditing ? '可发布' : '可切换编辑') : '只读查看' }}</div>
+        </div>
+      </div>
+
+      <div v-if="isEditing" class="editor-panel">
+        <div class="editor-canvas">
+          <Toolbar class="editor-toolbar" :editor="editorRef" :defaultConfig="toolbarConfig" :mode="mode" />
+          <Editor
+            class="editor-body"
+            v-model="valueHtml"
+            :defaultConfig="editorConfig"
+            :mode="mode"
+            @onCreated="handleCreated"
+          />
+        </div>
+        <div class="editor-action" v-if="isOwner">
+          <el-button @click="clearContent">清空内容</el-button>
+          <el-button type="primary" :loading="publishing" @click="publish">发布</el-button>
+          <el-button type="danger" plain :loading="deleting" @click="removeDocument">删除文章</el-button>
+        </div>
+      </div>
+
+      <div v-else class="article-container markdown-body" v-html="renderedContent"></div>
     </div>
 
-    <!-- 编辑器 -->
-    <div v-if="isEditing" style="border: 1px solid #ccc">
-      <Toolbar style="border-bottom: 1px solid #ccc" :editor="editorRef" :defaultConfig="toolbarConfig" :mode="mode" />
-      <Editor style="height: 500px; overflow-y: hidden;" v-model="valueHtml" :defaultConfig="editorConfig" :mode="mode"
-        @onCreated="handleCreated" />
-      <div style="margin-top: 10px;">
-        <el-button @click="valueHtml = '<p></p>'">清空内容</el-button>
-        <el-button type="primary" @click="publish()">发布</el-button>
-      </div>
-    </div>
-
-    <!-- 文章展示（阅读模式） -->
-    <div v-else class="article-container markdown-body" v-html="renderedContent"></div>
-
-    <!-- 切换编辑模式按钮（固定位置） -->
-    <div class="switch-wrap">
+    <div class="switch-wrap" v-if="isOwner">
       <el-button @click="isEditing = !isEditing">
         {{ isEditing ? "预览文章" : "返回编辑" }}
       </el-button>
@@ -44,13 +83,15 @@ import '@wangeditor/editor/dist/css/style.css'
 import { onBeforeUnmount, ref, shallowRef, onMounted, computed } from 'vue'
 import { Editor, Toolbar } from '@wangeditor/editor-for-vue'
 import { documentApi } from '@/api/documentApi'
-import { ElMessage } from 'element-plus'
+import { ElMessage, ElMessageBox } from 'element-plus'
 import { useRoute, useRouter } from 'vue-router'
 import { ArrowLeft } from '@element-plus/icons-vue' // 引入图标
 import { marked } from 'marked'
+import { useUserStore } from '@/stores/userStore'
 
 const route = useRoute()
 const router = useRouter()
+const userStore = useUserStore()
 
 const id = route.params.id
 
@@ -60,31 +101,41 @@ const articleAuthor = ref('未知作者')
 const editorRef = shallowRef()
 const valueHtml = ref('')
 const isEditing = ref(false)
+const publishing = ref(false)
+const deleting = ref(false)
 
 const renderedContent = computed(() => {
-  // If we are in editing mode, we use HTML from wangeditor
-  // If we are in viewing mode, we render it as markdown if possible
-  // Many rich text editors output HTML, so we check if it's HTML or Markdown
   const content = valueHtml.value
   if (!content) return ''
-  
-  // If it's HTML, we might just want to show it. 
-  // But the user specifically asked for MD format.
-  // If the content is raw MD, marked will handle it.
-  // If it's HTML, marked will also handle it (often just rendering as is).
   return marked.parse(content)
+})
+const plainText = computed(() => {
+  return String(valueHtml.value || '')
+    .replace(/<[^>]+>/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim()
+})
+const wordCount = computed(() => plainText.value.length)
+const titleLength = computed(() => String(articleTitle.value || '').trim().length)
+const readingMinutes = computed(() => Math.max(1, Math.ceil(wordCount.value / 300)))
+const currentUsername = computed(() => userStore.getUsername())
+const normalizeName = (name) => String(name || '').trim().toLowerCase()
+const isOwner = computed(() => {
+  const authorName = normalizeName(articleAuthor.value)
+  const currentName = normalizeName(currentUsername.value)
+  return Boolean(authorName) && Boolean(currentName) && authorName === currentName
 })
 
 onMounted(async () => {
   try {
-    console.log("id  is ", id)
     const res = await documentApi.detail(id)
-    console.log("res  is ", res)
     if (res.code === 200) {
-      console.log(res.data);
       valueHtml.value = res.data.content || ''
       articleTitle.value = res.data.title || '未命名文章'
       articleAuthor.value = res.data.author || '匿名'
+      if (!isOwner.value) {
+        isEditing.value = false
+      }
     } else {
       ElMessage.error(res.message || '请求错误')
     }
@@ -96,6 +147,7 @@ onMounted(async () => {
 
 const toolbarConfig = {}
 const editorConfig = { placeholder: '请输入内容...' }
+const mode = 'default'
 
 const handleCreated = (editor) => {
   editorRef.value = editor
@@ -106,17 +158,83 @@ onBeforeUnmount(() => {
   if (editor) editor.destroy()
 })
 
+const clearContent = () => {
+  valueHtml.value = '<p></p>'
+}
+
 const publish = async () => {
+  if (!isOwner.value) {
+    ElMessage.warning('你只有查看权限，无法发布该文章')
+    return
+  }
+  if (publishing.value) return
+  const title = String(articleTitle.value || '').trim()
+  
+  if (!title) {
+    ElMessage.warning('标题不能为空')
+    return
+  }
+  const contentText = String(valueHtml.value || '').replace(/<[^>]+>/g, '').trim()
+  if (!contentText) {
+    ElMessage.warning('内容为空，无法发布')
+    return
+  }
   try {
-    const res = await documentApi.publish({ content: valueHtml.value })
+    publishing.value = true
+    const author = String(currentUsername.value || articleAuthor.value || '匿名').trim()
+    const payload = { author, title, content: valueHtml.value }
+    if (id !== undefined && id !== null && String(id).trim() !== '') {
+      payload.id = id      
+    }
+    const res = await documentApi.publish(payload)
     if (res.code === 200) {
-      ElMessage.success(res.message)
+      ElMessage.success(res.message || '发布成功')
+      // 返回预览形式
+      router.push({ name: 'documentDetail', params: { id } })
+      isEditing.value = false
     } else {
-      ElMessage.error(res.message)
+      ElMessage.error(res.message || '发布失败')
     }
   } catch (error) {
     ElMessage.error('发布失败，请稍后再试')
     console.error(error)
+  } finally {
+    publishing.value = false
+  }
+}
+
+const removeDocument = async () => {
+  if (!isOwner.value) {
+    ElMessage.warning('你只有查看权限，无法删除该文章')
+    return
+  }
+  try {
+    await ElMessageBox.confirm(
+      '删除后不可恢复，确定删除这篇文章吗？',
+      '删除确认',
+      {
+        confirmButtonText: '确定删除',
+        cancelButtonText: '取消',
+        type: 'warning'
+      }
+    )
+  } catch {
+    return
+  }
+  try {
+    deleting.value = true
+    const res = await documentApi.remove(id)
+    if (res.code === 200) {
+      ElMessage.success(res.message || '删除成功')
+      router.push({ name: 'getDocument' })
+    } else {
+      ElMessage.error(res.message || '删除失败')
+    }
+  } catch (error) {
+    ElMessage.error('删除失败，请稍后再试')
+    console.error(error)
+  } finally {
+    deleting.value = false
   }
 }
 
@@ -128,14 +246,25 @@ const goBack = () => {
 <style scoped>
 .detail-page {
   position: relative;
-  height: 100%;
+  min-height: 100%;
   box-sizing: border-box;
-  padding: 16px;
+  padding: 16px 16px 28px;
   overflow: hidden;
   background:
     radial-gradient(1200px 520px at -240px -240px, rgba(0, 245, 255, 0.10) 0%, rgba(0, 245, 255, 0) 60%),
     radial-gradient(900px 520px at 120% 0, rgba(255, 0, 204, 0.08) 0%, rgba(255, 0, 204, 0) 60%),
     linear-gradient(180deg, #090a1a 0%, #0d1022 100%);
+}
+.content-shell {
+  position: relative;
+  z-index: 2;
+  max-width: 1240px;
+  margin: 0 auto;
+  border: 1px solid rgba(0, 255, 255, 0.22);
+  border-radius: 14px;
+  background: rgba(7, 11, 24, 0.72);
+  box-shadow: 0 0 16px rgba(0, 245, 255, 0.12), 0 0 30px rgba(255, 0, 204, 0.08);
+  backdrop-filter: blur(5px);
 }
 .jasmine {
   position: absolute;
@@ -225,15 +354,13 @@ const goBack = () => {
 .article-container {
   position: relative;
   padding: 40px;
-  border: 1px solid rgba(0, 255, 255, 0.22);
-  border-radius: 12px;
+  border-top: 1px solid rgba(0, 255, 255, 0.18);
   background: linear-gradient(135deg, rgba(8, 14, 32, 0.9), rgba(12, 18, 40, 0.86));
   line-height: 1.6;
   font-size: 16px;
-  max-width: 900px;
-  margin: 0 auto;
+  max-width: 980px;
+  margin: 0 auto 18px;
   z-index: 2;
-  box-shadow: 0 0 16px rgba(0, 245, 255, 0.12), 0 0 28px rgba(255, 0, 204, 0.08);
   overflow: visible;
 }
 .article-container::before,
@@ -307,37 +434,112 @@ const goBack = () => {
 
 .header {
   display: flex;
-  align-items: center;
-  margin-bottom: 20px;
-  position: relative;
-  z-index: 2;
-}
-
-.back-button {
-  margin-right: 16px;
-  font-size: 20px;
-  display: flex;
-  align-items: center;
-}
-
-.title-box {
-  display: flex;
+  align-items: flex-start;
   justify-content: space-between;
+  gap: 12px;
+  padding: 14px 16px 12px;
+  border-bottom: 1px solid rgba(0, 255, 255, 0.18);
+  background: linear-gradient(90deg, rgba(0, 245, 255, 0.08), rgba(255, 0, 204, 0.08));
+  position: relative;
+}
+.header-left {
+  display: flex;
   align-items: center;
-  width: 100%;
+  gap: 10px;
+  min-width: 0;
+  flex: 1;
+}
+.back-button {
+  font-size: 16px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.header-title-wrap {
+  min-width: 0;
+  flex: 1;
+}
+.header-right {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+.meta-pill {
+  font-size: 12px;
+  color: #9ee8ff;
+  background: rgba(0, 255, 255, 0.1);
+  border: 1px solid rgba(0, 255, 255, 0.2);
+  border-radius: 999px;
+  padding: 4px 10px;
+}
+.permission-pill.readonly {
+  color: #ffb7e8;
+  border-color: rgba(255, 0, 204, 0.28);
+  background: rgba(255, 0, 204, 0.12);
 }
 
 .title {
-  font-size: 22px;
-  font-weight: bold;
+  font-size: 24px;
+  font-weight: 700;
   color: #abf7ff;
   text-shadow: 0 0 10px rgba(0, 245, 255, 0.35);
 }
+.title-edit-input {
+  max-width: 680px;
+}
 
 .author {
-  font-size: 14px;
+  margin-top: 6px;
+  font-size: 13px;
   color: #8fb2c9;
-  margin-left: 16px;
+}
+.meta-strip {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+  padding: 12px 16px;
+  border-bottom: 1px solid rgba(0, 255, 255, 0.15);
+  background: rgba(8, 13, 30, 0.62);
+}
+.strip-item {
+  border: 1px solid rgba(0, 255, 255, 0.18);
+  border-radius: 10px;
+  background: rgba(8, 15, 34, 0.72);
+  padding: 10px 12px;
+}
+.strip-label {
+  font-size: 12px;
+  color: #88a7bf;
+}
+.strip-value {
+  margin-top: 4px;
+  font-size: 15px;
+  font-weight: 600;
+  color: #c7f8ff;
+}
+.editor-panel {
+  padding: 12px 14px 14px;
+}
+.editor-canvas {
+  border: 1px solid rgba(0, 255, 255, 0.2);
+  border-radius: 12px;
+  overflow: hidden;
+  background: rgba(10, 15, 34, 0.78);
+}
+.editor-toolbar {
+  border-bottom: 1px solid rgba(0, 255, 255, 0.18);
+}
+.editor-body {
+  height: 520px;
+  overflow-y: auto;
+}
+.editor-action {
+  margin-top: 10px;
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
 }
 .switch-wrap {
   position: fixed;
@@ -383,5 +585,32 @@ const goBack = () => {
     bottom: 74px;
     transform: translateX(50%);
   }
+  .header {
+    flex-direction: column;
+  }
+  .header-left {
+    width: 100%;
+  }
+  .header-right {
+    width: 100%;
+    justify-content: flex-start;
+  }
+  .meta-strip {
+    grid-template-columns: 1fr;
+  }
+  .article-container {
+    padding: 24px 16px;
+  }
+}
+
+:deep(.w-e-toolbar),
+:deep(.w-e-bar) {
+  background: #0f1328 !important;
+  border-color: rgba(0, 255, 255, 0.2) !important;
+}
+
+:deep(.w-e-text-container),
+:deep(.w-e-scroll) {
+  background: #f9fbff !important;
 }
 </style>

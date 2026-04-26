@@ -23,7 +23,7 @@
               <img class="thumb" :src="getCover(file)" />
             </div>
             <div class="doc-item-center">
-              <div class="doc-item-title">{{ getTitle(file.content) }}</div>
+              <div class="doc-item-title">{{ getTitle(file) }}</div>
               <div class="doc-item-meta">
                 <span class="author">{{ file.author }}</span>
                 <span class="dot">•</span>
@@ -97,7 +97,12 @@
       return list.filter(f => {
         const matchAuthor = af ? f.author === af : true
         const contentText = String(f.content || '').toLowerCase()
-        const matchQuery = q ? (contentText.includes(q) || String(f.author || '').toLowerCase().includes(q)) : true
+        const titleText = String(f.title || '').toLowerCase()
+        const matchQuery = q ? (
+          contentText.includes(q) ||
+          titleText.includes(q) ||
+          String(f.author || '').toLowerCase().includes(q)
+        ) : true
         return matchAuthor && matchQuery
       })
     })
@@ -105,17 +110,17 @@
     const stripHtml = (html) => {
       return String(html || '').replace(/<[^>]+>/g, '').replace(/\s+/g, ' ').trim()
     }
-    const getTitle = (html) => {
-      const text = stripHtml(html)
-      const first = text.split(/[\r\n]+/).find(s => s && s.trim()) || text
-      return first.length > 28 ? first.slice(0, 28) + '…' : first || '无标题'
+    const getTitle = (file) => {
+      const directTitle = String(file?.title || '').trim()
+      if (!directTitle) return '未命名文章'
+      return directTitle.length > 28 ? directTitle.slice(0, 28) + '…' : directTitle
     }
     const getExcerpt = (html) => {
       const text = stripHtml(html)
       return text.length > 140 ? text.slice(0, 140) + '…' : text
     }
     const getCover = (file) => {
-      const seed = encodeURIComponent(getTitle(file.content) || file.author || 'doc')
+      const seed = encodeURIComponent(getTitle(file) || file.author || 'doc')
       return `https://picsum.photos/seed/${seed}/300/200`
     }
 

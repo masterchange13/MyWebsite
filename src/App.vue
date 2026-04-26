@@ -126,6 +126,28 @@ body {
   border-radius: 10px !important;
 }
 
+/* Global dropdown tone down */
+.el-select-dropdown {
+  background: rgba(8, 12, 26, 0.96) !important;
+  border: 1px solid rgba(0, 220, 230, 0.2) !important;
+  box-shadow: 0 0 10px rgba(0, 220, 230, 0.08) !important;
+}
+
+.el-select-dropdown__item {
+  color: #9abec7 !important;
+}
+
+.el-select-dropdown__item.hover,
+.el-select-dropdown__item:hover {
+  background: rgba(170, 0, 135, 0.12) !important;
+  color: #cc79be !important;
+}
+
+.el-select-dropdown__item.is-selected {
+  color: #65d5dc !important;
+  background: rgba(0, 220, 230, 0.12) !important;
+}
+
 @media (max-width: 900px) {
   .global-petal:nth-child(n+9) {
     display: none;

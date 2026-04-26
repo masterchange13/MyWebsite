@@ -17,9 +17,9 @@ const getCurrentUser = () => {
   return request.get('/users/me/')
 }
 
-const getUserDetail = ({ username }) => {
-  return request.get('/users/detail', {
-    params: { username },
+const getUserDetail = ({ id }) => {
+  return request.get('/users/detail/', {
+    params: { id },
     silentError: true
   })
 }

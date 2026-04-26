@@ -1,16 +1,16 @@
 <template>
   <div class="profile-page">
     <el-card class="header" shadow="never">
-      <div class="title">个人信息</div>
-      <div class="subtitle">账户资料</div>
+      <div class="title">{{ isSelfProfile ? '个人信息' : `${targetUsername || targetUserId || '用户'} 的资料` }}</div>
+      <div class="subtitle">{{ isSelfProfile ? '账户资料' : '用户公开资料' }}</div>
     </el-card>
 
     <el-card class="body" shadow="always">
       <div class="row">
         <el-avatar :size="72" :src="avatarUrl" />
         <div class="info">
-          <div class="name">{{ username }}</div>
-          <div class="id">ID: {{ username }}</div>
+          <div class="name">{{ targetUsername || targetUserId || username }}</div>
+          <div class="id">ID: {{ targetUserId || '未知' }}</div>
         </div>
       </div>
       <el-form :model="form" :rules="rules" ref="formRef" label-width="88px" class="form">
@@ -18,20 +18,20 @@
           <el-input v-model="form.username" disabled />
         </el-form-item>
         <el-form-item label="邮箱" prop="email">
-          <el-input v-model="form.email" placeholder="请输入邮箱" />
+          <el-input v-model="form.email" placeholder="请输入邮箱" :disabled="!isSelfProfile" />
         </el-form-item>
         <el-form-item label="创建时间">
           <el-input :value="createdTimeText" readonly />
         </el-form-item>
-        <el-form-item label="新密码" prop="password">
+        <el-form-item v-if="isSelfProfile" label="新密码" prop="password">
           <el-input v-model="form.password" type="password" placeholder="不少于6位" show-password />
         </el-form-item>
-        <el-form-item label="确认密码" prop="confirm">
+        <el-form-item v-if="isSelfProfile" label="确认密码" prop="confirm">
           <el-input v-model="form.confirm" type="password" placeholder="再次输入" show-password />
         </el-form-item>
         <div class="actions">
           <el-button @click="goBack">返回</el-button>
-          <el-button type="primary" @click="submit">保存</el-button>
+          <el-button v-if="isSelfProfile" type="primary" @click="submit">保存</el-button>
         </div>
       </el-form>
     </el-card>
@@ -39,17 +39,27 @@
 </template>
 
 <script setup>
-import { computed, ref, onMounted } from 'vue'
-import { useRouter } from 'vue-router'
+import { computed, ref, onMounted, watch } from 'vue'
+import { useRouter, useRoute } from 'vue-router'
 import { useUserStore } from '@/stores/userStore'
 import { ElMessage } from 'element-plus'
 import dayjs from 'dayjs'
 import { userApi } from '@/api/userApi'
 
 const router = useRouter()
+const route = useRoute()
 const userStore = useUserStore()
 const username = computed(() => userStore.getUsername())
-const avatarUrl = computed(() => `https://api.dicebear.com/7.x/identicon/svg?seed=${username.value || 'user'}`)
+const targetUserId = computed(() => {
+  const raw = String(route.params.id || '').trim()
+  if (!raw || raw === 'undefined' || raw === 'null') return ''
+  return decodeURIComponent(raw)
+})
+const targetUsername = computed(() => String(form.value.username || '').trim())
+const isSelfProfile = computed(() => {
+  return !!targetUsername.value && targetUsername.value === username.value
+})
+const avatarUrl = computed(() => `https://api.dicebear.com/7.x/identicon/svg?seed=${targetUsername.value || targetUserId.value || 'user'}`)
 const goBack = () => router.back()
 
 const formRef = ref()
@@ -76,25 +86,26 @@ const rules = {
 
 const loadProfile = async () => {
   try {
-    const name = username.value || ''
     let data = null
-    if (name) {
-      const res1 = await userApi.getUserDetail({ username: name })
+    if (targetUserId.value) {
+      // chat 等页面带 id 跳转时，只按 id 查目标用户
+      const res1 = await userApi.getUserDetail({ id: targetUserId.value })
       data = res1?.data ?? res1
-    }
-    if (!data) {
+    } else {
+      // 无 id 的兜底逻辑（例如直接访问 /profile）
       const res2 = await userApi.getCurrentUser()
       data = res2?.data ?? res2
     }
-    form.value.username = data?.username || name || ''
+    form.value.username = data?.username || ''
     form.value.email = data?.email || ''
     createdTime.value = data?.created_time || ''
   } catch (e) {
-    form.value.username = username.value || ''
+    form.value.username = ''
   }
 }
 
 const submit = () => {
+  if (!isSelfProfile.value) return
   formRef.value.validate(async (valid) => {
     if (!valid) return
     const payload = { email: form.value.email }
@@ -116,7 +127,11 @@ const submit = () => {
   })
 }
 
-onMounted(() => {
+onMounted(async () => {
+  await loadProfile()
+})
+
+watch(() => route.params.id, () => {
   loadProfile()
 })
 </script>

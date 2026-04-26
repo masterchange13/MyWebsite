@@ -10,9 +10,9 @@
           v-for="u in filteredUsers"
           :key="u.username"
           :class="['user-item', selectedUser === u.username ? 'active' : '']"
-          @click="chooseUser(u.username)"
+          @click="chooseUser(u)"
         >
-          <img class="avatar clickable" :src="getAvatar(u.username)" @click.stop="toProfile" />
+          <img class="avatar clickable" :src="getAvatar(u.username)" @click.stop="toProfile(u.id)" />
           <div class="uname">{{ u.username }}</div>
         </div>
       </el-scrollbar>
@@ -21,7 +21,7 @@
     <el-card class="chat-window" shadow="always">
       <div class="window-header">
         <div class="peer">
-          <img class="avatar clickable" :src="getAvatar(selectedUser)" @click.stop="toProfile" />
+          <img class="avatar clickable" :src="getAvatar(selectedUser)" @click.stop="toProfile(selectedUserId)" />
           <div class="name">{{ selectedUser || '未选择' }}</div>
         </div>
       </div>
@@ -79,6 +79,7 @@ const message = ref("");
 const messages = ref([]);
 const users = ref([]);
 const selectedUser = ref("");
+const selectedUserId = ref("");
 const userStore = useUserStore();
 const router = useRouter();
 const scrollRef = ref(null);
@@ -101,14 +102,20 @@ const handleOutsideClick = (event) => {
 }
 const filteredUsers = computed(() => {
   const f = filter.value.trim().toLowerCase()
-  return f ? users.value.filter(u => u.username.toLowerCase().includes(f)) : users.value
+  return f ? users.value.filter(u => String(u.username || '').toLowerCase().includes(f)) : users.value
 })
 const getAvatar = (name) => `https://api.dicebear.com/7.x/identicon/svg?seed=${encodeURIComponent(name || 'user')}`
-const chooseUser = async (name) => {
-  selectedUser.value = name
+const chooseUser = async (user) => {
+  selectedUser.value = user?.username || ''
+  selectedUserId.value = String(user?.id ?? user?.user_id ?? '')
   await getHistory()
 }
-const toProfile = () => router.push('/profile')
+
+const toProfile = (id) => {
+  const target = String(id || '').trim()
+  if (!target) return
+  router.push(`/profile/${encodeURIComponent(target)}`)
+}
 
 const closeSocket = () => {
   if (socket.value) {
@@ -150,8 +157,17 @@ const getUsers = async () => {
   const response = await chatApi.getUsers();
   const me = userStore.getUsername();
   const list = response?.data ?? [];
-  users.value = Array.isArray(list) ? list.filter(u => u?.username !== me) : [];
+  users.value = Array.isArray(list)
+    ? list
+        .map((u) => ({
+          ...u,
+          id: u?.id ?? u?.user_id ?? '',
+          username: u?.username || ''
+        }))
+        .filter(u => u.username && u.username !== me)
+    : [];
   selectedUser.value = users.value.length ? users.value[0].username : '';
+  selectedUserId.value = users.value.length ? String(users.value[0].id || '') : '';
 };
 
 const getHistory = async () => {
