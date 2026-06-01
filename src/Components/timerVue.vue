@@ -93,30 +93,38 @@ onMounted(() => {
 
 <style scoped>
 .timer-page {
-  padding: 20px;
-  min-height: 100%;
-  background:
-    radial-gradient(1200px 600px at -200px -200px, rgba(79, 160, 255, 0.15) 0%, rgba(79, 160, 255, 0) 60%),
-    radial-gradient(800px 400px at 120% 20%, rgba(86, 220, 160, 0.12) 0%, rgba(86, 220, 160, 0) 60%),
-    linear-gradient(180deg, #eef5ff 0%, #f8fbff 100%);
+  padding: 14px;
+  height: 100%;
+  min-height: 0;
+  box-sizing: border-box;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
 }
 .timer-card {
-  max-width: 760px;
-  margin: 0 auto;
-  border-radius: 14px;
+  width: min(820px, 100%);
+  border-radius: 8px;
+  background: rgba(9, 15, 34, 0.82);
+  border: 1px solid rgba(0, 255, 255, 0.18);
+  box-shadow: 0 0 16px rgba(0, 245, 255, 0.08);
+}
+.timer-card :deep(.el-card__body) {
+  padding: 14px;
 }
 .header {
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 6px;
 }
 .title {
   font-size: 22px;
   font-weight: 700;
+  color: #a6f9ff;
+  text-shadow: 0 0 10px rgba(0, 245, 255, 0.35);
 }
 .subtitle {
   font-size: 13px;
-  color: #6b7a8c;
+  color: #9dc5de;
 }
 .controls {
   margin-top: 16px;
@@ -133,10 +141,14 @@ onMounted(() => {
   display: flex;
   flex-direction: column;
   gap: 6px;
+  padding: 10px;
+  border: 1px solid rgba(0, 255, 255, 0.16);
+  border-radius: 8px;
+  background: rgba(10, 16, 35, 0.72);
 }
 .label {
   font-size: 12px;
-  color: #6b7a8c;
+  color: #9dc5de;
 }
 .buttons {
   display: flex;
@@ -147,20 +159,84 @@ onMounted(() => {
   display: flex;
   flex-direction: column;
   gap: 6px;
+  padding: 10px;
+  border: 1px solid rgba(0, 255, 255, 0.16);
+  border-radius: 8px;
+  background: rgba(10, 16, 35, 0.72);
 }
 .volume {
   display: flex;
   align-items: center;
   gap: 12px;
+  padding: 10px;
+  border: 1px solid rgba(0, 255, 255, 0.16);
+  border-radius: 8px;
+  background: rgba(10, 16, 35, 0.72);
 }
 .display {
   margin-top: 18px;
+  padding: 16px;
+  border: 1px solid rgba(0, 255, 255, 0.18);
+  border-radius: 8px;
+  background: rgba(10, 16, 35, 0.82);
 }
 .time {
   font-size: 52px;
   font-weight: 800;
   text-align: center;
-  letter-spacing: 1px;
+  letter-spacing: 0;
   margin-bottom: 12px;
+  color: #e2fbff;
+  text-shadow: 0 0 14px rgba(0, 245, 255, 0.32);
+  font-variant-numeric: tabular-nums;
+}
+.timer-card :deep(.el-input__wrapper),
+.timer-card :deep(.el-input-number__decrease),
+.timer-card :deep(.el-input-number__increase) {
+  background: rgba(6, 12, 28, 0.9);
+  border-color: rgba(0, 255, 255, 0.18);
+  box-shadow: 0 0 0 1px rgba(0, 255, 255, 0.12) inset;
+}
+.timer-card :deep(.el-input__inner) {
+  color: #e2fbff;
+}
+.timer-card :deep(.el-input-number__decrease),
+.timer-card :deep(.el-input-number__increase) {
+  color: #8cf5ff;
+}
+.timer-card :deep(.el-slider__runway) {
+  background-color: rgba(0, 255, 255, 0.14);
+}
+.timer-card :deep(.el-slider__bar) {
+  background-color: #00d8ff;
+}
+.timer-card :deep(.el-progress-bar__outer) {
+  background-color: rgba(0, 255, 255, 0.12);
+}
+.timer-card :deep(.el-progress-bar__inner) {
+  background: linear-gradient(90deg, #00d8ff 0%, #3ee097 100%);
+}
+.timer-card :deep(.el-progress__text) {
+  color: #b8f8ff;
+}
+
+@media (max-width: 720px) {
+  .time-inputs {
+    grid-template-columns: 1fr;
+  }
+  .buttons {
+    flex-direction: column;
+  }
+  .buttons :deep(.el-button) {
+    margin-left: 0;
+    width: 100%;
+  }
+  .volume {
+    align-items: stretch;
+    flex-direction: column;
+  }
+  .time {
+    font-size: 42px;
+  }
 }
 </style>
