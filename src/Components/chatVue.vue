@@ -88,6 +88,7 @@ const filter = ref('');
 const showSymbolPanel = ref(false);
 const symbolToolsRef = ref(null);
 const quickSymbols = ['😀', '😂', '😍', '🥳', '👍', '👏', '🙏', '❤️', '✨', '🔥', '🌸', '🍀', '(＾▽＾)', 'QAQ', 'OTZ', '→', '←', '✓', '★', '※'];
+let audioContext = null;
 
 const insertSymbol = (symbol) => {
   message.value = `${message.value || ''}${symbol}`
@@ -132,7 +133,11 @@ const connectWebSocket = () => {
   socket.value.onopen = () => console.log("WebSocket 连接成功");
   socket.value.onmessage = async (event) => {
     const msgData = JSON.parse(event.data);
-    messages.value.push(normalizeMessage(msgData));
+    const normalized = normalizeMessage(msgData);
+    messages.value.push(normalized);
+    if (!isMyMessage(normalized)) {
+      playNotificationSound();
+    }
     await scrollToBottom();
   };
   socket.value.onclose = () => console.log("WebSocket 连接关闭");
@@ -218,6 +223,46 @@ const getUsername = (msg) => msg?.sendUsername || 'unknown';
 const getMessageText = (msg) => msg?.data || '';
 const getMessageTime = (msg) => formatTime(msg?.time);
 
+const unlockNotificationSound = () => {
+  try {
+    const AudioCtx = window.AudioContext || window.webkitAudioContext;
+    if (!AudioCtx) return;
+    if (!audioContext) audioContext = new AudioCtx();
+    if (audioContext.state === 'suspended') audioContext.resume();
+  } catch (e) {
+    // 浏览器拒绝音频初始化时忽略，避免影响聊天。
+  }
+};
+
+const playNotificationSound = () => {
+  try {
+    const AudioCtx = window.AudioContext || window.webkitAudioContext;
+    if (!AudioCtx) return;
+    if (!audioContext) audioContext = new AudioCtx();
+    if (audioContext.state === 'suspended') {
+      audioContext.resume().catch(() => {});
+    }
+
+    const now = audioContext.currentTime;
+    const oscillator = audioContext.createOscillator();
+    const gain = audioContext.createGain();
+
+    oscillator.type = 'sine';
+    oscillator.frequency.setValueAtTime(880, now);
+    oscillator.frequency.setValueAtTime(1175, now + 0.08);
+    gain.gain.setValueAtTime(0.0001, now);
+    gain.gain.exponentialRampToValueAtTime(0.18, now + 0.01);
+    gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.22);
+
+    oscillator.connect(gain);
+    gain.connect(audioContext.destination);
+    oscillator.start(now);
+    oscillator.stop(now + 0.24);
+  } catch (e) {
+    // 提示音失败不影响消息展示。
+  }
+};
+
 const scrollToBottom = async () => {
   await nextTick();
   const wrap = scrollRef.value?.wrapRef;
@@ -229,11 +274,15 @@ onMounted(async () => {
   await getUsers();
   if (selectedUser.value) await getHistory()
   document.addEventListener('mousedown', handleOutsideClick)
+  document.addEventListener('click', unlockNotificationSound, { once: true })
+  document.addEventListener('keydown', unlockNotificationSound, { once: true })
 });
 
 onUnmounted(() => {
   if (socket.value) socket.value.close();
   document.removeEventListener('mousedown', handleOutsideClick)
+  document.removeEventListener('click', unlockNotificationSound)
+  document.removeEventListener('keydown', unlockNotificationSound)
 });
 </script>
 

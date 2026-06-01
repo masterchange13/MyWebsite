@@ -23,6 +23,28 @@
           <el-button native-type="button" @click="reset">重置</el-button>
         </div>
       </el-form>
+
+      <div class="history-panel">
+        <div class="history-header">
+          <span>历史推盘</span>
+          <el-button size="small" link :loading="historyLoading" @click="loadHistory">刷新</el-button>
+        </div>
+        <el-scrollbar class="history-list" height="280px">
+          <button
+            v-for="item in historyRecords"
+            :key="item.id"
+            type="button"
+            class="history-item"
+            :class="{ active: currentCalcId === item.id }"
+            @click="openHistory(item.id)"
+          >
+            <span class="history-main">{{ item.topic || '未填写主题' }}</span>
+            <span class="history-sub">{{ item.datetime || formatHistoryTime(item.created_time) }}</span>
+            <span class="history-sub">{{ item.location || '未填写地点' }} · {{ historyStatusText(item.analysis_status) }}</span>
+          </button>
+          <div v-if="!historyLoading && historyRecords.length === 0" class="history-empty">暂无历史推盘</div>
+        </el-scrollbar>
+      </div>
     </el-card>
 
     <el-card class="qimen-result" shadow="always">
@@ -102,6 +124,8 @@ const submitting = ref(false)
 const currentCalcId = ref(null)
 const analysisStatus = ref('none')
 const pollTimer = ref(null)
+const historyRecords = ref([])
+const historyLoading = ref(false)
 const pendingStorageKey = 'qimen_pending_calc_id'
 const analysisStatusText = computed(() => {
   const map = {
@@ -113,6 +137,17 @@ const analysisStatusText = computed(() => {
   }
   return map[analysisStatus.value] || ''
 })
+const historyStatusText = (status) => {
+  const map = {
+    none: '未分析',
+    pending: '等待中',
+    running: '分析中',
+    success: '已完成',
+    failed: '失败'
+  }
+  return map[status] || '未知'
+}
+const formatHistoryTime = (value) => value ? dayjs(value).format('YYYY-MM-DD HH:mm') : '未知时间'
 const escapeHtml = (s) => String(s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
 const renderMarkdown = (src) => {
   let text = String(src || '')
@@ -318,6 +353,45 @@ const startAnalysisPolling = (id) => {
   pollTimer.value = setInterval(() => pollAnalysisResult(id), 5000)
 }
 
+const loadHistory = async () => {
+  historyLoading.value = true
+  try {
+    const res = await qiMenApi.history()
+    if (res?.code === 200) {
+      historyRecords.value = Array.isArray(res?.data?.records) ? res.data.records : []
+    }
+  } catch (e) {
+    // 历史记录加载失败不影响推盘主流程。
+  } finally {
+    historyLoading.value = false
+  }
+}
+
+const openHistory = async (id) => {
+  if (!id) return
+  clearAnalysisPolling()
+  try {
+    const res = await qiMenApi.result(id)
+    if (res?.code !== 200 || !applyServerData(res.data)) {
+      ElMessage.warning('历史记录加载失败')
+      return
+    }
+    const input = res.data?.input || {}
+    form.datetime = input.datetime || form.datetime
+    form.location = input.location || ''
+    form.topic = input.topic || ''
+    form.solar = input.solar !== false
+    form.analyze = analysisStatus.value !== 'none'
+    if (['pending', 'running'].includes(analysisStatus.value)) {
+      startAnalysisPolling(id)
+    } else {
+      forgetPending(id)
+    }
+  } catch (e) {
+    ElMessage.warning('历史记录加载失败')
+  }
+}
+
 const calc = async () => {
   submitting.value = true
   clearAnalysisPolling()
@@ -342,6 +416,7 @@ const calc = async () => {
           clearAnalysisPolling()
           ElMessage.success('推盘成功')
         }
+        loadHistory()
         return
       }
       ElMessage.warning('返回格式不符，使用本地推盘')
@@ -394,6 +469,7 @@ const reset = () => {
 }
 
 onMounted(async () => {
+  loadHistory()
   const pendingId = localStorage.getItem(pendingStorageKey)
   if (!pendingId) return
   currentCalcId.value = pendingId
@@ -443,6 +519,52 @@ onBeforeUnmount(() => {
   display: flex;
   gap: 8px;
   justify-content: flex-end;
+}
+.history-panel {
+  margin-top: 14px;
+  border-top: 1px solid rgba(0, 255, 255, 0.16);
+  padding-top: 12px;
+}
+.history-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  color: #b8f8ff;
+  font-weight: 700;
+  margin-bottom: 8px;
+}
+.history-list { height: 280px; }
+.history-item {
+  width: 100%;
+  border: 1px solid rgba(0, 255, 255, 0.16);
+  border-radius: 8px;
+  background: rgba(9, 15, 34, 0.62);
+  color: #dffcff;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  text-align: left;
+  padding: 8px 10px;
+  margin-bottom: 8px;
+  cursor: pointer;
+}
+.history-item:hover,
+.history-item.active {
+  border-color: rgba(0, 245, 255, 0.45);
+  background: rgba(0, 245, 255, 0.1);
+}
+.history-main {
+  font-size: 14px;
+  font-weight: 700;
+}
+.history-sub,
+.history-empty {
+  color: #9dc5de;
+  font-size: 12px;
+}
+.history-empty {
+  padding: 10px 0;
+  text-align: center;
 }
 .qimen-result {
   display: flex;
