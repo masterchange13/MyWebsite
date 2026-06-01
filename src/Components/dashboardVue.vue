@@ -58,6 +58,10 @@
           <el-icon><document /></el-icon>
           <span>blog</span>
         </el-menu-item>
+        <el-menu-item index="6" @click="toGuide()">
+          <el-icon><setting /></el-icon>
+          <span>Guide</span>
+        </el-menu-item>
       </el-menu>
     </el-header>
 
@@ -115,6 +119,10 @@
         <el-menu-item index="5" @click="getDocument(); showMenuDrawer=false">
           <el-icon><document /></el-icon>
           <span>blog</span>
+        </el-menu-item>
+        <el-menu-item index="6" @click="toGuide(); showMenuDrawer=false">
+          <el-icon><setting /></el-icon>
+          <span>Guide</span>
         </el-menu-item>
       </el-menu>
     </el-drawer>
@@ -207,6 +215,7 @@ const toProfile = async () => {
 const toQiMen = () => router.push("/qiMen");
 const toTimer = () => router.push("/timer");
 const toCalculator = () => router.push("/calculator");
+const toGuide = () => router.push("/guide");
 
 const audioRef = ref<HTMLAudioElement | null>(null);
 const trackRef = ref<HTMLElement | null>(null);

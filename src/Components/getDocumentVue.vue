@@ -24,11 +24,15 @@
             </div>
             <div class="doc-item-center">
               <div class="doc-item-title">{{ getTitle(file) }}</div>
-              <div class="doc-item-meta">
-                <span class="author">{{ file.author }}</span>
-                <span class="dot">•</span>
-                <span class="time">{{ formatTime(file.create_time) }}</span>
-              </div>
+            <div class="doc-item-meta">
+              <span class="author">{{ file.author }}</span>
+              <span class="dot">•</span>
+              <span class="time">{{ formatTime(file.create_time) }}</span>
+              <span class="dot">•</span>
+              <span class="visibility-tag" :class="file.is_public ? 'public' : 'private'">
+                {{ file.is_public ? '公开' : '仅自己可见' }}
+              </span>
+            </div>
               <div class="doc-item-excerpt">{{ getExcerpt(file.content) }}</div>
             </div>
             <div class="doc-item-right">
@@ -225,6 +229,21 @@
   line-clamp: 3;
   -webkit-box-orient: vertical;
   overflow: hidden;
+}
+.visibility-tag {
+  padding: 2px 8px;
+  border-radius: 999px;
+  font-size: 12px;
+}
+.visibility-tag.public {
+  color: #8ff4ff;
+  border: 1px solid rgba(0, 245, 255, 0.24);
+  background: rgba(0, 245, 255, 0.12);
+}
+.visibility-tag.private {
+  color: #ffc0f1;
+  border: 1px solid rgba(255, 0, 204, 0.24);
+  background: rgba(255, 0, 204, 0.12);
 }
 .doc-item-right {
   display: flex;

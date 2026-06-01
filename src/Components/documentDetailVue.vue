@@ -28,6 +28,7 @@
           <div class="meta-pill">字数：{{ wordCount }}</div>
           <div class="meta-pill">预计阅读：{{ readingMinutes }} 分钟</div>
           <div class="meta-pill">状态：{{ isEditing ? '编辑中' : '阅读中' }}</div>
+          <div class="meta-pill" :class="{ readonly: !isPublic }">公开：{{ isPublic ? '是' : '否' }}</div>
           <div class="meta-pill permission-pill" :class="{ readonly: !isOwner }">
             权限：{{ isOwner ? '可编辑' : '仅查看' }}
           </div>
@@ -61,6 +62,10 @@
           />
         </div>
         <div class="editor-action" v-if="isOwner">
+          <div class="privacy-control">
+            <div class="privacy-label">公开给别人看</div>
+            <el-switch v-model="isPublic" />
+          </div>
           <el-button @click="clearContent">清空内容</el-button>
           <el-button type="primary" :loading="publishing" @click="publish">发布</el-button>
           <el-button type="danger" plain :loading="deleting" @click="removeDocument">删除文章</el-button>
@@ -97,6 +102,7 @@ const id = route.params.id
 
 const articleTitle = ref('文章标题加载中...')
 const articleAuthor = ref('未知作者')
+const isPublic = ref(true)
 
 const editorRef = shallowRef()
 const valueHtml = ref('')
@@ -133,13 +139,24 @@ onMounted(async () => {
       valueHtml.value = res.data.content || ''
       articleTitle.value = res.data.title || '未命名文章'
       articleAuthor.value = res.data.author || '匿名'
+      isPublic.value = res.data.is_public !== false
       if (!isOwner.value) {
         isEditing.value = false
       }
     } else {
       ElMessage.error(res.message || '请求错误')
+      if (res.code === 403) {
+        router.push({ name: 'getDocument' })
+      }
     }
   } catch (error) {
+    const status = error?.response?.status
+    const message = error?.response?.data?.message
+    if (status === 403) {
+      ElMessage.warning(message || '该文章仅作者可见')
+      router.push({ name: 'getDocument' })
+      return
+    }
     ElMessage.error('获取文章失败，请稍后再试')
     console.error(error)
   }
@@ -182,7 +199,7 @@ const publish = async () => {
   try {
     publishing.value = true
     const author = String(currentUsername.value || articleAuthor.value || '匿名').trim()
-    const payload = { author, title, content: valueHtml.value }
+    const payload = { author, title, content: valueHtml.value, is_public: isPublic.value }
     if (id !== undefined && id !== null && String(id).trim() !== '') {
       payload.id = id      
     }
@@ -540,6 +557,22 @@ const goBack = () => {
   display: flex;
   justify-content: flex-end;
   gap: 8px;
+  flex-wrap: wrap;
+  align-items: center;
+}
+.privacy-control {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-right: auto;
+  padding: 8px 10px;
+  border: 1px solid rgba(0, 255, 255, 0.16);
+  border-radius: 8px;
+  background: rgba(10, 16, 35, 0.72);
+}
+.privacy-label {
+  font-size: 12px;
+  color: #9dc5de;
 }
 .switch-wrap {
   position: fixed;

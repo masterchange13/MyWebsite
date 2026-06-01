@@ -25,6 +25,10 @@
           <div class="title-tip">标题长度：{{ titleLength }}/80</div>
         </div>
         <div class="action-right">
+          <div class="privacy-control">
+            <div class="privacy-label">公开给别人看</div>
+            <el-switch v-model="isPublic" />
+          </div>
           <el-button @click="clearContent">清空内容</el-button>
           <el-button type="primary" :loading="publishing" @click="publish">发布</el-button>
         </div>
@@ -83,6 +87,7 @@ const author = computed(() => useStore.getUsername()) // 计算属性放在 setu
 const editorRef = shallowRef()
 const mode = 'default'
 const publishing = ref(false)
+const isPublic = ref(true)
 
 // 内容 HTML
 const valueHtml = ref('<p></p>')
@@ -125,6 +130,7 @@ const handleCreated = (editor) => {
 const clearContent = () => {
   valueHtml.value = '<p></p>'
   docTitle.value = ''
+  isPublic.value = true
 }
 
 // 发布方法
@@ -145,7 +151,8 @@ const publish = async () => {
     const res = await request.post('/document/publish/', {
       author: author.value, // 取计算属性的值
       title: title,
-      content: valueHtml.value
+      content: valueHtml.value,
+      is_public: isPublic.value
     })    
     if (res.code === 200) {
       ElMessage.success(res.message)
@@ -245,6 +252,20 @@ const publish = async () => {
   display: flex;
   gap: 8px;
   flex-shrink: 0;
+  align-items: center;
+}
+.privacy-control {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 10px;
+  border: 1px solid rgba(0, 255, 255, 0.16);
+  border-radius: 8px;
+  background: rgba(10, 16, 35, 0.72);
+}
+.privacy-label {
+  color: #9dc5de;
+  font-size: 12px;
 }
 
 .quick-overview {
