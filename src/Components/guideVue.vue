@@ -4,12 +4,12 @@
       <div>
         <div class="eyebrow">导航指南</div>
         <h1>快速了解网站如何使用</h1>
-        <p>从顶部菜单进入各功能区；移动端点击左上角菜单按钮打开导航。计时器、倒计时和音乐播放器会在全局保持运行。</p>
+        <p>从顶部菜单进入各功能区；移动端点击左上角菜单按钮打开导航。计时器、倒计时和音乐播放器会在全局保持运行。你也可以在 Feedback 留言板提交需求。</p>
       </div>
       <div class="quick-actions">
         <el-button type="primary" @click="go('/navigator')">打开导航页</el-button>
-        <el-button @click="go('/timer')">定时器</el-button>
-        <el-button @click="go('/chat')">聊天</el-button>
+        <el-button @click="go('/transfer')">上传/预览</el-button>
+        <el-button @click="go('/feedback')">留言板</el-button>
       </div>
     </section>
 
@@ -41,7 +41,7 @@
           <span class="num">1</span>
           <div>
             <div class="step-title">先从 Navigator 管理常用网站</div>
-            <div class="step-text">把 GitHub、博客、工具站等常用链接集中维护，后续从导航页快速进入。</div>
+            <div class="step-text">支持添加、编辑、拖拽排序；图标留空会自动使用站点图标。</div>
           </div>
         </div>
         <div class="step">
@@ -54,8 +54,8 @@
         <div class="step">
           <span class="num">3</span>
           <div>
-            <div class="step-title">使用工具辅助工作</div>
-            <div class="step-text">Timer 可全局倒计时和正向计时，QiMenDunJia 支持异步分析和历史记录。</div>
+            <div class="step-title">传文件、上传音乐、提交需求</div>
+            <div class="step-text">Transfer 支持文件/音乐上传并预览历史；Feedback 留言板可提交需求并查看处理状态。</div>
           </div>
         </div>
       </div>
@@ -77,7 +77,7 @@ const guideGroups = [
       { name: 'Video', path: '/video', tip: '查看或管理视频内容' },
       { name: 'Music', path: '/music', tip: '播放音乐，底部播放器全局保留' },
       { name: 'Document', path: '/document', tip: '创建、编辑和管理文档' },
-      { name: 'Transfer', path: '/transfer', tip: '上传或传输文件' }
+      { name: 'Transfer', path: '/transfer', tip: '上传文件/音乐，查看历史并支持预览' }
     ]
   },
   {
@@ -97,7 +97,14 @@ const guideGroups = [
       { name: 'Chat', path: '/chat', tip: '选择联系人聊天，收到消息会有提示音' },
       { name: 'To Do List', path: '/todoList', tip: '记录待办和完成状态' },
       { name: 'Profile', path: '/profile/me', tip: '查看或进入个人资料页' },
-      { name: 'Navigator', path: '/navigator', tip: '维护个人常用网站入口' }
+      { name: 'Navigator', path: '/navigator', tip: '维护常用网站入口（可编辑、拖拽排序、自动站点图标）' }
+    ]
+  },
+  {
+    title: '反馈与需求',
+    desc: '提交需求、查看处理进度。',
+    items: [
+      { name: 'Feedback', path: '/feedback', tip: '提交新需求并查看状态/回复' }
     ]
   },
   {

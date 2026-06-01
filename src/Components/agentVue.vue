@@ -1,55 +1,95 @@
 <template>
-  <div class="agent-container">
-    <el-card class="agent-header" shadow="never">
-      <div class="title">Agent</div>
-      <div class="subtitle">对话助手</div>
-    </el-card>
-
-    <el-card class="agent-body" shadow="always">
-      <el-scrollbar class="messages" ref="scrollRef">
-        <div v-for="(m, i) in messages" :key="i" :class="['message', m.role]">
-          <div class="bubble">
-            <div class="role">{{ m.role === 'user' ? '我' : 'Agent' }}</div>
-            <div class="content">{{ m.content }}</div>
-            <div class="time">{{ formatTime(m.time) }}</div>
+  <div class="agent-page">
+    <el-card class="agent-shell" shadow="never">
+      <div class="layout">
+        <aside class="sidebar">
+          <div class="sidebar-head">
+            <div class="sidebar-title">Agent</div>
+            <el-button type="primary" size="small" @click="newConversation" :loading="convLoading">新建对话</el-button>
           </div>
-        </div>
-      </el-scrollbar>
+          <div class="sidebar-sub">点击切换历史对话</div>
+          <el-scrollbar class="conv-list">
+            <button
+              v-for="c in conversations"
+              :key="c.id"
+              type="button"
+              class="conv-item"
+              :class="{ active: c.id === activeConversationId }"
+              @click="switchConversation(c.id)"
+            >
+              <div class="conv-title">{{ c.title || '新对话' }}</div>
+              <div class="conv-meta">{{ formatDateTime(c.update_time || c.created_time) }}</div>
+            </button>
+          </el-scrollbar>
+        </aside>
 
-      <div class="composer">
-        <el-input
-          v-model="input"
-          type="textarea"
-          :rows="3"
-          placeholder="输入你的问题..."
-          @keydown.ctrl.enter="send"
-        />
-        <div class="actions">
-          <el-button type="primary" @click="send" :loading="loading">发送</el-button>
-          <el-button @click="clear">清空</el-button>
-        </div>
+        <main class="main">
+          <div class="main-head">
+            <div class="main-title">{{ activeTitle }}</div>
+            <div class="main-sub">支持流式输出与历史记录</div>
+          </div>
+
+          <el-scrollbar class="messages" ref="scrollRef">
+            <div v-for="(m, i) in messages" :key="m.id || i" :class="['message', m.role]">
+              <div class="bubble">
+                <div class="role">{{ m.role === 'user' ? '我' : 'Agent' }}</div>
+                <div class="content">{{ m.content }}</div>
+                <div class="time">{{ formatTime(m.created_time || m.time) }}</div>
+              </div>
+            </div>
+          </el-scrollbar>
+
+          <div class="composer">
+            <el-input
+              v-model="input"
+              type="textarea"
+              :rows="3"
+              placeholder="输入你的问题...（Ctrl+Enter 发送）"
+              @keydown.ctrl.enter="send"
+            />
+            <div class="actions">
+              <el-button type="primary" @click="send" :loading="sending">发送</el-button>
+              <el-button @click="newConversation" :loading="convLoading">新对话</el-button>
+            </div>
+          </div>
+        </main>
       </div>
     </el-card>
   </div>
   </template>
 
 <script setup>
-import { ref, nextTick } from 'vue'
+import { computed, nextTick, onMounted, ref } from 'vue'
 import { ElMessage } from 'element-plus'
 import { agentApi } from '@/api/agentApi'
+import { useUserStore } from '@/stores/userStore'
 
-const messages = ref([
-  { role: 'assistant', content: '你好！我是你的 Agent，有什么可以帮你？', time: Date.now() }
-])
+const userStore = useUserStore()
+const username = computed(() => userStore.getUsername())
+
+const conversations = ref([])
+const activeConversationId = ref(null)
+const activeTitle = ref('新对话')
+const convLoading = ref(false)
+
+const messages = ref([])
 const input = ref('')
-const loading = ref(false)
+const sending = ref(false)
 const scrollRef = ref(null)
 
 const formatTime = (t) => {
+  if (!t) return ''
   const d = new Date(t)
   const hh = String(d.getHours()).padStart(2, '0')
   const mm = String(d.getMinutes()).padStart(2, '0')
   return `${hh}:${mm}`
+}
+
+const formatDateTime = (t) => {
+  if (!t) return ''
+  const d = new Date(t)
+  const pad = (v) => String(v).padStart(2, '0')
+  return `${pad(d.getMonth() + 1)}-${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}`
 }
 
 const scrollToBottom = async () => {
@@ -58,80 +98,278 @@ const scrollToBottom = async () => {
   if (wrap) wrap.scrollTop = wrap.scrollHeight
 }
 
-const send = async () => {
-  const text = input.value.trim()
-  if (!text) return
-  messages.value.push({ role: 'user', content: text, time: Date.now() })
-  input.value = ''
-  loading.value = true
-  await scrollToBottom()
-
+const loadConversations = async () => {
+  convLoading.value = true
   try {
-    const res = await agentApi.ask({ message: text })
-    const reply = res?.data?.answer || '后端暂未配置，我先给出占位回复：收到你的问题。'
-    messages.value.push({ role: 'assistant', content: reply, time: Date.now() })
+    const res = await agentApi.listConversations({ username: username.value })
+    conversations.value = res?.data || []
   } catch (e) {
-    ElMessage.warning('服务暂不可用，使用占位回复')
-    messages.value.push({ role: 'assistant', content: '服务暂不可用，请稍后再试。', time: Date.now() })
+    conversations.value = []
   } finally {
-    loading.value = false
+    convLoading.value = false
+  }
+}
+
+const loadMessages = async (conversationId) => {
+  try {
+    const res = await agentApi.listMessages({ conversation_id: conversationId, username: username.value })
+    const data = res?.data || {}
+    messages.value = data.messages || []
+    activeTitle.value = data.conversation?.title || '新对话'
+  } catch (e) {
+    messages.value = []
+    activeTitle.value = '新对话'
+  } finally {
     await scrollToBottom()
   }
 }
 
-const clear = () => {
-  messages.value = []
+const newConversation = async () => {
+  convLoading.value = true
+  try {
+    const res = await agentApi.createConversation({ title: '新对话', username: username.value })
+    const id = res?.data?.id
+    await loadConversations()
+    if (id) {
+      activeConversationId.value = id
+      await loadMessages(id)
+    }
+  } catch (e) {
+    ElMessage.error('新建对话失败')
+  } finally {
+    convLoading.value = false
+  }
 }
+
+const switchConversation = async (id) => {
+  if (sending.value) return
+  activeConversationId.value = id
+  await loadMessages(id)
+}
+
+const startStream = async ({ conversationId, text }) => {
+  const body = {
+    conversation_id: conversationId,
+    message: text,
+    username: username.value,
+  }
+  const resp = await fetch('/api/agent/chat_stream/', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(body),
+    credentials: 'include',
+  })
+  if (!resp.ok || !resp.body) {
+    throw new Error('stream failed')
+  }
+  const reader = resp.body.getReader()
+  const decoder = new TextDecoder('utf-8')
+  let buf = ''
+  let finalConversationId = conversationId
+
+  const assistant = { id: `local_${Date.now()}`, role: 'assistant', content: '', time: Date.now() }
+  messages.value.push(assistant)
+  await scrollToBottom()
+
+  while (true) {
+    const { value, done } = await reader.read()
+    if (done) break
+    buf += decoder.decode(value, { stream: true })
+    const parts = buf.split('\n\n')
+    buf = parts.pop() || ''
+    for (const part of parts) {
+      const lines = part.split('\n')
+      let event = 'message'
+      let dataLine = ''
+      for (const ln of lines) {
+        if (ln.startsWith('event:')) event = ln.slice('event:'.length).trim()
+        if (ln.startsWith('data:')) dataLine += ln.slice('data:'.length).trim()
+      }
+      if (!dataLine) continue
+      let payload
+      try {
+        payload = JSON.parse(dataLine)
+      } catch (e) {
+        continue
+      }
+      if (event === 'meta') {
+        if (payload?.conversation_id) {
+          finalConversationId = payload.conversation_id
+          activeConversationId.value = payload.conversation_id
+        }
+        if (payload?.title) activeTitle.value = payload.title
+        await loadConversations()
+      } else if (event === 'delta') {
+        assistant.content = assistant.content + (payload?.content || '')
+      } else if (event === 'error') {
+        throw new Error(payload?.message || 'error')
+      } else if (event === 'done') {
+        await loadConversations()
+        if (finalConversationId) {
+          await loadMessages(finalConversationId)
+        }
+        return
+      }
+    }
+    await scrollToBottom()
+  }
+
+  await loadConversations()
+  if (finalConversationId) {
+    await loadMessages(finalConversationId)
+  }
+}
+
+const send = async () => {
+  const text = input.value.trim()
+  if (!text) return
+  if (!activeConversationId.value) {
+    await newConversation()
+  }
+  const convId = activeConversationId.value
+  messages.value.push({ role: 'user', content: text, time: Date.now() })
+  input.value = ''
+  sending.value = true
+  await scrollToBottom()
+
+  try {
+    await startStream({ conversationId: convId, text })
+  } catch (e) {
+    ElMessage.error('发送失败')
+    messages.value.push({ role: 'assistant', content: '服务暂不可用，请稍后再试。', time: Date.now() })
+  } finally {
+    sending.value = false
+    await scrollToBottom()
+  }
+}
+
+onMounted(async () => {
+  await loadConversations()
+  if (conversations.value.length) {
+    activeConversationId.value = conversations.value[0].id
+    await loadMessages(activeConversationId.value)
+  } else {
+    await newConversation()
+  }
+})
 </script>
 
 <style scoped>
-.agent-container {
-  padding: 20px;
+.agent-page {
+  padding: 14px;
   height: 100%;
   box-sizing: border-box;
+  overflow: hidden;
+}
+.agent-shell {
+  height: 100%;
+  border: 1px solid rgba(0, 255, 255, 0.18);
+  border-radius: 12px;
+  background: rgba(9, 15, 34, 0.72);
+}
+.agent-shell :deep(.el-card__body) {
+  height: 100%;
+  padding: 0;
+}
+.layout {
+  height: 100%;
+  display: grid;
+  grid-template-columns: 280px 1fr;
+  min-height: 0;
+}
+.sidebar {
+  border-right: 1px solid rgba(0, 255, 255, 0.14);
+  padding: 12px;
   display: flex;
   flex-direction: column;
-  gap: 14px;
-  max-width: 1280px;
-  width: 100%;
-  margin: 0 auto;
+  gap: 10px;
+  min-width: 0;
+  min-height: 0;
 }
-.agent-header {
-  border: 1px solid rgba(0, 255, 255, 0.22);
+.sidebar-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
 }
-.agent-header .title {
-  font-size: 18px;
-  font-weight: 600;
+.sidebar-title {
+  font-size: 16px;
+  font-weight: 700;
   color: #9ef7ff;
   text-shadow: 0 0 10px rgba(0, 245, 255, 0.35);
 }
-.agent-header .subtitle {
+.sidebar-sub {
   font-size: 12px;
   color: #88a7bf;
-  margin-top: 4px;
 }
-.agent-body {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
+.conv-list {
   flex: 1;
   min-height: 0;
-  height: 100%;
 }
-.agent-body :deep(.el-card__body) {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
+.conv-list :deep(.el-scrollbar__wrap) {
+  overflow: auto;
+}
+.conv-item {
+  width: 100%;
+  text-align: left;
+  border: 1px solid rgba(0, 255, 255, 0.14);
+  border-radius: 10px;
+  background: rgba(10, 16, 35, 0.72);
+  padding: 10px;
+  cursor: pointer;
+  margin-bottom: 10px;
+}
+.conv-item:hover {
+  border-color: rgba(0, 245, 255, 0.45);
+  box-shadow: 0 0 16px rgba(0, 245, 255, 0.10);
+}
+.conv-item.active {
+  border-color: rgba(255, 0, 204, 0.35);
+  box-shadow: 0 0 18px rgba(255, 0, 204, 0.14);
+}
+.conv-title {
+  color: #e2fbff;
+  font-weight: 700;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.conv-meta {
+  margin-top: 4px;
+  color: rgba(136, 167, 191, 0.95);
+  font-size: 12px;
+}
+.main {
   height: 100%;
+  display: grid;
+  grid-template-rows: auto 1fr auto;
+  min-width: 0;
   min-height: 0;
+  overflow: hidden;
+}
+.main-head {
+  padding: 12px 14px;
+  border-bottom: 1px solid rgba(0, 255, 255, 0.14);
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 10px;
+}
+.main-title {
+  font-size: 16px;
+  font-weight: 700;
+  color: #d6fbff;
+}
+.main-sub {
+  font-size: 12px;
+  color: #88a7bf;
 }
 .messages {
-  flex: 1;
   min-height: 0;
   padding: 12px;
-  background: rgba(10, 16, 35, 0.82);
-  border: 1px solid rgba(0, 255, 255, 0.18);
-  border-radius: 10px;
+}
+.messages :deep(.el-scrollbar__wrap) {
+  overflow: auto;
 }
 .message {
   display: flex;
@@ -176,10 +414,11 @@ const clear = () => {
   text-align: right;
 }
 .composer {
+  padding: 12px 14px 14px;
+  border-top: 1px solid rgba(0, 255, 255, 0.14);
   display: flex;
   flex-direction: column;
   gap: 10px;
-  padding-top: 4px;
 }
 .actions {
   display: flex;
@@ -188,8 +427,12 @@ const clear = () => {
 }
 
 @media (max-width: 900px) {
-  .agent-container {
-    padding: 12px;
+  .layout {
+    grid-template-columns: 1fr;
+  }
+  .sidebar {
+    border-right: none;
+    border-bottom: 1px solid rgba(0, 255, 255, 0.14);
   }
   .bubble {
     max-width: 90%;

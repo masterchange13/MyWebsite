@@ -1,5 +1,7 @@
 import request from '@/utils/request'
 
 export const agentApi = {
-  ask: (data) => request.post('/agent/ask', data)
+  listConversations: (params) => request.get('/agent/conversations/', { params }),
+  createConversation: (data) => request.post('/agent/conversations/create/', data),
+  listMessages: (params) => request.get('/agent/messages/', { params }),
 }
