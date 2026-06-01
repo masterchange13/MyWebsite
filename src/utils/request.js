@@ -100,6 +100,7 @@ import axios from 'axios'
 import { ElMessage, ElLoading } from 'element-plus'
 
 let loadingInstance
+let loadingCount = 0
 
 function showError(message) {
   ElMessage.error(message || '发生未知错误，请稍后重试。')
@@ -114,29 +115,48 @@ export const request = axios.create({
 // ================= 请求拦截器 =================
 request.interceptors.request.use(
   config => {
-    loadingInstance = ElLoading.service({
-      lock: true,
-      text: '加载中...',
-      background: 'rgba(0, 0, 0, 0.7)'
-    })
+    config._showLoading = config.showLoading !== false
+    if (config._showLoading) {
+      loadingCount += 1
+      if (!loadingInstance) {
+        loadingInstance = ElLoading.service({
+          lock: true,
+          text: '加载中...',
+          background: 'rgba(0, 0, 0, 0.7)'
+        })
+      }
+    }
 
     return config
   },
   error => {
-    if (loadingInstance) loadingInstance.close()
+    if (loadingInstance) {
+      loadingInstance.close()
+      loadingInstance = null
+      loadingCount = 0
+    }
     return Promise.reject(error)
   }
 )
+
+function closeLoading(config) {
+  if (!config?._showLoading) return
+  loadingCount = Math.max(loadingCount - 1, 0)
+  if (loadingCount === 0 && loadingInstance) {
+    loadingInstance.close()
+    loadingInstance = null
+  }
+}
 
 
 // ================= 响应拦截器 =================
 request.interceptors.response.use(
   response => {
-    if (loadingInstance) loadingInstance.close()
+    closeLoading(response.config)
     return response.data
   },
   error => {
-    if (loadingInstance) loadingInstance.close()
+    closeLoading(error.config)
     if (error?.config?.silentError) {
       return Promise.reject(error)
     }

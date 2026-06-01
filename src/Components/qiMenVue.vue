@@ -2,7 +2,7 @@
   <div class="qimen-page">
     <el-card class="qimen-form" shadow="always">
       <div class="title">奇门遁甲推盘</div>
-      <el-form :model="form" label-width="90px" class="form-grid">
+      <el-form :model="form" label-width="90px" class="form-grid" @submit.prevent="calc">
         <el-form-item label="时间">
           <el-date-picker v-model="form.datetime" type="datetime" value-format="YYYY-MM-DD HH:mm:ss" />
         </el-form-item>
@@ -19,8 +19,8 @@
           <el-switch v-model="form.analyze" />
         </el-form-item>
         <div class="form-actions">
-          <el-button type="primary" @click="calc">推盘</el-button>
-          <el-button @click="reset">重置</el-button>
+          <el-button type="primary" native-type="submit" :loading="submitting">推盘</el-button>
+          <el-button native-type="button" @click="reset">重置</el-button>
         </div>
       </el-form>
     </el-card>
@@ -31,6 +31,7 @@
           <div>时间：{{ displayDatetime }}</div>
           <div>地点：{{ form.location || '未填写' }}</div>
           <div>主题：{{ form.topic || '未填写' }}</div>
+          <div v-if="currentCalcId">记录：#{{ currentCalcId }} <span v-if="analysisStatusText">AI：{{ analysisStatusText }}</span></div>
         </div>
         <div class="legend">
           <span class="lg gate">八门</span>
@@ -55,11 +56,11 @@
         </div>
       </div>
     </el-card>
-    <el-card class="qimen-analysis" shadow="always" v-if="analysis">
+    <el-card class="qimen-analysis" shadow="always" v-if="analysis || analyzing || analysisStatus === 'failed'">
       <div class="a-title" :data-status="analyzing ? '分析中…' : ''">分析结果</div>
       <div class="a-meta">
-        <span class="provider">{{ analysis.provider || '未知来源' }}</span>
-        <span class="model">{{ analysis.model || '' }}</span>
+        <span class="provider">{{ analysis?.provider || '未知来源' }}</span>
+        <span class="model">{{ analysis?.model || '' }}</span>
       </div>
       <el-scrollbar class="a-text">
         <div class="md" v-html="analysisHtml"></div>
@@ -69,7 +70,7 @@
   </template>
 
 <script setup>
-import { ref, reactive, computed } from 'vue'
+import { ref, reactive, computed, onMounted, onBeforeUnmount } from 'vue'
 import { ElMessage } from 'element-plus'
 import dayjs from 'dayjs'
 import { qiMenApi } from '@/api/qiMenApi'
@@ -97,6 +98,21 @@ const palaces = ref([
 const displayDatetime = ref(form.datetime)
 const analysis = ref(null)
 const analyzing = ref(false)
+const submitting = ref(false)
+const currentCalcId = ref(null)
+const analysisStatus = ref('none')
+const pollTimer = ref(null)
+const pendingStorageKey = 'qimen_pending_calc_id'
+const analysisStatusText = computed(() => {
+  const map = {
+    none: '',
+    pending: '等待中',
+    running: '分析中',
+    success: '已完成',
+    failed: '失败'
+  }
+  return map[analysisStatus.value] || ''
+})
 const escapeHtml = (s) => String(s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
 const renderMarkdown = (src) => {
   let text = String(src || '')
@@ -210,40 +226,138 @@ const localCalc = () => {
   }
 }
 
+const clearAnalysisPolling = () => {
+  if (pollTimer.value) {
+    clearInterval(pollTimer.value)
+    pollTimer.value = null
+  }
+}
+
+const rememberPending = (id) => {
+  if (!id) return
+  localStorage.setItem(pendingStorageKey, String(id))
+}
+
+const forgetPending = (id) => {
+  const saved = localStorage.getItem(pendingStorageKey)
+  if (!id || saved === String(id)) {
+    localStorage.removeItem(pendingStorageKey)
+  }
+}
+
+const applyServerData = (data) => {
+  if (!data) return false
+  displayDatetime.value = data?.meta?.parsed_datetime || data?.input?.datetime || displayDatetime.value
+  currentCalcId.value = data?.id || currentCalcId.value
+  analysisStatus.value = data?.analysis_status || 'none'
+
+  const chart = data?.chart
+  const list = Array.isArray(chart) ? chart : (Array.isArray(chart?.palaces) ? chart.palaces : null)
+  if (!Array.isArray(list) || list.length < palaces.value.length) {
+    return false
+  }
+
+  palaces.value = palaces.value.map((p, i) => ({
+    ...p,
+    gate: list[i]?.gate ?? p.gate,
+    star: list[i]?.star ?? p.star,
+    god: list[i]?.god ?? p.god,
+    tip: list[i]?.tip ?? p.tip
+  }))
+
+  if (data?.analysis) {
+    analysis.value = data.analysis
+  } else if (['pending', 'running'].includes(analysisStatus.value)) {
+    analysis.value = {
+      text: 'AI分析正在后台运行，可以先使用页面其他功能。分析完成后回到本页会自动显示结果。',
+      provider: 'deepseek',
+      model: ''
+    }
+  } else if (analysisStatus.value === 'failed') {
+    analysis.value = {
+      text: `分析失败：${data?.analysis_error || '未知错误'}`,
+      provider: 'deepseek',
+      model: ''
+    }
+  } else {
+    analysis.value = null
+  }
+
+  analyzing.value = ['pending', 'running'].includes(analysisStatus.value)
+  return true
+}
+
+const pollAnalysisResult = async (id, notifyDone = true) => {
+  if (!id) return
+  try {
+    const res = await qiMenApi.result(id)
+    if (res?.code !== 200) return
+    const ok = applyServerData(res.data)
+    if (!ok) return
+
+    if (['success', 'failed', 'none'].includes(analysisStatus.value)) {
+      clearAnalysisPolling()
+      forgetPending(id)
+      analyzing.value = false
+      if (notifyDone && analysisStatus.value === 'success') {
+        ElMessage.success('AI分析完成')
+      }
+      if (notifyDone && analysisStatus.value === 'failed') {
+        ElMessage.warning('AI分析失败，已保存失败状态')
+      }
+    }
+  } catch (e) {
+    // 轮询失败不打断页面操作，下一轮继续尝试。
+  }
+}
+
+const startAnalysisPolling = (id) => {
+  if (!id) return
+  clearAnalysisPolling()
+  rememberPending(id)
+  pollTimer.value = setInterval(() => pollAnalysisResult(id), 5000)
+}
+
 const calc = async () => {
+  submitting.value = true
+  clearAnalysisPolling()
   try {
     displayDatetime.value = form.datetime || dayjs().format('YYYY-MM-DD HH:mm:ss')
     const payload = { datetime: displayDatetime.value, location: form.location, topic: form.topic, solar: form.solar, analyze: form.analyze }
     analyzing.value = !!form.analyze
+    analysisStatus.value = form.analyze ? 'pending' : 'none'
+    analysis.value = form.analyze ? {
+      text: 'AI分析任务正在创建，页面不会被长时间占用。',
+      provider: 'deepseek',
+      model: ''
+    } : null
     const res = await qiMenApi.calc(payload)
     if (res?.code === 200) {
       const data = res?.data || {}
-      displayDatetime.value = data?.meta?.parsed_datetime || data?.input?.datetime || displayDatetime.value
-      const chart = data?.chart
-      const list = Array.isArray(chart) ? chart : (Array.isArray(chart?.palaces) ? chart.palaces : null)
-      if (Array.isArray(list) && list.length >= palaces.value.length) {
-        palaces.value = palaces.value.map((p, i) => ({
-          ...p,
-          gate: list[i]?.gate ?? p.gate,
-          star: list[i]?.star ?? p.star,
-          god: list[i]?.god ?? p.god,
-          tip: list[i]?.tip ?? p.tip
-        }))
-        analysis.value = data?.analysis || null
-        analyzing.value = false
-        ElMessage.success('推盘成功')
+      if (applyServerData(data)) {
+        if (['pending', 'running'].includes(analysisStatus.value) && currentCalcId.value) {
+          startAnalysisPolling(currentCalcId.value)
+          ElMessage.success('推盘成功，AI分析已在后台运行')
+        } else {
+          clearAnalysisPolling()
+          ElMessage.success('推盘成功')
+        }
         return
       }
       ElMessage.warning('返回格式不符，使用本地推盘')
       localCalc()
       analysis.value = null
       analyzing.value = false
+      currentCalcId.value = null
+      analysisStatus.value = 'none'
       return
     }
     ElMessage.warning(res?.message || '后端无结果，使用本地推盘')
     localCalc()
     analysis.value = null
     analyzing.value = false
+    currentCalcId.value = null
+    analysisStatus.value = 'none'
   } catch (e) {
     const code = e?.response?.data?.code
     const id = e?.response?.data?.data?.id
@@ -254,8 +368,12 @@ const calc = async () => {
       localCalc()
       ElMessage.warning('后端不可用，使用本地推盘')
       analysis.value = null
+      currentCalcId.value = null
+      analysisStatus.value = 'none'
     }
     analyzing.value = false
+  } finally {
+    submitting.value = false
   }
 }
 
@@ -265,9 +383,36 @@ const reset = () => {
   form.topic = ''
   form.solar = true
   form.analyze = false
+  submitting.value = false
+  clearAnalysisPolling()
+  forgetPending(currentCalcId.value)
+  currentCalcId.value = null
+  analysisStatus.value = 'none'
   palaces.value = palaces.value.map(p => ({ ...p, gate: '-', star: '-', god: '-', tip: '-' }))
   analysis.value = null
+  analyzing.value = false
 }
+
+onMounted(async () => {
+  const pendingId = localStorage.getItem(pendingStorageKey)
+  if (!pendingId) return
+  currentCalcId.value = pendingId
+  analysisStatus.value = 'pending'
+  analyzing.value = true
+  analysis.value = {
+    text: '正在恢复上次未完成的AI分析任务，完成后会自动显示结果。',
+    provider: 'deepseek',
+    model: ''
+  }
+  await pollAnalysisResult(pendingId, false)
+  if (['pending', 'running'].includes(analysisStatus.value)) {
+    startAnalysisPolling(pendingId)
+  }
+})
+
+onBeforeUnmount(() => {
+  clearAnalysisPolling()
+})
 </script>
 
 <style scoped>
