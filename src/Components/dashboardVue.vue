@@ -62,6 +62,10 @@
           <el-icon><setting /></el-icon>
           <span>Guide</span>
         </el-menu-item>
+        <el-menu-item index="7" @click="toFeedback()">
+          <el-icon><document /></el-icon>
+          <span>Feedback</span>
+        </el-menu-item>
       </el-menu>
     </el-header>
 
@@ -123,6 +127,10 @@
         <el-menu-item index="6" @click="toGuide(); showMenuDrawer=false">
           <el-icon><setting /></el-icon>
           <span>Guide</span>
+        </el-menu-item>
+        <el-menu-item index="7" @click="toFeedback(); showMenuDrawer=false">
+          <el-icon><document /></el-icon>
+          <span>Feedback</span>
         </el-menu-item>
       </el-menu>
     </el-drawer>
@@ -216,6 +224,7 @@ const toQiMen = () => router.push("/qiMen");
 const toTimer = () => router.push("/timer");
 const toCalculator = () => router.push("/calculator");
 const toGuide = () => router.push("/guide");
+const toFeedback = () => router.push("/feedback");
 
 const audioRef = ref<HTMLAudioElement | null>(null);
 const trackRef = ref<HTMLElement | null>(null);

@@ -94,6 +94,11 @@ const routes = [
                 path: '/guide',
                 name: 'guide',
                 component: () => import('@/Components/guideVue.vue')
+            },
+            {
+                path: '/feedback',
+                name: 'feedback',
+                component: () => import('@/Components/feedbackVue.vue')
             }
         ]
     },
