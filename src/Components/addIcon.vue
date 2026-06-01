@@ -58,9 +58,23 @@ const resetForm = () => {
     website.value.img = '';
 };
 
+const getSiteFavicon = (url) => {
+  if (!url) return ''
+  try {
+    const u = new URL(url.startsWith('http') ? url : `https://${url}`)
+    return `${u.origin}/favicon.ico`
+  } catch (e) {
+    return ''
+  }
+}
+
 const submitForm = async () => {
     try {
-        const res = await navigatorApi.addNavigator({ ...website.value, username: username.value })
+        const payload = { ...website.value, username: username.value }
+        if (!payload.img) {
+          payload.img = getSiteFavicon(payload.url)
+        }
+        const res = await navigatorApi.addNavigator(payload)
         if (res && res.code === 200) {
             Message.success('Icon added successfully!')
             emit('added')
@@ -79,8 +93,8 @@ const previewImg = computed(() => {
   const url = website.value.url
   if (img) return img
   try {
-    const u = new URL(url)
-    return `https://www.google.com/s2/favicons?sz=128&domain_url=${u.origin}`
+    const u = new URL(url.startsWith('http') ? url : `https://${url}`)
+    return `${u.origin}/favicon.ico`
   } catch (e) {
     const seed = encodeURIComponent(website.value.name || 'nav')
     return `https://picsum.photos/seed/${seed}/128/128`
