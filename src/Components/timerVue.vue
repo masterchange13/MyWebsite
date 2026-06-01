@@ -6,42 +6,60 @@
         <div class="subtitle">设置倒计时，结束后播放《好一朵茉莉花》提醒</div>
       </div>
 
-      <div class="controls">
-        <div class="time-inputs">
-          <div class="field">
-            <div class="label">分钟</div>
-            <el-input-number v-model="durationMinutes" :min="0" :max="999" :disabled="isRunning" @keyup.enter="start" />
+      <div class="timer-tools">
+        <section class="timer-section">
+          <div class="section-title">定时器</div>
+          <div class="display">
+            <div class="time">{{ formattedRemaining }}</div>
+            <el-progress :percentage="progressPercent" :stroke-width="10" />
           </div>
-          <div class="field">
-            <div class="label">秒</div>
-            <el-input-number v-model="durationSecondsPart" :min="0" :max="59" :disabled="isRunning" @keyup.enter="start" />
+
+          <div class="controls">
+            <div class="time-inputs">
+              <div class="field">
+                <div class="label">分钟</div>
+                <el-input-number v-model="durationMinutes" :min="0" :max="999" :disabled="isRunning" @keyup.enter="start" />
+              </div>
+              <div class="field">
+                <div class="label">秒</div>
+                <el-input-number v-model="durationSecondsPart" :min="0" :max="59" :disabled="isRunning" @keyup.enter="start" />
+              </div>
+            </div>
+
+            <div class="buttons">
+              <el-button type="primary" :disabled="remainingSeconds <= 0 && totalSeconds <= 0" @click="start">
+                {{ isRunning ? '继续' : '开始' }}
+              </el-button>
+              <el-button :disabled="!isRunning" @click="pause">暂停</el-button>
+              <el-button @click="reset">重置</el-button>
+              <el-button @click="previewSound">试听</el-button>
+              <el-button type="danger" :disabled="!isAlarmPlaying" @click="stopAlarm">停止提醒</el-button>
+            </div>
+
+            <div class="source">
+              <div class="label">提醒音频链接</div>
+              <el-input v-model="alarmUrl" placeholder="粘贴音频链接（支持 mp3/ogg/opus）" @keyup.enter="previewSound" />
+            </div>
+
+            <div class="volume">
+              <div class="label">音量</div>
+              <el-slider v-model="soundVolume" :min="0" :max="100" />
+            </div>
           </div>
-        </div>
+        </section>
 
-        <div class="buttons">
-          <el-button type="primary" :disabled="remainingSeconds <= 0 && totalSeconds <= 0" @click="start">
-            {{ isRunning ? '继续' : '开始' }}
-          </el-button>
-          <el-button :disabled="!isRunning" @click="pause">暂停</el-button>
-          <el-button @click="reset">重置</el-button>
-          <el-button @click="previewSound">试听</el-button>
-          <el-button type="danger" :disabled="!isAlarmPlaying" @click="stopAlarm">停止提醒</el-button>
-        </div>
-
-        <div class="source">
-          <div class="label">提醒音频链接</div>
-          <el-input v-model="alarmUrl" placeholder="粘贴音频链接（支持 mp3/ogg/opus）" @keyup.enter="previewSound" />
-        </div>
-
-        <div class="volume">
-          <div class="label">音量</div>
-          <el-slider v-model="soundVolume" :min="0" :max="100" />
-        </div>
-      </div>
-
-      <div class="display">
-        <div class="time">{{ formattedRemaining }}</div>
-        <el-progress :percentage="progressPercent" :stroke-width="10" />
+        <section class="timer-section">
+          <div class="section-title">计时器</div>
+          <div class="display stopwatch-display">
+            <div class="time">{{ formattedStopwatch }}</div>
+            <div class="status">{{ stopwatchRunning ? '计时中' : (stopwatchElapsedSeconds > 0 ? '已暂停' : '未开始') }}</div>
+          </div>
+          <div class="buttons stopwatch-buttons">
+            <el-button type="primary" :disabled="stopwatchRunning" @click="startStopwatch">开始</el-button>
+            <el-button :disabled="!stopwatchRunning" @click="pauseStopwatch">暂停</el-button>
+            <el-button @click="resetStopwatch">重置</el-button>
+          </div>
+        </section>
       </div>
     </el-card>
   </div>
@@ -53,11 +71,12 @@ import { storeToRefs } from 'pinia'
 import { useTimerStore } from '@/stores/timerStore'
 
 const timerStore = useTimerStore()
-const { remainingSeconds, isRunning, isAlarmPlaying } = storeToRefs(timerStore)
+const { remainingSeconds, isRunning, isAlarmPlaying, stopwatchElapsedSeconds, stopwatchRunning } = storeToRefs(timerStore)
 
 const totalSeconds = computed(() => timerStore.durationSeconds || 0)
 const formattedRemaining = computed(() => timerStore.formattedRemaining)
 const progressPercent = computed(() => timerStore.progressPercent)
+const formattedStopwatch = computed(() => timerStore.formattedStopwatch)
 
 const durationMinutes = computed({
   get: () => Math.floor((timerStore.durationSeconds || 0) / 60),
@@ -85,6 +104,9 @@ const pause = () => timerStore.pause()
 const reset = () => timerStore.reset()
 const previewSound = () => timerStore.preview()
 const stopAlarm = () => timerStore.stopAlarm()
+const startStopwatch = () => timerStore.startStopwatch()
+const pauseStopwatch = () => timerStore.pauseStopwatch()
+const resetStopwatch = () => timerStore.resetStopwatch()
 
 onMounted(() => {
   timerStore.hydrate()
@@ -102,7 +124,7 @@ onMounted(() => {
   justify-content: center;
 }
 .timer-card {
-  width: min(820px, 100%);
+  width: min(1080px, 100%);
   border-radius: 8px;
   background: rgba(9, 15, 34, 0.82);
   border: 1px solid rgba(0, 255, 255, 0.18);
@@ -126,8 +148,26 @@ onMounted(() => {
   font-size: 13px;
   color: #9dc5de;
 }
-.controls {
+.timer-tools {
   margin-top: 16px;
+  display: grid;
+  grid-template-columns: minmax(0, 1.25fr) minmax(320px, 0.75fr);
+  gap: 12px;
+}
+.timer-section {
+  border: 1px solid rgba(0, 255, 255, 0.16);
+  border-radius: 8px;
+  background: rgba(6, 12, 28, 0.42);
+  padding: 12px;
+  min-width: 0;
+}
+.section-title {
+  color: #b8f8ff;
+  font-weight: 700;
+  margin-bottom: 10px;
+}
+.controls {
+  margin-top: 12px;
   display: flex;
   flex-direction: column;
   gap: 14px;
@@ -174,7 +214,6 @@ onMounted(() => {
   background: rgba(10, 16, 35, 0.72);
 }
 .display {
-  margin-top: 18px;
   padding: 16px;
   border: 1px solid rgba(0, 255, 255, 0.18);
   border-radius: 8px;
@@ -189,6 +228,20 @@ onMounted(() => {
   color: #e2fbff;
   text-shadow: 0 0 14px rgba(0, 245, 255, 0.32);
   font-variant-numeric: tabular-nums;
+}
+.stopwatch-display {
+  min-height: 130px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+.status {
+  text-align: center;
+  color: #9dc5de;
+  font-size: 13px;
+}
+.stopwatch-buttons {
+  margin-top: 12px;
 }
 .timer-card :deep(.el-input__wrapper),
 .timer-card :deep(.el-input-number__decrease),
@@ -221,6 +274,9 @@ onMounted(() => {
 }
 
 @media (max-width: 720px) {
+  .timer-tools {
+    grid-template-columns: 1fr;
+  }
   .time-inputs {
     grid-template-columns: 1fr;
   }

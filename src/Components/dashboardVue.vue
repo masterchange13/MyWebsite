@@ -11,6 +11,7 @@
         <div class="user-info">
           <el-avatar class="avatar clickable" :size="40" src="https://api.dicebear.com/7.x/identicon/svg?seed=vue" @click="toProfile" />
           <span class="username">Hello, {{ username }}</span>
+          <el-button v-if="stopwatchVisible" class="timer-pill stopwatch-pill" @click="toTimer">Stopwatch {{ stopwatchFormatted }}</el-button>
           <el-button v-if="timerIsAlarmPlaying" type="danger" class="timer-stop" @click="stopTimerAlarm">停止提醒</el-button>
           <el-button v-else-if="timerIsRunning" class="timer-pill" @click="toTimer">Timer {{ timerFormatted }}</el-button>
           <el-button @click="logout" class="logout-button">Logout</el-button>
@@ -158,8 +159,15 @@ const userStore = useUserStore();
 const username = computed(() => userStore.getUsername());
 const router = useRouter();
 const timerStore = useTimerStore();
-const { isRunning: timerIsRunning, isAlarmPlaying: timerIsAlarmPlaying } = storeToRefs(timerStore);
+const {
+  isRunning: timerIsRunning,
+  isAlarmPlaying: timerIsAlarmPlaying,
+  stopwatchRunning,
+  stopwatchElapsedSeconds
+} = storeToRefs(timerStore);
 const timerFormatted = computed(() => timerStore.formattedRemaining);
+const stopwatchFormatted = computed(() => timerStore.formattedStopwatch);
+const stopwatchVisible = computed(() => stopwatchRunning.value || stopwatchElapsedSeconds.value > 0);
 const stopTimerAlarm = () => timerStore.stopAlarm();
 
 const logout = () => {
@@ -488,6 +496,14 @@ const updateIsMobile = () => {
 .timer-pill:hover {
   background: rgba(0, 255, 255, 0.2);
 }
+.stopwatch-pill {
+  background: rgba(62, 224, 151, 0.12);
+  color: #8ef8cb;
+  border-color: rgba(62, 224, 151, 0.45);
+}
+.stopwatch-pill:hover {
+  background: rgba(62, 224, 151, 0.2);
+}
 .timer-stop {
   border-radius: 8px;
 }
@@ -570,6 +586,11 @@ const updateIsMobile = () => {
   }
   .timer-pill {
     display: none;
+  }
+  .stopwatch-pill {
+    display: inline-flex;
+    padding: 6px 9px;
+    font-size: 12px;
   }
   .mini-player {
     flex-wrap: wrap;

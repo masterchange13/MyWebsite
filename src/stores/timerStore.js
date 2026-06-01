@@ -11,7 +11,10 @@ export const useTimerStore = defineStore('timer', {
     endAtMs: 0,
     audioUrl: 'https://upload.wikimedia.org/wikipedia/commons/c/c6/%E8%8C%89%E8%8E%89%E8%8A%B1-KS%E6%BC%94%E7%A4%BA.opus',
     volume: 0.5,
-    isAlarmPlaying: false
+    isAlarmPlaying: false,
+    stopwatchElapsedSeconds: 0,
+    stopwatchRunning: false,
+    stopwatchStartedAtMs: 0
   }),
   getters: {
     formattedRemaining: (state) => {
@@ -25,6 +28,15 @@ export const useTimerStore = defineStore('timer', {
       if (!total) return 0
       const done = Math.max(0, Math.min(total, total - (state.remainingSeconds || 0)))
       return Math.round((done / total) * 100)
+    },
+    formattedStopwatch: (state) => {
+      const s = Math.max(0, Math.floor(state.stopwatchElapsedSeconds || 0))
+      const h = Math.floor(s / 3600)
+      const m = Math.floor((s % 3600) / 60)
+      const sec = s % 60
+      return h > 0
+        ? `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}:${String(sec).padStart(2, '0')}`
+        : `${String(m).padStart(2, '0')}:${String(sec).padStart(2, '0')}`
     }
   },
   actions: {
@@ -109,6 +121,24 @@ export const useTimerStore = defineStore('timer', {
       this._intervalId = window.setInterval(() => this._tick(), 200)
       this._tick()
     },
+    _stopStopwatchInterval() {
+      if (this._stopwatchIntervalId != null) {
+        window.clearInterval(this._stopwatchIntervalId)
+        this._stopwatchIntervalId = null
+      }
+    },
+    _tickStopwatch() {
+      if (!this.stopwatchRunning) return
+      const base = Math.max(0, Math.floor(this._stopwatchBaseSeconds || 0))
+      const startedAt = this.stopwatchStartedAtMs || Date.now()
+      const elapsed = Math.floor((Date.now() - startedAt) / 1000)
+      this.stopwatchElapsedSeconds = Math.max(0, base + elapsed)
+    },
+    _startStopwatchInterval() {
+      this._stopStopwatchInterval()
+      this._stopwatchIntervalId = window.setInterval(() => this._tickStopwatch(), 200)
+      this._tickStopwatch()
+    },
     async start() {
       if (this.isRunning) return
       this.stopAlarm()
@@ -135,6 +165,27 @@ export const useTimerStore = defineStore('timer', {
       this.stopAlarm()
       this.remainingSeconds = Math.max(0, this.durationSeconds || 0)
     },
+    startStopwatch() {
+      if (this.stopwatchRunning) return
+      this._stopwatchBaseSeconds = Math.max(0, Math.floor(this.stopwatchElapsedSeconds || 0))
+      this.stopwatchStartedAtMs = Date.now()
+      this.stopwatchRunning = true
+      this._startStopwatchInterval()
+    },
+    pauseStopwatch() {
+      if (!this.stopwatchRunning) return
+      this._tickStopwatch()
+      this._stopStopwatchInterval()
+      this.stopwatchRunning = false
+      this._stopwatchBaseSeconds = this.stopwatchElapsedSeconds
+    },
+    resetStopwatch() {
+      this._stopStopwatchInterval()
+      this.stopwatchRunning = false
+      this.stopwatchElapsedSeconds = 0
+      this.stopwatchStartedAtMs = 0
+      this._stopwatchBaseSeconds = 0
+    },
     async preview() {
       await this.primeAudio()
       this.startAlarm()
@@ -152,6 +203,11 @@ export const useTimerStore = defineStore('timer', {
           this.remainingSeconds = 0
         }
       }
+      if (this.stopwatchRunning) {
+        if (!this.stopwatchStartedAtMs) this.stopwatchStartedAtMs = Date.now()
+        this._stopwatchBaseSeconds = 0
+        this._startStopwatchInterval()
+      }
     },
     setAudioUrl(url) {
       this.audioUrl = url || ''
@@ -165,4 +221,3 @@ export const useTimerStore = defineStore('timer', {
   },
   persist: true
 })
-
