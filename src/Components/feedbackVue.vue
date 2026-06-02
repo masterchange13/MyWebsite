@@ -95,7 +95,7 @@ const formatStatus = (status) => {
 const refresh = async () => {
   loading.value = true
   try {
-    const res = await request.get('/feedback/list/', { params: { username: username.value }, showLoading: false })
+    const res = await request.get('/feedback/list/', { showLoading: false })
     items.value = res?.data || []
   } catch (e) {
     items.value = []
@@ -109,7 +109,6 @@ const submit = async () => {
     title: form.value.title,
     content: form.value.content,
     contact: form.value.contact,
-    username: username.value,
   }
   try {
     const res = await request.post('/feedback/submit/', payload)
@@ -205,4 +204,3 @@ onMounted(() => {
   line-height: 1.6;
 }
 </style>
-

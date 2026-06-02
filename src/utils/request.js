@@ -106,6 +106,13 @@ function showError(message) {
   ElMessage.error(message || '发生未知错误，请稍后重试。')
 }
 
+function getCookie(name) {
+  const value = `; ${document.cookie}`
+  const parts = value.split(`; ${name}=`)
+  if (parts.length === 2) return parts.pop().split(';').shift()
+  return ''
+}
+
 export const request = axios.create({
   baseURL: '/api',
   timeout: 10000,
@@ -115,6 +122,16 @@ export const request = axios.create({
 // ================= 请求拦截器 =================
 request.interceptors.request.use(
   config => {
+    const method = (config.method || 'get').toLowerCase()
+    const safeMethods = new Set(['get', 'head', 'options', 'trace'])
+    if (!safeMethods.has(method)) {
+      const csrf = getCookie('csrftoken')
+      if (csrf) {
+        config.headers = config.headers || {}
+        config.headers['X-CSRFToken'] = csrf
+      }
+    }
+
     config._showLoading = config.showLoading !== false
     if (config._showLoading) {
       loadingCount += 1

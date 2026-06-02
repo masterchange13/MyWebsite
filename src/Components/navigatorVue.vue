@@ -97,7 +97,7 @@ const addIcon = () => {
 
 // 获取导航数据
 const getIcons = async () => {
-  const response = await navigatorApi.getAllNavigators({ username: username.value })
+  const response = await navigatorApi.getAllNavigators()
   icons.value = response.data || [];
 }
 
@@ -113,7 +113,7 @@ const onAdded = async () => {
 
 const remove = async (icon) => {
   try {
-    const res = await navigatorApi.removeNavigator({ ...icon, username: username.value })
+    const res = await navigatorApi.removeNavigator({ ...icon })
     if (res.code === 200) {
       ElMessage.success('已删除')
       await getIcons()
@@ -145,7 +145,7 @@ const openEdit = (icon) => {
 
 const saveEdit = async () => {
   try {
-    const payload = { ...editForm.value, username: username.value }
+    const payload = { ...editForm.value }
     if (!payload.img) {
       payload.img = getSiteFavicon(payload.url)
     }
@@ -194,7 +194,7 @@ const onDragEnd = async () => {
   if (!reordered.value) return
   try {
     const orderedIds = icons.value.map(i => i.id)
-    const res = await navigatorApi.updateNavigatorOrder({ ordered_ids: orderedIds, username: username.value })
+    const res = await navigatorApi.updateNavigatorOrder({ ordered_ids: orderedIds })
     if (res.code === 200) {
       ElMessage.success('已更新顺序')
     } else {

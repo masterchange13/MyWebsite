@@ -101,7 +101,7 @@ const scrollToBottom = async () => {
 const loadConversations = async () => {
   convLoading.value = true
   try {
-    const res = await agentApi.listConversations({ username: username.value })
+    const res = await agentApi.listConversations()
     conversations.value = res?.data || []
   } catch (e) {
     conversations.value = []
@@ -112,7 +112,7 @@ const loadConversations = async () => {
 
 const loadMessages = async (conversationId) => {
   try {
-    const res = await agentApi.listMessages({ conversation_id: conversationId, username: username.value })
+    const res = await agentApi.listMessages({ conversation_id: conversationId })
     const data = res?.data || {}
     messages.value = data.messages || []
     activeTitle.value = data.conversation?.title || '新对话'
@@ -127,7 +127,7 @@ const loadMessages = async (conversationId) => {
 const newConversation = async () => {
   convLoading.value = true
   try {
-    const res = await agentApi.createConversation({ title: '新对话', username: username.value })
+    const res = await agentApi.createConversation({ title: '新对话' })
     const id = res?.data?.id
     await loadConversations()
     if (id) {
@@ -147,15 +147,22 @@ const switchConversation = async (id) => {
   await loadMessages(id)
 }
 
+const getCookie = (name) => {
+  const value = `; ${document.cookie}`
+  const parts = value.split(`; ${name}=`)
+  if (parts.length === 2) return parts.pop().split(';').shift()
+  return ''
+}
+
 const startStream = async ({ conversationId, text }) => {
   const body = {
     conversation_id: conversationId,
     message: text,
-    username: username.value,
   }
+  const csrf = getCookie('csrftoken')
   const resp = await fetch('/api/agent/chat_stream/', {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers: { 'Content-Type': 'application/json', ...(csrf ? { 'X-CSRFToken': csrf } : {}) },
     body: JSON.stringify(body),
     credentials: 'include',
   })

@@ -25,7 +25,7 @@ const userStore = useUserStore()
 const username = computed(() => userStore.getUsername())
 
 const getAllMusic = async () => {
-    const res = await musicApi.getAllUserMusic({ username: username.value })
+    const res = await musicApi.getAllUserMusic()
     if (res.code === 200) {
         datas.value = res.data.map(item => ({
             ...item,

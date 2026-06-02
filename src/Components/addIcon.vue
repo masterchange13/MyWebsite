@@ -70,7 +70,7 @@ const getSiteFavicon = (url) => {
 
 const submitForm = async () => {
     try {
-        const payload = { ...website.value, username: username.value }
+        const payload = { ...website.value }
         if (!payload.img) {
           payload.img = getSiteFavicon(payload.url)
         }

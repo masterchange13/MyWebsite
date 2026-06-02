@@ -135,7 +135,7 @@ const formatTime = (unixSeconds) => {
 
 const getFiles = async () => {
   try {
-    const res = await request.get('/file/list/', { params: { username: username.value }, showLoading: false, silentError: true })
+    const res = await request.get('/file/list/', { showLoading: false, silentError: true })
     const list = res?.data || []
     files.value = list.map(f => ({
       ...f,
@@ -226,7 +226,6 @@ const uploadFile = async () => {
   message.value = "上传中...";
   const formData = new FormData();
   formData.append("file", file);
-  formData.append("username", username.value || "");
 
   try {
     const response = await request.post('/file/upload/', formData);
