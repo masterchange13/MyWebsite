@@ -66,6 +66,10 @@
           <el-icon><document /></el-icon>
           <span>Feedback</span>
         </el-menu-item>
+        <el-menu-item index="8" @click="toAuthor()">
+          <el-icon><User /></el-icon>
+          <span>Author</span>
+        </el-menu-item>
       </el-menu>
     </el-header>
 
@@ -132,6 +136,10 @@
           <el-icon><document /></el-icon>
           <span>Feedback</span>
         </el-menu-item>
+        <el-menu-item index="8" :class="{ 'is-active': isMenuActive('8') }" @click="toAuthor(); showMenuDrawer=false">
+          <el-icon><document /></el-icon>
+          <span>Author</span>
+        </el-menu-item>
       </el-menu>
     </el-drawer>
 
@@ -194,6 +202,7 @@ const menuActiveSet = computed(() => {
   else if (p.startsWith('/getDocument') || p.startsWith('/documentDetail')){ active.add('5') }
   else if (p.startsWith('/guide'))   { active.add('6') }
   else if (p.startsWith('/feedback')){ active.add('7') }
+  else if (p.startsWith('/author'))   { active.add('8') }
   return active
 })
 const isMenuActive = (index: string) => menuActiveSet.value.has(index)
@@ -213,7 +222,7 @@ const logout = () => {
   router.push("/");
 };
 
-import { Document, Menu as IconMenu, Location, Setting } from "@element-plus/icons-vue";
+import { Document, Menu as IconMenu, Location, Setting, User } from "@element-plus/icons-vue";
 const handleOpen = (key: string, keyPath: string[]) => {
   console.log(key, keyPath);
 };
@@ -248,6 +257,7 @@ const toTimer = () => router.push("/timer");
 const toCalculator = () => router.push("/calculator");
 const toGuide = () => router.push("/guide");
 const toFeedback = () => router.push("/feedback");
+const toAuthor = () => router.push("/author");
 
 const audioRef = ref<HTMLAudioElement | null>(null);
 const trackRef = ref<HTMLElement | null>(null);
