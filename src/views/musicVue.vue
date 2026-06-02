@@ -133,7 +133,7 @@ const userStore = useUserStore()
 const uname = vComputed(() => userStore.getUsername())
 
 const getAllMusic = async () => {
-  const res = await musicApi.getAllMusic({ username: uname.value });
+  const res = await musicApi.getAllMusic();
   state.songList = Array.isArray(res.data) ? res.data : [];
   console.log("all music's res.data", res.data);
 };

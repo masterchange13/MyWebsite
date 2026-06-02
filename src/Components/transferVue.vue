@@ -41,8 +41,6 @@
       <div class="music-form">
         <el-input v-model="musicForm.title" placeholder="歌曲名" />
         <el-input v-model="musicForm.artist" placeholder="歌手" />
-        <el-input v-model="musicForm.album_title" placeholder="专辑名" />
-        <el-input v-model="musicForm.album_id" placeholder="专辑ID" />
 
         <div class="file-row">
           <label>封面：</label>
@@ -241,8 +239,6 @@ const uploadFile = async () => {
 
 const musicForm = ref({
   title: "",
-  album_id: "",
-  album_title: "",
   artist: "",
   cover: null,
   audio: null,
@@ -260,7 +256,9 @@ const uploadMusic = async () => {
   const formData = new FormData();
 
   for (let key in musicForm.value) {
-    formData.append(key, musicForm.value[key]);
+    const v = musicForm.value[key]
+    if (v === null || v === undefined || v === '') continue
+    formData.append(key, v);
   }
 
   try {
