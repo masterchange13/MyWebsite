@@ -25,44 +25,44 @@
         class="cyber-menu"
         :ellipsis="false"
       >
-        <el-sub-menu index="1" popper-class="cyber-menu-popper">
+        <el-sub-menu index="1" popper-class="cyber-menu-popper" :class="{ 'is-active': isMenuActive('1') }">
           <template #title>
             <el-icon><location /></el-icon>
             <span>Media Hub</span>
           </template>
-          <el-menu-item index="1-1" @click="toVideo()">video</el-menu-item>
-          <el-menu-item index="1-2" @click="toDocument()">document</el-menu-item>
-          <el-menu-item index="1-3" @click="toMusic()">music</el-menu-item>
-          <el-menu-item index="1-4" @click="toTransfer()">transfer</el-menu-item>
-          <el-menu-item index="1-5" @click="toDoList()">to do list</el-menu-item>
+          <el-menu-item index="1-1" :class="{ 'is-active': isMenuActive('1-1') }" @click="toVideo()">video</el-menu-item>
+          <el-menu-item index="1-2" :class="{ 'is-active': isMenuActive('1-2') }" @click="toDocument()">document</el-menu-item>
+          <el-menu-item index="1-3" :class="{ 'is-active': isMenuActive('1-3') }" @click="toMusic()">music</el-menu-item>
+          <el-menu-item index="1-4" :class="{ 'is-active': isMenuActive('1-4') }" @click="toTransfer()">transfer</el-menu-item>
+          <el-menu-item index="1-5" :class="{ 'is-active': isMenuActive('1-5') }" @click="toDoList()">to do list</el-menu-item>
         </el-sub-menu>
-        <el-sub-menu index="2" popper-class="cyber-menu-popper">
+        <el-sub-menu index="2" popper-class="cyber-menu-popper" :class="{ 'is-active': isMenuActive('2') }">
           <template #title>
             <el-icon><icon-menu /></el-icon>
             <span>Tools</span>
           </template>
-          <el-menu-item index="2-1" @click="toAgent()">agent</el-menu-item>
-          <el-menu-item index="2-2" @click="toQiMen()">QiMenDunJia</el-menu-item>
-          <el-menu-item index="2-3" @click="toTimer()">Timer</el-menu-item>
-          <el-menu-item index="2-4" @click="toCalculator()">Calculator</el-menu-item>
+          <el-menu-item index="2-1" :class="{ 'is-active': isMenuActive('2-1') }" @click="toAgent()">agent</el-menu-item>
+          <el-menu-item index="2-2" :class="{ 'is-active': isMenuActive('2-2') }" @click="toQiMen()">QiMenDunJia</el-menu-item>
+          <el-menu-item index="2-3" :class="{ 'is-active': isMenuActive('2-3') }" @click="toTimer()">Timer</el-menu-item>
+          <el-menu-item index="2-4" :class="{ 'is-active': isMenuActive('2-4') }" @click="toCalculator()">Calculator</el-menu-item>
         </el-sub-menu>
-        <el-menu-item index="3" @click="toChat()">
+        <el-menu-item index="3" :class="{ 'is-active': isMenuActive('3') }" @click="toChat()">
           <el-icon><document /></el-icon>
           <span>Chat</span>
         </el-menu-item>
-        <el-menu-item index="4" @click="toNavigator()">
+        <el-menu-item index="4" :class="{ 'is-active': isMenuActive('4') }" @click="toNavigator()">
           <el-icon><setting /></el-icon>
           <span>Navigator</span>
         </el-menu-item>
-        <el-menu-item index="5" @click="getDocument()">
+        <el-menu-item index="5" :class="{ 'is-active': isMenuActive('5') }" @click="getDocument()">
           <el-icon><document /></el-icon>
           <span>blog</span>
         </el-menu-item>
-        <el-menu-item index="6" @click="toGuide()">
+        <el-menu-item index="6" :class="{ 'is-active': isMenuActive('6') }" @click="toGuide()">
           <el-icon><setting /></el-icon>
           <span>Guide</span>
         </el-menu-item>
-        <el-menu-item index="7" @click="toFeedback()">
+        <el-menu-item index="7" :class="{ 'is-active': isMenuActive('7') }" @click="toFeedback()">
           <el-icon><document /></el-icon>
           <span>Feedback</span>
         </el-menu-item>
@@ -74,61 +74,61 @@
     </el-main>
 
     <el-drawer v-model="showMenuDrawer" :with-header="false" size="240px">
-      <el-menu default-active="4" class="el-menu-vertical-demo" @open="handleOpen" @close="handleClose" style="height: 100%;">
-        <el-sub-menu index="1">
+      <el-menu class="el-menu-vertical-demo" @open="handleOpen" @close="handleClose" style="height: 100%;">
+        <el-sub-menu index="1" :class="{ 'is-active': isMenuActive('1') }">
           <template #title>
             <el-icon><location /></el-icon>
             <span>Navigator One</span>
           </template>
           <el-menu-item-group title="Group One">
-            <el-menu-item index="1-1" @click="toVideo(); showMenuDrawer=false">video</el-menu-item>
-            <el-menu-item index="1-2" @click="toDocument(); showMenuDrawer=false">document</el-menu-item>
-            <el-menu-item index="1-3" @click="toMusic(); showMenuDrawer=false">music</el-menu-item>
+            <el-menu-item index="1-1" :class="{ 'is-active': isMenuActive('1-1') }" @click="toVideo(); showMenuDrawer=false">video</el-menu-item>
+            <el-menu-item index="1-2" :class="{ 'is-active': isMenuActive('1-2') }" @click="toDocument(); showMenuDrawer=false">document</el-menu-item>
+            <el-menu-item index="1-3" :class="{ 'is-active': isMenuActive('1-3') }" @click="toMusic(); showMenuDrawer=false">music</el-menu-item>
           </el-menu-item-group>
           <el-menu-item-group title="Group Two">
-            <el-menu-item index="1-4" @click="toTransfer(); showMenuDrawer=false">transfer</el-menu-item>
-            <el-menu-item index="1-5" @click="toDoList(); showMenuDrawer=false">to do list</el-menu-item>
+            <el-menu-item index="1-4" :class="{ 'is-active': isMenuActive('1-4') }" @click="toTransfer(); showMenuDrawer=false">transfer</el-menu-item>
+            <el-menu-item index="1-5" :class="{ 'is-active': isMenuActive('1-5') }" @click="toDoList(); showMenuDrawer=false">to do list</el-menu-item>
           </el-menu-item-group>
         </el-sub-menu>
-        <el-sub-menu index="2">
+        <el-sub-menu index="2" :class="{ 'is-active': isMenuActive('2') }">
           <template #title>
             <el-icon><icon-menu /></el-icon>
             <span>Navigator Two</span>
           </template>
-          <el-menu-item index="2-1" @click="toAgent(); showMenuDrawer=false">
+          <el-menu-item index="2-1" :class="{ 'is-active': isMenuActive('2-1') }" @click="toAgent(); showMenuDrawer=false">
             <el-icon><icon-menu /></el-icon>
             <span>agent</span>
           </el-menu-item>
-          <el-menu-item index="2-2" @click="toQiMen(); showMenuDrawer=false">
+          <el-menu-item index="2-2" :class="{ 'is-active': isMenuActive('2-2') }" @click="toQiMen(); showMenuDrawer=false">
             <el-icon><icon-menu /></el-icon>
             <span>QiMenDunJia</span>
           </el-menu-item>
-          <el-menu-item index="2-3" @click="toTimer(); showMenuDrawer=false">
+          <el-menu-item index="2-3" :class="{ 'is-active': isMenuActive('2-3') }" @click="toTimer(); showMenuDrawer=false">
             <el-icon><icon-menu /></el-icon>
             <span>Timer</span>
           </el-menu-item>
-          <el-menu-item index="2-4" @click="toCalculator(); showMenuDrawer=false">
+          <el-menu-item index="2-4" :class="{ 'is-active': isMenuActive('2-4') }" @click="toCalculator(); showMenuDrawer=false">
             <el-icon><icon-menu /></el-icon>
             <span>Calculator</span>
           </el-menu-item>
         </el-sub-menu>
-        <el-menu-item index="3" @click="toChat(); showMenuDrawer=false">
+        <el-menu-item index="3" :class="{ 'is-active': isMenuActive('3') }" @click="toChat(); showMenuDrawer=false">
           <el-icon><document /></el-icon>
           <span>Chat</span>
         </el-menu-item>
-        <el-menu-item index="4" @click="toNavigator(); showMenuDrawer=false">
+        <el-menu-item index="4" :class="{ 'is-active': isMenuActive('4') }" @click="toNavigator(); showMenuDrawer=false">
           <el-icon><setting /></el-icon>
           <span>Navigator Four</span>
         </el-menu-item>
-        <el-menu-item index="5" @click="getDocument(); showMenuDrawer=false">
+        <el-menu-item index="5" :class="{ 'is-active': isMenuActive('5') }" @click="getDocument(); showMenuDrawer=false">
           <el-icon><document /></el-icon>
           <span>blog</span>
         </el-menu-item>
-        <el-menu-item index="6" @click="toGuide(); showMenuDrawer=false">
+        <el-menu-item index="6" :class="{ 'is-active': isMenuActive('6') }" @click="toGuide(); showMenuDrawer=false">
           <el-icon><setting /></el-icon>
           <span>Guide</span>
         </el-menu-item>
-        <el-menu-item index="7" @click="toFeedback(); showMenuDrawer=false">
+        <el-menu-item index="7" :class="{ 'is-active': isMenuActive('7') }" @click="toFeedback(); showMenuDrawer=false">
           <el-icon><document /></el-icon>
           <span>Feedback</span>
         </el-menu-item>
@@ -166,7 +166,7 @@
 <script setup lang="ts">
 import { computed, ref, onMounted, onUnmounted, watch } from "vue";
 import { storeToRefs } from "pinia";
-import { useRouter } from "vue-router";
+import { useRouter, useRoute } from "vue-router";
 import { useUserStore } from "@/stores/userStore";
 import { useTimerStore } from "@/stores/timerStore";
 import { userApi } from "@/api/userApi";
@@ -174,6 +174,29 @@ import { userApi } from "@/api/userApi";
 const userStore = useUserStore();
 const username = computed(() => userStore.getUsername());
 const router = useRouter();
+const route = useRoute();
+
+// Match current route to menu indices (manually controlled, not via el-menu state)
+const menuActiveSet = computed(() => {
+  const p = route.path
+  const active = new Set<string>()
+  if (p.startsWith('/video'))        { active.add('1-1'); active.add('1') }
+  else if (p.startsWith('/document')){ active.add('1-2'); active.add('1') }
+  else if (p.startsWith('/music'))   { active.add('1-3'); active.add('1') }
+  else if (p.startsWith('/transfer')){ active.add('1-4'); active.add('1') }
+  else if (p.startsWith('/todoList')){ active.add('1-5'); active.add('1') }
+  else if (p.startsWith('/agent'))   { active.add('2-1'); active.add('2') }
+  else if (p.startsWith('/qiMen'))   { active.add('2-2'); active.add('2') }
+  else if (p.startsWith('/timer'))   { active.add('2-3'); active.add('2') }
+  else if (p.startsWith('/calculator')){ active.add('2-4'); active.add('2') }
+  else if (p.startsWith('/chat'))    { active.add('3') }
+  else if (p.startsWith('/navigator')){ active.add('4') }
+  else if (p.startsWith('/getDocument') || p.startsWith('/documentDetail')){ active.add('5') }
+  else if (p.startsWith('/guide'))   { active.add('6') }
+  else if (p.startsWith('/feedback')){ active.add('7') }
+  return active
+})
+const isMenuActive = (index: string) => menuActiveSet.value.has(index)
 const timerStore = useTimerStore();
 const {
   isRunning: timerIsRunning,
@@ -461,6 +484,10 @@ const updateIsMobile = () => {
   color: #00f5ff;
   font-weight: 600;
   box-shadow: inset 0 0 0 1px rgba(0, 255, 255, 0.35);
+}
+:deep(.el-menu-vertical-demo .el-sub-menu.is-active > .el-sub-menu__title) {
+  color: #65d5dc;
+  text-shadow: 0 0 6px rgba(101, 213, 220, 0.35);
 }
 :deep(.el-menu-vertical-demo .el-icon) {
   color: #80f8ff;

@@ -1,15 +1,16 @@
 <template>
   <div class="detail-page">
-    <div class="jasmine jasmine-left"></div>
-    <div class="jasmine jasmine-right"></div>
-    <div class="jasmine-bottom"></div>
+    <!-- Subtle ambient decorations -->
+    <div class="ambient-orb orb-1"></div>
+    <div class="ambient-orb orb-2"></div>
 
     <div class="content-shell">
+      <!-- Header -->
       <div class="header">
         <div class="header-left">
-          <el-button text @click="goBack" type="primary" class="back-button">
+          <el-button text @click="goBack" class="back-button">
             <el-icon><ArrowLeft /></el-icon>
-            <span>返回</span>
+            <span>返回列表</span>
           </el-button>
           <div class="header-title-wrap">
             <div v-if="!isEditing" class="title">{{ articleTitle }}</div>
@@ -21,35 +22,54 @@
               show-word-limit
               placeholder="请输入标题"
             />
-            <div class="author">作者：{{ articleAuthor }}</div>
+            <div class="author">
+              <span class="author-dot"></span>
+              {{ articleAuthor }}
+            </div>
           </div>
         </div>
         <div class="header-right">
-          <div class="meta-pill">字数：{{ wordCount }}</div>
-          <div class="meta-pill">预计阅读：{{ readingMinutes }} 分钟</div>
-          <div class="meta-pill">状态：{{ isEditing ? '编辑中' : '阅读中' }}</div>
-          <div class="meta-pill" :class="{ readonly: !isPublic }">公开：{{ isPublic ? '是' : '否' }}</div>
-          <div class="meta-pill permission-pill" :class="{ readonly: !isOwner }">
-            权限：{{ isOwner ? '可编辑' : '仅查看' }}
+          <span class="meta-chip">
+            <span class="chip-icon">📄</span> {{ wordCount }} 字
+          </span>
+          <span class="meta-chip">
+            <span class="chip-icon">⏱️</span> {{ readingMinutes }} 分钟
+          </span>
+          <span class="meta-chip" :class="{ 'chip-private': !isPublic }">
+            {{ isPublic ? '🌐 公开' : '🔒 私密' }}
+          </span>
+          <span class="meta-chip" :class="{ 'chip-editable': isOwner }">
+            {{ isOwner ? '✏️ 可编辑' : '👁️ 仅查看' }}
+          </span>
+        </div>
+      </div>
+
+      <!-- Meta strip for owner -->
+      <div v-if="isOwner" class="meta-strip">
+        <div class="strip-item">
+          <div class="strip-icon">📝</div>
+          <div class="strip-info">
+            <div class="strip-label">标题完整度</div>
+            <div class="strip-value">{{ titleLength >= 6 ? '良好' : '建议补充' }}</div>
+          </div>
+        </div>
+        <div class="strip-item">
+          <div class="strip-icon">📊</div>
+          <div class="strip-info">
+            <div class="strip-label">正文完整度</div>
+            <div class="strip-value">{{ wordCount >= 120 ? '良好' : '可再丰富' }}</div>
+          </div>
+        </div>
+        <div class="strip-item">
+          <div class="strip-icon">🔧</div>
+          <div class="strip-info">
+            <div class="strip-label">操作权限</div>
+            <div class="strip-value">{{ isEditing ? '编辑模式' : '预览模式' }}</div>
           </div>
         </div>
       </div>
 
-      <div v-if="isOwner" class="meta-strip">
-        <div class="strip-item">
-          <div class="strip-label">标题完整度</div>
-          <div class="strip-value">{{ titleLength >= 6 ? '良好' : '建议补充' }}</div>
-        </div>
-        <div class="strip-item">
-          <div class="strip-label">正文完整度</div>
-          <div class="strip-value">{{ wordCount >= 120 ? '良好' : '可再丰富' }}</div>
-        </div>
-        <div class="strip-item">
-          <div class="strip-label">操作权限</div>
-          <div class="strip-value">{{ isOwner ? (isEditing ? '可发布' : '可切换编辑') : '只读查看' }}</div>
-        </div>
-      </div>
-
+      <!-- Editor Panel -->
       <div v-if="isEditing" class="editor-panel">
         <div class="editor-canvas">
           <Toolbar class="editor-toolbar" :editor="editorRef" :defaultConfig="toolbarConfig" :mode="mode" />
@@ -61,23 +81,31 @@
             @onCreated="handleCreated"
           />
         </div>
-        <div class="editor-action" v-if="isOwner">
+        <div class="editor-actions" v-if="isOwner">
           <div class="privacy-control">
-            <div class="privacy-label">公开给别人看</div>
-            <el-switch v-model="isPublic" />
+            <span class="privacy-icon">{{ isPublic ? '🌐' : '🔒' }}</span>
+            <span class="privacy-label">公开给别人看</span>
+            <el-switch v-model="isPublic" size="small" />
           </div>
-          <el-button @click="clearContent">清空内容</el-button>
-          <el-button type="primary" :loading="publishing" @click="publish">发布</el-button>
-          <el-button type="danger" plain :loading="deleting" @click="removeDocument">删除文章</el-button>
+          <div class="action-buttons">
+            <el-button @click="clearContent" :disabled="publishing">清空内容</el-button>
+            <el-button type="primary" :loading="publishing" @click="publish">发布文章</el-button>
+            <el-button type="danger" plain :loading="deleting" @click="removeDocument">删除文章</el-button>
+          </div>
         </div>
       </div>
 
-      <div v-else class="article-container markdown-body" v-html="renderedContent"></div>
+      <!-- Article Content -->
+      <div v-else class="article-wrapper">
+        <article class="article-content markdown-body" v-html="renderedContent"></article>
+      </div>
     </div>
 
-    <div class="switch-wrap" v-if="isOwner">
-      <el-button @click="isEditing = !isEditing">
-        {{ isEditing ? "预览文章" : "返回编辑" }}
+    <!-- Floating edit toggle -->
+    <div class="edit-toggle" v-if="isOwner">
+      <el-button @click="isEditing = !isEditing" class="toggle-btn">
+        <span v-if="isEditing">👁️ 预览文章</span>
+        <span v-else>✏️ 编辑文章</span>
       </el-button>
     </div>
   </div>
@@ -90,7 +118,7 @@ import { Editor, Toolbar } from '@wangeditor/editor-for-vue'
 import { documentApi } from '@/api/documentApi'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { useRoute, useRouter } from 'vue-router'
-import { ArrowLeft } from '@element-plus/icons-vue' // 引入图标
+import { ArrowLeft } from '@element-plus/icons-vue'
 import { marked } from 'marked'
 import { useUserStore } from '@/stores/userStore'
 
@@ -112,7 +140,7 @@ const deleting = ref(false)
 
 const renderedContent = computed(() => {
   const content = valueHtml.value
-  if (!content) return ''
+  if (!content) return '<p style="color:#7a9aaa;text-align:center;padding:60px 0;">这篇文章还没有内容</p>'
   return marked.parse(content)
 })
 const plainText = computed(() => {
@@ -186,7 +214,7 @@ const publish = async () => {
   }
   if (publishing.value) return
   const title = String(articleTitle.value || '').trim()
-  
+
   if (!title) {
     ElMessage.warning('标题不能为空')
     return
@@ -201,12 +229,11 @@ const publish = async () => {
     const author = String(currentUsername.value || articleAuthor.value || '匿名').trim()
     const payload = { author, title, content: valueHtml.value, is_public: isPublic.value }
     if (id !== undefined && id !== null && String(id).trim() !== '') {
-      payload.id = id      
+      payload.id = id
     }
     const res = await documentApi.publish(payload)
     if (res.code === 200) {
       ElMessage.success(res.message || '发布成功')
-      // 返回预览形式
       router.push({ name: 'documentDetail', params: { id } })
       isEditing.value = false
     } else {
@@ -265,216 +292,121 @@ const goBack = () => {
   position: relative;
   min-height: 100%;
   box-sizing: border-box;
-  padding: 16px 16px 28px;
+  padding: 20px;
   overflow: hidden;
   background:
-    radial-gradient(1200px 520px at -240px -240px, rgba(0, 245, 255, 0.10) 0%, rgba(0, 245, 255, 0) 60%),
-    radial-gradient(900px 520px at 120% 0, rgba(255, 0, 204, 0.08) 0%, rgba(255, 0, 204, 0) 60%),
-    linear-gradient(180deg, #090a1a 0%, #0d1022 100%);
+    radial-gradient(1000px 500px at -200px -200px, rgba(0, 245, 255, 0.05) 0%, transparent 60%),
+    radial-gradient(800px 500px at 120% 0%, rgba(255, 0, 204, 0.04) 0%, transparent 60%),
+    linear-gradient(180deg, #080b1a 0%, #0c1026 100%);
 }
+
+/* ── Ambient orbs (subtle, replacing jasmine) ── */
+.ambient-orb {
+  position: absolute;
+  border-radius: 50%;
+  pointer-events: none;
+  z-index: 0;
+  animation: orbPulse 8s ease-in-out infinite;
+}
+.orb-1 {
+  width: 300px;
+  height: 300px;
+  left: -100px;
+  top: -80px;
+  background: radial-gradient(circle, rgba(0, 245, 255, 0.08), transparent 70%);
+  animation-delay: 0s;
+}
+.orb-2 {
+  width: 250px;
+  height: 250px;
+  right: -80px;
+  top: 40%;
+  background: radial-gradient(circle, rgba(255, 0, 204, 0.06), transparent 70%);
+  animation-delay: 3s;
+}
+@keyframes orbPulse {
+  0%, 100% { transform: scale(1); opacity: 0.5; }
+  50% { transform: scale(1.15); opacity: 0.8; }
+}
+
+/* ── Content Shell ── */
 .content-shell {
   position: relative;
   z-index: 2;
-  max-width: 1240px;
+  max-width: 1040px;
   margin: 0 auto;
-  border: 1px solid rgba(0, 255, 255, 0.22);
-  border-radius: 14px;
-  background: rgba(7, 11, 24, 0.72);
-  box-shadow: 0 0 16px rgba(0, 245, 255, 0.12), 0 0 30px rgba(255, 0, 204, 0.08);
-  backdrop-filter: blur(5px);
-}
-.jasmine {
-  position: absolute;
-  width: 120px;
-  height: 120px;
-  opacity: 0.34;
-  pointer-events: none;
-  filter: drop-shadow(0 0 8px rgba(255, 255, 255, 0.18));
-  animation: jasmineFloat 6.2s ease-in-out infinite;
-}
-.jasmine::before,
-.jasmine::after {
-  content: "";
-  position: absolute;
-  inset: 0;
-  border-radius: 50%;
-  background:
-    radial-gradient(circle at 50% 16%, rgba(255, 255, 255, 0.9) 0 10px, transparent 11px),
-    radial-gradient(circle at 82% 38%, rgba(255, 255, 255, 0.9) 0 10px, transparent 11px),
-    radial-gradient(circle at 72% 76%, rgba(255, 255, 255, 0.9) 0 10px, transparent 11px),
-    radial-gradient(circle at 28% 76%, rgba(255, 255, 255, 0.9) 0 10px, transparent 11px),
-    radial-gradient(circle at 18% 38%, rgba(255, 255, 255, 0.9) 0 10px, transparent 11px),
-    radial-gradient(circle at 50% 50%, rgba(255, 236, 163, 0.95) 0 8px, transparent 9px);
-}
-.jasmine::after {
-  transform: scale(0.62) translate(42px, 42px);
-  opacity: 0.72;
-}
-.jasmine-left {
-  left: 16px;
-  top: 76px;
-  animation-delay: 0s;
-}
-.jasmine-right {
-  right: 16px;
-  top: 76px;
-  animation-delay: 1.3s;
-}
-.jasmine-bottom {
-  position: absolute;
-  left: 50%;
-  bottom: 10px;
-  transform: translateX(-50%);
-  width: min(92%, 980px);
-  height: 68px;
-  border-radius: 999px;
-  opacity: 0.45;
-  pointer-events: none;
-  animation: jasmineGlow 5.4s ease-in-out infinite;
-  background:
-    radial-gradient(circle at 8% 56%, rgba(255, 255, 255, 0.85) 0 8px, transparent 9px),
-    radial-gradient(circle at 14% 42%, rgba(255, 255, 255, 0.8) 0 7px, transparent 8px),
-    radial-gradient(circle at 24% 56%, rgba(255, 255, 255, 0.85) 0 8px, transparent 9px),
-    radial-gradient(circle at 30% 42%, rgba(255, 255, 255, 0.8) 0 7px, transparent 8px),
-    radial-gradient(circle at 42% 56%, rgba(255, 255, 255, 0.85) 0 8px, transparent 9px),
-    radial-gradient(circle at 48% 42%, rgba(255, 255, 255, 0.8) 0 7px, transparent 8px),
-    radial-gradient(circle at 58% 56%, rgba(255, 255, 255, 0.85) 0 8px, transparent 9px),
-    radial-gradient(circle at 64% 42%, rgba(255, 255, 255, 0.8) 0 7px, transparent 8px),
-    radial-gradient(circle at 74% 56%, rgba(255, 255, 255, 0.85) 0 8px, transparent 9px),
-    radial-gradient(circle at 80% 42%, rgba(255, 255, 255, 0.8) 0 7px, transparent 8px),
-    radial-gradient(circle at 90% 56%, rgba(255, 255, 255, 0.85) 0 8px, transparent 9px),
-    linear-gradient(90deg, rgba(0, 245, 255, 0.16), rgba(255, 0, 204, 0.16));
-  box-shadow: 0 0 14px rgba(0, 245, 255, 0.18), 0 0 20px rgba(255, 0, 204, 0.12);
+  border-radius: 16px;
+  border: 1px solid rgba(0, 255, 255, 0.16);
+  background: rgba(7, 11, 24, 0.75);
+  backdrop-filter: blur(10px);
+  box-shadow:
+    0 0 20px rgba(0, 245, 255, 0.06),
+    0 0 40px rgba(0, 0, 0, 0.3);
+  overflow: hidden;
 }
 
-@keyframes jasmineFloat {
-  0%, 100% {
-    transform: translateY(0) rotate(0deg);
-    opacity: 0.34;
-  }
-  50% {
-    transform: translateY(-8px) rotate(1.5deg);
-    opacity: 0.45;
-  }
-}
-
-@keyframes jasmineGlow {
-  0%, 100% {
-    opacity: 0.36;
-    filter: saturate(0.95);
-  }
-  50% {
-    opacity: 0.52;
-    filter: saturate(1.12);
-  }
-}
-.article-container {
-  position: relative;
-  padding: 40px;
-  border-top: 1px solid rgba(0, 255, 255, 0.18);
-  background: linear-gradient(135deg, rgba(8, 14, 32, 0.9), rgba(12, 18, 40, 0.86));
-  line-height: 1.6;
-  font-size: 16px;
-  max-width: 980px;
-  margin: 0 auto 18px;
-  z-index: 2;
-  overflow: visible;
-}
-.article-container::before,
-.article-container::after {
-  content: "";
-  position: absolute;
-  top: 30px;
-  width: 8px;
-  height: calc(100% - 60px);
-  border-radius: 999px;
-  pointer-events: none;
-}
-.article-container::before {
-  left: -18px;
-  background: linear-gradient(180deg, rgba(0, 245, 255, 0.85) 0%, rgba(0, 245, 255, 0.15) 100%);
-  box-shadow: 0 0 14px rgba(0, 245, 255, 0.5);
-}
-.article-container::after {
-  right: -18px;
-  background: linear-gradient(180deg, rgba(255, 0, 204, 0.82) 0%, rgba(255, 0, 204, 0.15) 100%);
-  box-shadow: 0 0 14px rgba(255, 0, 204, 0.45);
-}
-
-/* Basic Markdown Styles */
-:deep(.markdown-body) h1, 
-:deep(.markdown-body) h2, 
-:deep(.markdown-body) h3 {
-  border-bottom: 1px solid rgba(0, 255, 255, 0.26);
-  color: #aef9ff;
-  padding-bottom: .3em;
-  margin-top: 24px;
-  margin-bottom: 16px;
-  font-weight: 600;
-  line-height: 1.25;
-}
-:deep(.markdown-body) p {
-  margin-top: 0;
-  margin-bottom: 16px;
-  color: #d8f8ff;
-}
-:deep(.markdown-body) code {
-  padding: .2em .4em;
-  margin: 0;
-  font-size: 85%;
-  color: #94f5ff;
-  background-color: rgba(0, 245, 255, 0.12);
-  border-radius: 3px;
-}
-:deep(.markdown-body) pre {
-  padding: 16px;
-  overflow: auto;
-  font-size: 85%;
-  line-height: 1.45;
-  color: #d8f8ff;
-  background-color: rgba(6, 12, 28, 0.92);
-  border: 1px solid rgba(0, 255, 255, 0.2);
-  border-radius: 6px;
-  margin-bottom: 16px;
-}
-:deep(.markdown-body) blockquote {
-  padding: 0 1em;
-  color: #bfefff;
-  border-left: .25em solid rgba(255, 0, 204, 0.5);
-  background: rgba(255, 0, 204, 0.08);
-  margin: 0 0 16px 0;
-}
-:deep(.markdown-body) img {
-  max-width: 100%;
-  box-sizing: content-box;
-}
-
+/* ── Header ── */
 .header {
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
-  gap: 12px;
-  padding: 14px 16px 12px;
-  border-bottom: 1px solid rgba(0, 255, 255, 0.18);
-  background: linear-gradient(90deg, rgba(0, 245, 255, 0.08), rgba(255, 0, 204, 0.08));
-  position: relative;
+  gap: 16px;
+  padding: 20px 24px 16px;
+  border-bottom: 1px solid rgba(0, 255, 255, 0.12);
+  background: linear-gradient(105deg, rgba(0, 245, 255, 0.05), transparent 40%);
 }
 .header-left {
   display: flex;
-  align-items: center;
-  gap: 10px;
+  align-items: flex-start;
+  gap: 14px;
   min-width: 0;
   flex: 1;
 }
 .back-button {
-  font-size: 16px;
+  flex-shrink: 0;
+  font-size: 14px;
   display: flex;
   align-items: center;
   gap: 6px;
+  color: #6abfcc;
+  padding: 6px 12px;
+  border-radius: 8px;
+  transition: all 0.15s ease;
+}
+.back-button:hover {
+  color: #8ff4ff;
+  background: rgba(0, 255, 255, 0.08) !important;
 }
 .header-title-wrap {
   min-width: 0;
   flex: 1;
+}
+.title {
+  font-size: 26px;
+  font-weight: 800;
+  color: #d6fbff;
+  line-height: 1.35;
+  text-shadow: 0 0 12px rgba(0, 245, 255, 0.15);
+  word-break: break-word;
+}
+.title-edit-input {
+  max-width: 600px;
+}
+.author {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 8px;
+  font-size: 14px;
+  color: #7ba5b8;
+  font-weight: 500;
+}
+.author-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #00f5ff, #ff00cc);
+  box-shadow: 0 0 8px rgba(0, 245, 255, 0.4);
 }
 .header-right {
   display: flex;
@@ -482,81 +414,92 @@ const goBack = () => {
   gap: 8px;
   flex-wrap: wrap;
   justify-content: flex-end;
+  padding-top: 4px;
 }
-.meta-pill {
+.meta-chip {
   font-size: 12px;
   color: #9ee8ff;
-  background: rgba(0, 255, 255, 0.1);
-  border: 1px solid rgba(0, 255, 255, 0.2);
+  background: rgba(0, 255, 255, 0.08);
+  border: 1px solid rgba(0, 255, 255, 0.16);
   border-radius: 999px;
-  padding: 4px 10px;
+  padding: 4px 12px;
+  white-space: nowrap;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-weight: 500;
 }
-.permission-pill.readonly {
-  color: #ffb7e8;
-  border-color: rgba(255, 0, 204, 0.28);
-  background: rgba(255, 0, 204, 0.12);
-}
-
-.title {
-  font-size: 24px;
-  font-weight: 700;
-  color: #abf7ff;
-  text-shadow: 0 0 10px rgba(0, 245, 255, 0.35);
-}
-.title-edit-input {
-  max-width: 680px;
-}
-
-.author {
-  margin-top: 6px;
+.chip-icon {
   font-size: 13px;
-  color: #8fb2c9;
 }
+.meta-chip.chip-private {
+  color: #ffc0f1;
+  border-color: rgba(255, 0, 204, 0.20);
+  background: rgba(255, 0, 204, 0.08);
+}
+.meta-chip.chip-editable {
+  color: #b8f8d0;
+  border-color: rgba(62, 224, 151, 0.20);
+  background: rgba(62, 224, 151, 0.08);
+}
+
+/* ── Meta Strip ── */
 .meta-strip {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 10px;
-  padding: 12px 16px;
-  border-bottom: 1px solid rgba(0, 255, 255, 0.15);
-  background: rgba(8, 13, 30, 0.62);
+  gap: 12px;
+  padding: 14px 24px;
+  border-bottom: 1px solid rgba(0, 255, 255, 0.10);
+  background: rgba(8, 13, 30, 0.4);
 }
 .strip-item {
-  border: 1px solid rgba(0, 255, 255, 0.18);
-  border-radius: 10px;
-  background: rgba(8, 15, 34, 0.72);
-  padding: 10px 12px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 14px;
+  border-radius: 12px;
+  border: 1px solid rgba(0, 255, 255, 0.10);
+  background: rgba(8, 15, 34, 0.5);
+}
+.strip-icon {
+  font-size: 22px;
+  flex-shrink: 0;
 }
 .strip-label {
-  font-size: 12px;
-  color: #88a7bf;
+  font-size: 11px;
+  color: #5f8598;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
 }
 .strip-value {
-  margin-top: 4px;
-  font-size: 15px;
+  margin-top: 2px;
+  font-size: 14px;
   font-weight: 600;
-  color: #c7f8ff;
+  color: #b8f0f8;
 }
+
+/* ── Editor ── */
 .editor-panel {
-  padding: 12px 14px 14px;
+  padding: 16px 24px 20px;
 }
 .editor-canvas {
-  border: 1px solid rgba(0, 255, 255, 0.2);
+  border: 1px solid rgba(0, 255, 255, 0.16);
   border-radius: 12px;
   overflow: hidden;
-  background: rgba(10, 15, 34, 0.78);
+  background: rgba(10, 15, 34, 0.6);
 }
 .editor-toolbar {
-  border-bottom: 1px solid rgba(0, 255, 255, 0.18);
+  border-bottom: 1px solid rgba(0, 255, 255, 0.14);
 }
 .editor-body {
   height: 520px;
   overflow-y: auto;
 }
-.editor-action {
-  margin-top: 10px;
+.editor-actions {
+  margin-top: 14px;
   display: flex;
-  justify-content: flex-end;
-  gap: 8px;
+  justify-content: space-between;
+  gap: 12px;
   flex-wrap: wrap;
   align-items: center;
 }
@@ -564,62 +507,225 @@ const goBack = () => {
   display: flex;
   align-items: center;
   gap: 8px;
-  margin-right: auto;
-  padding: 8px 10px;
-  border: 1px solid rgba(0, 255, 255, 0.16);
-  border-radius: 8px;
-  background: rgba(10, 16, 35, 0.72);
+  padding: 8px 14px;
+  border: 1px solid rgba(0, 255, 255, 0.14);
+  border-radius: 10px;
+  background: rgba(10, 16, 35, 0.5);
+}
+.privacy-icon {
+  font-size: 16px;
 }
 .privacy-label {
-  font-size: 12px;
+  font-size: 13px;
   color: #9dc5de;
+  font-weight: 500;
 }
-.switch-wrap {
-  position: fixed;
-  right: 28px;
-  top: 148px;
-  z-index: 30;
-}
-.switch-wrap :deep(.el-button) {
-  border-radius: 999px;
-  border: 1px solid rgba(0, 255, 255, 0.3);
-  background: rgba(8, 16, 36, 0.82);
-  color: #9ef7ff;
-  box-shadow: 0 0 12px rgba(0, 245, 255, 0.14), 0 0 18px rgba(255, 0, 204, 0.08);
-}
-.switch-wrap :deep(.el-button:hover) {
-  border-color: rgba(255, 0, 204, 0.35);
-  color: #ff9dec;
-  background: rgba(24, 10, 38, 0.85);
+.action-buttons {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
 }
 
-@media (max-width: 900px) {
-  .jasmine {
-    width: 90px;
-    height: 90px;
-    opacity: 0.26;
-    animation-duration: 7s;
-  }
-  .jasmine-left {
-    left: 8px;
-    top: 92px;
-  }
-  .jasmine-right {
-    right: 8px;
-    top: 92px;
-  }
-  .jasmine-bottom {
-    height: 56px;
-    opacity: 0.34;
-  }
-  .switch-wrap {
-    right: 50%;
-    top: auto;
-    bottom: 74px;
-    transform: translateX(50%);
+/* ── Article Content ── */
+.article-wrapper {
+  padding: 12px 24px 32px;
+}
+.article-content {
+  max-width: 860px;
+  margin: 0 auto;
+  padding: 36px 40px;
+  border-radius: 14px;
+  border: 1px solid rgba(0, 255, 255, 0.10);
+  background: rgba(8, 12, 26, 0.5);
+  line-height: 1.85;
+  font-size: 16px;
+  position: relative;
+}
+/* Decorative side accents */
+.article-content::before,
+.article-content::after {
+  content: '';
+  position: absolute;
+  top: 40px;
+  width: 4px;
+  border-radius: 999px;
+}
+.article-content::before {
+  left: -1px;
+  height: 60px;
+  background: linear-gradient(180deg, rgba(0, 245, 255, 0.6), transparent);
+}
+.article-content::after {
+  right: -1px;
+  height: 60px;
+  background: linear-gradient(180deg, rgba(255, 0, 204, 0.5), transparent);
+}
+
+/* ── Markdown Typography ── */
+:deep(.markdown-body) h1,
+:deep(.markdown-body) h2,
+:deep(.markdown-body) h3,
+:deep(.markdown-body) h4 {
+  color: #b8f4fa;
+  font-weight: 700;
+  line-height: 1.35;
+  margin-top: 28px;
+  margin-bottom: 14px;
+}
+:deep(.markdown-body) h1 { font-size: 28px; border-bottom: 2px solid rgba(0, 255, 255, 0.18); padding-bottom: 8px; }
+:deep(.markdown-body) h2 { font-size: 24px; border-bottom: 1px solid rgba(0, 255, 255, 0.14); padding-bottom: 6px; }
+:deep(.markdown-body) h3 { font-size: 20px; }
+:deep(.markdown-body) h4 { font-size: 17px; }
+
+:deep(.markdown-body) p {
+  margin-top: 0;
+  margin-bottom: 16px;
+  color: #c8e8f4;
+  line-height: 1.85;
+}
+:deep(.markdown-body) a {
+  color: #5ed8e8;
+  text-decoration: none;
+  border-bottom: 1px solid rgba(94, 216, 232, 0.3);
+  transition: all 0.15s ease;
+}
+:deep(.markdown-body) a:hover {
+  color: #ff95ec;
+  border-bottom-color: rgba(255, 149, 236, 0.4);
+}
+:deep(.markdown-body) strong {
+  color: #e0f6ff;
+  font-weight: 700;
+}
+:deep(.markdown-body) code {
+  padding: 2px 6px;
+  margin: 0 2px;
+  font-size: 85%;
+  color: #94f5ff;
+  background: rgba(0, 245, 255, 0.10);
+  border: 1px solid rgba(0, 245, 255, 0.14);
+  border-radius: 4px;
+  font-family: 'JetBrains Mono', 'Fira Code', 'Cascadia Code', monospace;
+}
+:deep(.markdown-body) pre {
+  padding: 18px 20px;
+  overflow: auto;
+  font-size: 14px;
+  line-height: 1.55;
+  color: #d0eef8;
+  background: rgba(6, 10, 24, 0.8);
+  border: 1px solid rgba(0, 255, 255, 0.14);
+  border-radius: 10px;
+  margin-bottom: 18px;
+}
+:deep(.markdown-body) pre code {
+  padding: 0;
+  margin: 0;
+  color: inherit;
+  background: transparent;
+  border: none;
+  font-size: inherit;
+}
+:deep(.markdown-body) blockquote {
+  padding: 12px 18px;
+  color: #a8d8e8;
+  border-left: 3px solid rgba(255, 0, 204, 0.4);
+  background: rgba(255, 0, 204, 0.05);
+  border-radius: 0 8px 8px 0;
+  margin: 0 0 18px 0;
+}
+:deep(.markdown-body) blockquote p {
+  margin-bottom: 0;
+  color: #a8d8e8;
+}
+:deep(.markdown-body) ul,
+:deep(.markdown-body) ol {
+  padding-left: 1.5em;
+  color: #c8e8f4;
+  margin-bottom: 16px;
+}
+:deep(.markdown-body) li {
+  margin-bottom: 6px;
+}
+:deep(.markdown-body) img {
+  max-width: 100%;
+  border-radius: 8px;
+  margin: 12px 0;
+}
+:deep(.markdown-body) hr {
+  border: none;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(0, 255, 255, 0.3), transparent);
+  margin: 28px 0;
+}
+:deep(.markdown-body) table {
+  border-collapse: collapse;
+  width: 100%;
+  margin-bottom: 16px;
+  font-size: 14px;
+}
+:deep(.markdown-body) th,
+:deep(.markdown-body) td {
+  padding: 8px 14px;
+  border: 1px solid rgba(0, 255, 255, 0.14);
+  text-align: left;
+  color: #c8e8f4;
+}
+:deep(.markdown-body) th {
+  background: rgba(0, 245, 255, 0.06);
+  font-weight: 700;
+  color: #b8f4fa;
+}
+
+/* ── Edit Toggle (floating) ── */
+.edit-toggle {
+  position: fixed;
+  right: 28px;
+  bottom: 40px;
+  z-index: 30;
+}
+.toggle-btn {
+  border-radius: 999px !important;
+  border: 1px solid rgba(0, 255, 255, 0.24) !important;
+  background: rgba(8, 16, 36, 0.85) !important;
+  color: #9ef7ff !important;
+  font-weight: 600 !important;
+  padding: 10px 20px !important;
+  font-size: 14px !important;
+  backdrop-filter: blur(8px);
+  box-shadow:
+    0 4px 16px rgba(0, 0, 0, 0.4),
+    0 0 16px rgba(0, 245, 255, 0.10) !important;
+  transition: all 0.2s ease !important;
+}
+.toggle-btn:hover {
+  border-color: rgba(255, 0, 204, 0.30) !important;
+  color: #ff9dec !important;
+  box-shadow:
+    0 6px 20px rgba(0, 0, 0, 0.5),
+    0 0 20px rgba(255, 0, 204, 0.12) !important;
+  transform: translateY(-2px);
+}
+
+/* ── Editor overrides ── */
+:deep(.w-e-toolbar),
+:deep(.w-e-bar) {
+  background: #0f1328 !important;
+  border-color: rgba(0, 255, 255, 0.16) !important;
+}
+:deep(.w-e-text-container),
+:deep(.w-e-scroll) {
+  background: #f9fbff !important;
+}
+
+/* ── Responsive ── */
+@media (max-width: 768px) {
+  .detail-page {
+    padding: 12px;
   }
   .header {
     flex-direction: column;
+    padding: 14px 16px 12px;
   }
   .header-left {
     width: 100%;
@@ -628,22 +734,37 @@ const goBack = () => {
     width: 100%;
     justify-content: flex-start;
   }
+  .title {
+    font-size: 22px;
+  }
   .meta-strip {
     grid-template-columns: 1fr;
+    gap: 8px;
+    padding: 12px 16px;
   }
-  .article-container {
-    padding: 24px 16px;
+  .article-wrapper {
+    padding: 8px 12px 20px;
   }
-}
-
-:deep(.w-e-toolbar),
-:deep(.w-e-bar) {
-  background: #0f1328 !important;
-  border-color: rgba(0, 255, 255, 0.2) !important;
-}
-
-:deep(.w-e-text-container),
-:deep(.w-e-scroll) {
-  background: #f9fbff !important;
+  .article-content {
+    padding: 20px 16px;
+  }
+  .editor-actions {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .action-buttons {
+    justify-content: flex-end;
+  }
+  .edit-toggle {
+    right: 16px;
+    bottom: 24px;
+  }
+  .toggle-btn {
+    font-size: 13px !important;
+    padding: 8px 16px !important;
+  }
+  .ambient-orb {
+    display: none;
+  }
 }
 </style>
