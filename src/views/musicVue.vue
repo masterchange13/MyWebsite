@@ -191,11 +191,7 @@ const clickProgress = (e) => {
   state.resumeAfterSeek = !audio.paused
 
   const target = percent * audio.duration
-  if (typeof audio.fastSeek === 'function') {
-    audio.fastSeek(target)
-  } else {
-    audio.currentTime = target
-  }
+  audio.currentTime = target
 
   state.audioProgress = percent
   state.thumbTranslateX = percent * state.progressL

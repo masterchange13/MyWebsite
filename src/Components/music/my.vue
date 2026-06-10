@@ -20,12 +20,14 @@ import { onMounted, ref, computed } from 'vue'
 import { useUserStore } from '@/stores/userStore'
 import { musicApi } from '@/api/musicApi'
 
+const emit = defineEmits(['PlayThisMusic'])
+
 const datas = ref([])
 const userStore = useUserStore()
 const username = computed(() => userStore.getUsername())
 
 const getAllMusic = async () => {
-    const res = await musicApi.getAllUserMusic()
+    const res = await musicApi.getAllMusic()
     if (res.code === 200) {
         datas.value = res.data.map(item => ({
             ...item,
@@ -45,8 +47,9 @@ const formatTime = (seconds) => {
 
 const PlayThisMusic = (index) => {
     const song = datas.value[index]
-    // 触发播放事件
-    console.log('播放音乐:', song)
+    if (song) {
+        emit('PlayThisMusic', song)
+    }
 }
 
 onMounted(() => {

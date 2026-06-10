@@ -98,6 +98,56 @@
       <!-- Article Content -->
       <div v-else class="article-wrapper">
         <article class="article-content markdown-body" v-html="renderedContent"></article>
+
+        <!-- Comments Section -->
+        <div class="comments-section">
+          <div class="comments-header">
+            <div class="comments-title">
+              <span class="comments-icon">💬</span>
+              <span>评论</span>
+              <span class="comments-count">{{ comments.length }}</span>
+            </div>
+          </div>
+
+          <div v-if="comments.length === 0" class="comments-empty">
+            暂无评论，来说点什么吧
+          </div>
+
+          <div v-else class="comments-list">
+            <div v-for="c in comments" :key="c.id" class="comment-item">
+              <div class="comment-avatar">
+                <img :src="getCommentAvatar(c.author)" alt="" />
+              </div>
+              <div class="comment-body">
+                <div class="comment-meta">
+                  <span class="comment-author">{{ c.author }}</span>
+                  <span class="comment-time">{{ formatCommentTime(c.created_time) }}</span>
+                </div>
+                <div class="comment-content">{{ c.content }}</div>
+              </div>
+              <div v-if="isCommentOwner(c)" class="comment-delete" @click="deleteComment(c.id)" title="删除评论">
+                ✕
+              </div>
+            </div>
+          </div>
+
+          <div class="comment-composer">
+            <el-input
+              v-model="commentText"
+              type="textarea"
+              :rows="2"
+              placeholder="写下你的评论..."
+              maxlength="500"
+              show-word-limit
+            />
+            <div class="comment-actions">
+              <span class="comment-hint">以 {{ currentUsername }} 的身份评论</span>
+              <el-button type="primary" size="small" :loading="commentSubmitting" :disabled="!commentText.trim()" @click="submitComment">
+                发表评论
+              </el-button>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
 
@@ -171,6 +221,7 @@ onMounted(async () => {
       if (!isOwner.value) {
         isEditing.value = false
       }
+      loadComments()
     } else {
       ElMessage.error(res.message || '请求错误')
       if (res.code === 403) {
@@ -284,6 +335,84 @@ const removeDocument = async () => {
 
 const goBack = () => {
   router.back()
+}
+
+// ── Comments ──
+const comments = ref([])
+const commentText = ref('')
+const commentSubmitting = ref(false)
+
+const loadComments = async () => {
+  try {
+    const res = await documentApi.getComments(id)
+    if (res.code === 200) {
+      comments.value = res.data || []
+    }
+  } catch (e) {
+    console.error('加载评论失败', e)
+  }
+}
+
+const submitComment = async () => {
+  const text = commentText.value.trim()
+  if (!text || commentSubmitting.value) return
+  commentSubmitting.value = true
+  try {
+    const res = await documentApi.addComment({
+      document_id: Number(id),
+      author: currentUsername.value,
+      content: text,
+    })
+    if (res.code === 200) {
+      commentText.value = ''
+      await loadComments()
+    } else {
+      ElMessage.error(res.message || '评论失败')
+    }
+  } catch (e) {
+    ElMessage.error('评论失败，请稍后再试')
+  } finally {
+    commentSubmitting.value = false
+  }
+}
+
+const deleteComment = async (commentId) => {
+  try {
+    await ElMessageBox.confirm('确定删除这条评论吗？', '删除确认', {
+      confirmButtonText: '确定',
+      cancelButtonText: '取消',
+      type: 'warning',
+    })
+  } catch {
+    return
+  }
+  try {
+    const res = await documentApi.deleteComment(commentId)
+    if (res.code === 200) {
+      ElMessage.success('已删除')
+      await loadComments()
+    } else {
+      ElMessage.error(res.message || '删除失败')
+    }
+  } catch (e) {
+    ElMessage.error('删除失败，请稍后再试')
+  }
+}
+
+const isCommentOwner = (comment) => {
+  return normalizeName(comment.author) === normalizeName(currentUsername.value)
+}
+
+const getCommentAvatar = (name) => {
+  return `https://api.dicebear.com/7.x/identicon/svg?seed=${encodeURIComponent(name || 'user')}`
+}
+
+const formatCommentTime = (s) => {
+  if (!s) return ''
+  const d = new Date(s)
+  if (Number.isNaN(d.getTime())) return ''
+  const pad = (v) => String(v).padStart(2, '0')
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}`
 }
 </script>
 
@@ -716,6 +845,131 @@ const goBack = () => {
 :deep(.w-e-text-container),
 :deep(.w-e-scroll) {
   background: #f9fbff !important;
+}
+
+/* ── Comments ── */
+.comments-section {
+  max-width: 860px;
+  margin: 24px auto 0;
+  padding: 0 4px;
+}
+.comments-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 16px;
+}
+.comments-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 18px;
+  font-weight: 700;
+  color: #9ef7ff;
+}
+.comments-icon {
+  font-size: 20px;
+}
+.comments-count {
+  font-size: 13px;
+  font-weight: 400;
+  color: #7fa4bd;
+  background: rgba(0, 255, 255, 0.08);
+  border: 1px solid rgba(0, 255, 255, 0.16);
+  border-radius: 20px;
+  padding: 1px 10px;
+}
+.comments-empty {
+  text-align: center;
+  color: rgba(214, 251, 255, 0.45);
+  font-size: 14px;
+  padding: 28px 0;
+}
+.comments-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-bottom: 18px;
+}
+.comment-item {
+  display: flex;
+  gap: 12px;
+  padding: 14px 16px;
+  border-radius: 12px;
+  border: 1px solid rgba(0, 255, 255, 0.10);
+  background: rgba(10, 16, 35, 0.45);
+  transition: border-color 0.2s;
+}
+.comment-item:hover {
+  border-color: rgba(0, 255, 255, 0.2);
+}
+.comment-avatar {
+  flex-shrink: 0;
+}
+.comment-avatar img {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  border: 1px solid rgba(0, 255, 255, 0.24);
+}
+.comment-body {
+  flex: 1;
+  min-width: 0;
+}
+.comment-meta {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 4px;
+}
+.comment-author {
+  font-size: 13px;
+  font-weight: 600;
+  color: #b9f6ff;
+}
+.comment-time {
+  font-size: 11px;
+  color: #7fa4bd;
+}
+.comment-content {
+  white-space: pre-wrap;
+  word-break: break-word;
+  color: rgba(214, 251, 255, 0.8);
+  font-size: 14px;
+  line-height: 1.6;
+}
+.comment-delete {
+  flex-shrink: 0;
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  color: rgba(214, 251, 255, 0.3);
+  cursor: pointer;
+  font-size: 13px;
+  transition: all 0.15s;
+}
+.comment-delete:hover {
+  color: #ff6b6b;
+  background: rgba(255, 107, 107, 0.12);
+}
+.comment-composer {
+  padding: 14px 16px;
+  border-radius: 12px;
+  border: 1px solid rgba(0, 255, 255, 0.14);
+  background: rgba(10, 16, 35, 0.45);
+}
+.comment-actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 10px;
+}
+.comment-hint {
+  font-size: 12px;
+  color: #7fa4bd;
 }
 
 /* ── Responsive ── */

@@ -6,7 +6,7 @@
       </template>
 
       <div class="desc">
-        你可以在这里提交想要的功能/改进点，我会在后台看到并处理。
+        你可以在这里提交想要的功能/改进点，所有人都会看到你的留言。
       </div>
 
       <el-form :model="form" label-width="90px" class="form">
@@ -29,27 +29,33 @@
 
     <el-card class="card" shadow="hover">
       <template #header>
-        <div class="card-header">📌 我的需求</div>
+        <div class="card-header">
+          <span>📌 所有留言</span>
+          <span class="count-badge">{{ items.length }} 条</span>
+        </div>
       </template>
 
-      <div v-if="!items.length" class="empty">还没有提交过需求</div>
+      <div v-if="!items.length" class="empty">还没有留言，快来发布第一条吧！</div>
 
-      <div v-else class="list">
-        <el-collapse>
-          <el-collapse-item v-for="it in items" :key="it.id" :name="String(it.id)">
-            <template #title>
-              <div class="row-title">
-                <span class="title">{{ it.title }}</span>
-                <span class="meta">{{ formatStatus(it.status) }} · {{ formatTime(it.created_time) }}</span>
-              </div>
-            </template>
-            <div class="content">{{ it.content }}</div>
-            <div v-if="it.reply" class="reply">
-              <div class="reply-label">回复</div>
-              <div class="reply-content">{{ it.reply }}</div>
+      <div v-else class="message-list">
+        <div v-for="it in items" :key="it.id" class="message-item">
+          <div class="message-header">
+            <div class="user-info">
+              <img class="user-avatar" :src="getAvatar(it.username)" />
+              <span class="user-name">{{ it.username || '匿名' }}</span>
             </div>
-          </el-collapse-item>
-        </el-collapse>
+            <div class="message-meta">
+              <span :class="['status-tag', statusClass(it.status)]">{{ formatStatus(it.status) }}</span>
+              <span class="time">{{ formatTime(it.created_time) }}</span>
+            </div>
+          </div>
+          <div class="message-title">{{ it.title }}</div>
+          <div class="message-content">{{ it.content }}</div>
+          <div v-if="it.reply" class="message-reply">
+            <div class="reply-label">📢 回复</div>
+            <div class="reply-body">{{ it.reply }}</div>
+          </div>
+        </div>
       </div>
     </el-card>
   </div>
@@ -79,6 +85,8 @@ const reset = () => {
   form.value.contact = ''
 }
 
+const getAvatar = (name) => `https://api.dicebear.com/7.x/identicon/svg?seed=${encodeURIComponent(name || 'user')}`
+
 const formatTime = (s) => {
   if (!s) return ''
   const d = new Date(s)
@@ -90,6 +98,12 @@ const formatStatus = (status) => {
   if (status === 'done') return '已完成'
   if (status === 'processing') return '处理中'
   return '新提交'
+}
+
+const statusClass = (status) => {
+  if (status === 'done') return 'done'
+  if (status === 'processing') return 'processing'
+  return 'new'
 }
 
 const refresh = async () => {
@@ -145,6 +159,19 @@ onMounted(() => {
   font-weight: 600;
   color: #9ef7ff;
   text-shadow: 0 0 10px rgba(0, 245, 255, 0.35);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.count-badge {
+  font-size: 13px;
+  font-weight: 400;
+  color: #7fa4bd;
+  text-shadow: none;
+  background: rgba(0, 255, 255, 0.08);
+  border: 1px solid rgba(0, 255, 255, 0.18);
+  border-radius: 20px;
+  padding: 2px 12px;
 }
 .desc {
   margin-bottom: 12px;
@@ -155,42 +182,101 @@ onMounted(() => {
   color: rgba(214, 251, 255, 0.75);
 }
 .empty {
-  color: rgba(214, 251, 255, 0.65);
-  font-size: 13px;
-  padding: 8px 0;
+  color: rgba(214, 251, 255, 0.55);
+  font-size: 14px;
+  padding: 24px 0;
+  text-align: center;
 }
-.list {
-  margin-top: 6px;
-}
-.row-title {
+
+/* ==================== 消息列表 ==================== */
+.message-list {
   display: flex;
-  align-items: baseline;
+  flex-direction: column;
   gap: 10px;
-  min-width: 0;
 }
-.title {
-  font-weight: 700;
-  color: #d6fbff;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-.meta {
-  font-size: 12px;
-  color: rgba(136, 167, 191, 0.95);
-  flex: 0 0 auto;
-}
-.content {
-  white-space: pre-wrap;
-  color: rgba(214, 251, 255, 0.85);
-  line-height: 1.6;
-}
-.reply {
-  margin-top: 12px;
-  padding: 10px 12px;
+.message-item {
+  padding: 14px 16px;
   border-radius: 12px;
   border: 1px solid rgba(0, 255, 255, 0.14);
-  background: rgba(8, 14, 32, 0.72);
+  background: rgba(10, 16, 35, 0.62);
+  transition: border-color 0.2s;
+}
+.message-item:hover {
+  border-color: rgba(0, 255, 255, 0.28);
+}
+.message-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 8px;
+}
+.user-info {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.user-avatar {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  border: 1px solid rgba(0, 255, 255, 0.28);
+}
+.user-name {
+  font-size: 13px;
+  font-weight: 600;
+  color: #b9f6ff;
+}
+.message-meta {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-shrink: 0;
+}
+.status-tag {
+  font-size: 11px;
+  padding: 2px 8px;
+  border-radius: 10px;
+  border: 1px solid;
+  font-weight: 500;
+}
+.status-tag.new {
+  color: #88b3c9;
+  border-color: rgba(136, 179, 201, 0.4);
+  background: rgba(136, 179, 201, 0.08);
+}
+.status-tag.processing {
+  color: #f0c060;
+  border-color: rgba(240, 192, 96, 0.4);
+  background: rgba(240, 192, 96, 0.08);
+}
+.status-tag.done {
+  color: #5cdb8b;
+  border-color: rgba(92, 219, 139, 0.4);
+  background: rgba(92, 219, 139, 0.08);
+}
+.time {
+  font-size: 12px;
+  color: #7fa4bd;
+  font-variant-numeric: tabular-nums;
+}
+.message-title {
+  font-size: 15px;
+  font-weight: 700;
+  color: #d6fbff;
+  margin-bottom: 6px;
+}
+.message-content {
+  white-space: pre-wrap;
+  color: rgba(214, 251, 255, 0.8);
+  line-height: 1.65;
+  font-size: 14px;
+}
+.message-reply {
+  margin-top: 12px;
+  padding: 10px 14px;
+  border-radius: 10px;
+  border: 1px solid rgba(0, 255, 255, 0.16);
+  background: rgba(8, 16, 36, 0.7);
 }
 .reply-label {
   font-size: 12px;
@@ -198,9 +284,20 @@ onMounted(() => {
   color: #9ef7ff;
   margin-bottom: 6px;
 }
-.reply-content {
+.reply-body {
   white-space: pre-wrap;
   color: rgba(214, 251, 255, 0.85);
   line-height: 1.6;
+}
+
+@media (max-width: 900px) {
+  .message-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 6px;
+  }
+  .message-meta {
+    align-self: flex-start;
+  }
 }
 </style>

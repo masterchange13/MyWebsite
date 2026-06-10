@@ -26,6 +26,8 @@
 <script setup>
 import { ref, onMounted } from 'vue'
 
+const emit = defineEmits(['PlayThisMusic'])
+
 const favoriteList = ref([])
 
 const loadFavorites = () => {
@@ -44,8 +46,9 @@ const formatTime = (seconds) => {
 
 const PlayThisMusic = (index) => {
   const song = favoriteList.value[index]
-  console.log('播放收藏音乐:', song)
-  // 这里可以触发全局播放事件
+  if (song) {
+    emit('PlayThisMusic', song)
+  }
 }
 
 const removeFromFavorite = (index) => {
