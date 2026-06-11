@@ -34,6 +34,7 @@
           :class="{ 'drag-over': dragOverIndex === index }"
           draggable="true"
           @dragstart="onDragStart(index)"
+          @dragenter="onDragEnter(index)"
           @dragover.prevent="onDragOver(index)"
           @dragleave="onDragLeave"
           @drop.prevent="onDrop(index)"
@@ -165,10 +166,17 @@ const saveEdit = async () => {
 const dragFromIndex = ref(null)
 const dragOverIndex = ref(null)
 const reordered = ref(false)
+// Counter to fix dragleave firing on child elements
+const dragEnterCounter = ref(0)
 
 const onDragStart = (index) => {
   dragFromIndex.value = index
   reordered.value = false
+}
+
+const onDragEnter = (index) => {
+  dragEnterCounter.value++
+  dragOverIndex.value = index
 }
 
 const onDragOver = (index) => {
@@ -176,21 +184,31 @@ const onDragOver = (index) => {
 }
 
 const onDragLeave = () => {
-  dragOverIndex.value = null
+  dragEnterCounter.value--
+  if (dragEnterCounter.value <= 0) {
+    dragEnterCounter.value = 0
+    dragOverIndex.value = null
+  }
 }
 
 const onDrop = (toIndex) => {
   const fromIndex = dragFromIndex.value
   if (fromIndex === null || fromIndex === undefined) return
   if (toIndex === fromIndex) return
-  const moved = icons.value.splice(fromIndex, 1)[0]
-  icons.value.splice(toIndex, 0, moved)
+
+  // Pure swap: exchange the two items, other cards unaffected
+  const draggedItem = icons.value[fromIndex]
+  icons.value.splice(fromIndex, 1, icons.value[toIndex])
+  icons.value.splice(toIndex, 1, draggedItem)
+
   dragFromIndex.value = toIndex
   reordered.value = true
+  dragEnterCounter.value = 0
 }
 
 const onDragEnd = async () => {
   dragOverIndex.value = null
+  dragEnterCounter.value = 0
   if (!reordered.value) return
   try {
     const orderedIds = icons.value.map(i => i.id)

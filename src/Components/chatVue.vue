@@ -134,6 +134,8 @@ const connectWebSocket = () => {
   socket.value.onmessage = async (event) => {
     const msgData = JSON.parse(event.data);
     const normalized = normalizeMessage(msgData);
+    // 只显示当前对话相关的消息，过滤掉不属于当前会话的消息
+    if (!isRelevantMessage(normalized)) return;
     messages.value.push(normalized);
     if (!isMyMessage(normalized)) {
       playNotificationSound();
@@ -222,6 +224,14 @@ const isMyMessage = (msg) => getUsername(msg) === userStore.getUsername();
 const getUsername = (msg) => msg?.sendUsername || 'unknown';
 const getMessageText = (msg) => msg?.data || '';
 const getMessageTime = (msg) => formatTime(msg?.time);
+// 判断消息是否属于当前会话：消息的收发双方必须恰好是当前用户和选中的对方
+const isRelevantMessage = (msg) => {
+  const me = userStore.getUsername();
+  const peer = selectedUser.value;
+  const sender = getUsername(msg);
+  const receiver = msg?.receiveUsername || '';
+  return (sender === me && receiver === peer) || (sender === peer && receiver === me);
+};
 
 const unlockNotificationSound = () => {
   try {
