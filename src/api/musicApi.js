@@ -12,6 +12,6 @@ export const musicApi = {
     // 用户个人音乐库
     getAllUserMusic: (params) => request.get('/music/getAllMusic', { params }),
     updateMusicStatus: (data) => request.post('/music/update_music_status', data),
-    uploadMusic: (data) => request.post('/music/upload', data),
+    uploadMusic: (data) => request.post('/music/upload', data, { timeout: 300000 }),
     SearchSongs: (params) => request.get('/music/search', {params}),
 }

@@ -119,12 +119,42 @@ export const request = axios.create({
   withCredentials: true,
 })
 
+// CSRF token 缓存
+let csrfPromise = null
+
+async function ensureCsrfToken() {
+  // 如果已有 cookie，直接返回
+  if (getCookie('csrftoken')) return
+
+  // 如果有正在进行的请求，等它完成
+  if (csrfPromise) {
+    await csrfPromise
+    return
+  }
+
+  // 发起新请求获取 CSRF cookie
+  csrfPromise = axios.get('/api/csrf/', {
+    withCredentials: true,
+    timeout: 5000,
+    showLoading: false,
+    silentError: true,
+  }).then(() => {
+    csrfPromise = null
+  }).catch(() => {
+    csrfPromise = null
+  })
+
+  await csrfPromise
+}
+
 // ================= 请求拦截器 =================
 request.interceptors.request.use(
-  config => {
+  async config => {
     const method = (config.method || 'get').toLowerCase()
     const safeMethods = new Set(['get', 'head', 'options', 'trace'])
     if (!safeMethods.has(method)) {
+      // 确保 CSRF cookie 存在，没有则自动获取
+      await ensureCsrfToken()
       const csrf = getCookie('csrftoken')
       if (csrf) {
         config.headers = config.headers || {}
