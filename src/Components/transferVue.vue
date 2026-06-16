@@ -26,6 +26,7 @@
             <div class="history-actions">
               <el-button type="primary" link @click="previewFile(f)">预览</el-button>
               <el-button type="primary" link @click="openFile(f)">打开</el-button>
+              <el-button type="primary" link @click="downloadFile(f)">下载</el-button>
             </div>
           </div>
         </div>
@@ -83,6 +84,7 @@
           <img v-if="previewCoverUrl" :src="previewCoverUrl" class="preview-cover" />
           <audio :src="previewUrl" controls class="preview-audio" />
         </div>
+        <pre v-else-if="previewType === 'text'" class="preview-text"><code>{{ previewTextContent }}</code></pre>
         <iframe v-else :key="previewUrl" :src="previewUrl" class="preview-iframe"></iframe>
       </div>
       <template #footer>
@@ -111,6 +113,7 @@ const previewTitle = ref('')
 const previewUrl = ref('')
 const previewType = ref('iframe')
 const previewCoverUrl = ref('')
+const previewTextContent = ref('')
 const musics = ref([])
 
 const formatBytes = (bytes) => {
@@ -159,23 +162,65 @@ const toApiUrl = (u) => {
   return `/api/${s}`
 }
 
+// Extensions that should be displayed as plain text (synced with backend _TEXT_EXTENSIONS)
+const TEXT_EXTENSIONS = new Set([
+  'csv', 'tsv', 'txt', 'log', 'md', 'rst',
+  'py', 'js', 'ts', 'jsx', 'tsx', 'vue', 'svelte',
+  'html', 'htm', 'css', 'scss', 'less', 'sass',
+  'json', 'xml', 'yaml', 'yml', 'toml', 'ini', 'cfg', 'conf',
+  'sh', 'bash', 'zsh', 'fish', 'bat', 'ps1',
+  'sql', 'graphql', 'gql',
+  'java', 'c', 'cpp', 'cc', 'cxx', 'h', 'hpp', 'rs', 'go', 'rb', 'php',
+  'swift', 'kt', 'scala', 'r', 'pl', 'lua', 'dart',
+  'makefile', 'cmake', 'dockerfile',
+  'env', 'gitignore', 'editorconfig',
+])
+
 const getPreviewType = (filename) => {
   const name = String(filename || '').toLowerCase()
   const ext = name.includes('.') ? name.split('.').pop() : ''
-  const imageExt = new Set(['png', 'jpg', 'jpeg', 'gif', 'webp', 'svg'])
-  const audioExt = new Set(['mp3', 'wav', 'ogg'])
+  const imageExt = new Set(['png', 'jpg', 'jpeg', 'gif', 'webp', 'svg', 'bmp', 'ico'])
+  const audioExt = new Set(['mp3', 'wav', 'ogg', 'flac', 'aac', 'wma'])
   if (imageExt.has(ext)) return 'image'
   if (audioExt.has(ext)) return 'audio'
+  if (TEXT_EXTENSIONS.has(ext)) return 'text'
   return 'iframe'
 }
 
-const previewFile = (row) => {
+const previewFile = async (row) => {
   if (!row?.url) return
   previewTitle.value = row.name || '预览'
   previewUrl.value = row.url
   previewType.value = getPreviewType(row.name)
   previewCoverUrl.value = ''
+  previewTextContent.value = ''
+
+  if (previewType.value === 'text') {
+    try {
+      const resp = await fetch(row.url)
+      if (resp.ok) {
+        previewTextContent.value = await resp.text()
+      } else {
+        previewTextContent.value = '无法加载文件内容'
+      }
+    } catch {
+      previewTextContent.value = '加载失败，请重试'
+    }
+  }
+
   showPreview.value = true
+}
+
+const downloadFile = (row) => {
+  if (!row?.url) return
+  // Build download URL: /api/file/open/<name> → /api/file/download/<name>
+  const downloadUrl = row.url.replace('/open/', '/download/')
+  const a = document.createElement('a')
+  a.href = downloadUrl
+  a.download = row.name || ''
+  document.body.appendChild(a)
+  a.click()
+  document.body.removeChild(a)
 }
 
 const getMusics = async () => {
@@ -421,6 +466,28 @@ onMounted(() => {
 .preview-audio {
   width: 100%;
 }
+.preview-text {
+  width: 100%;
+  max-height: 70vh;
+  overflow: auto;
+  margin: 0;
+  padding: 16px;
+  border-radius: 10px;
+  background: #0a0f20;
+  border: 1px solid rgba(0, 255, 255, 0.14);
+  color: #d6fbff;
+  font-family: 'Cascadia Code', 'Fira Code', 'JetBrains Mono', 'Consolas', monospace;
+  font-size: 13px;
+  line-height: 1.6;
+  white-space: pre;
+  tab-size: 4;
+}
+
+.preview-text code {
+  font-family: inherit;
+  font-size: inherit;
+}
+
 .preview-iframe {
   width: 100%;
   height: 70vh;
