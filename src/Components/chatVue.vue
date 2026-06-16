@@ -58,7 +58,7 @@
             </button>
           </div>
         </div>
-        <el-input v-model="message" type="textarea" :rows="2" placeholder="输入消息，按 Enter 发送" @keyup.enter="sendMessage" />
+        <el-input v-model="message" type="textarea" :rows="2" placeholder="输入消息，按 Enter 发送（Shift+Enter 换行）" @keydown.enter.prevent="sendMessage" />
         <div class="actions">
           <el-button type="primary" @click="sendMessage" :disabled="!selectedUser">发送</el-button>
           <el-button @click="message = ''">清空</el-button>
@@ -136,7 +136,15 @@ const connectWebSocket = () => {
     const normalized = normalizeMessage(msgData);
     // 只显示当前对话相关的消息，过滤掉不属于当前会话的消息
     if (!isRelevantMessage(normalized)) return;
-    messages.value.push(normalized);
+    // 避免重复：如果本地已有乐观更新的相同消息（内容+发送者匹配），替换掉它
+    const idx = messages.value.findLastIndex(
+      m => m._pending && m.sendUsername === normalized.sendUsername && m.data === normalized.data
+    );
+    if (idx >= 0) {
+      messages.value[idx] = normalized; // 用服务器消息替换（含正确的 created_time）
+    } else {
+      messages.value.push(normalized);
+    }
     if (!isMyMessage(normalized)) {
       playNotificationSound();
     }
@@ -147,12 +155,23 @@ const connectWebSocket = () => {
 };
 
 const sendMessage = () => {
-  if (socket.value && selectedUser.value && message.value.trim()) {
+  const text = (message.value || '').trim()
+  if (socket.value && selectedUser.value && text) {
+    const now = new Date().toISOString()
+    const me = userStore.getUsername()
+    // 乐观更新：立即在本地显示消息，无需等待 WebSocket 回显
+    messages.value.push({
+      sendUsername: me,
+      receiveUsername: selectedUser.value,
+      data: text,
+      time: now,
+      _pending: true,  // 标记为待确认
+    })
     const data = {
       type: "message",
-      data: message.value,
+      data: text,
       receiveUsername: selectedUser.value,
-      sendUsername: userStore.getUsername()
+      sendUsername: me
     };
     chatApi.sendMessage(socket.value, data);
     message.value = "";
@@ -215,8 +234,10 @@ const normalizeMessage = (raw) => {
   }
   return {
     sendUsername: raw?.sendUsername || raw?.from || 'unknown',
+    receiveUsername: raw?.receiveUsername || raw?.to || '',
     data: raw?.data ?? raw?.message ?? '',
-    time: raw?.create_time || raw?.time || raw?.createdAt || new Date().toISOString()
+    // API returns 'created_time', WebSocket also returns 'created_time' now
+    time: raw?.created_time || raw?.create_time || raw?.time || raw?.createdAt || new Date().toISOString()
   }
 }
 
