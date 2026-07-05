@@ -48,7 +48,10 @@
         </el-sub-menu>
         <el-menu-item index="3" :class="{ 'is-active': isMenuActive('3') }" @click="toChat()">
           <el-icon><document /></el-icon>
-          <span>Chat</span>
+          <span class="chat-menu-label">
+            Chat
+            <span v-if="totalUnread > 0" class="unread-badge">{{ totalUnread > 99 ? '99+' : totalUnread }}</span>
+          </span>
         </el-menu-item>
         <el-menu-item index="4" :class="{ 'is-active': isMenuActive('4') }" @click="toNavigator()">
           <el-icon><setting /></el-icon>
@@ -118,7 +121,10 @@
         </el-sub-menu>
         <el-menu-item index="3" :class="{ 'is-active': isMenuActive('3') }" @click="toChat(); showMenuDrawer=false">
           <el-icon><document /></el-icon>
-          <span>Chat</span>
+          <span class="chat-menu-label">
+            Chat
+            <span v-if="totalUnread > 0" class="unread-badge">{{ totalUnread > 99 ? '99+' : totalUnread }}</span>
+          </span>
         </el-menu-item>
         <el-menu-item index="4" :class="{ 'is-active': isMenuActive('4') }" @click="toNavigator(); showMenuDrawer=false">
           <el-icon><setting /></el-icon>
@@ -177,7 +183,10 @@ import { storeToRefs } from "pinia";
 import { useRouter, useRoute } from "vue-router";
 import { useUserStore } from "@/stores/userStore";
 import { useTimerStore } from "@/stores/timerStore";
+import { useChatStore } from "@/stores/chatStore";
 import { userApi } from "@/api/userApi";
+import * as chatSocket from "@/websocket/chatSocket";
+import { playMessageSound, sendNotification, requestNotificationPermission } from "@/utils/notify";
 
 const userStore = useUserStore();
 const username = computed(() => userStore.getUsername());
@@ -217,6 +226,37 @@ const timerFormatted = computed(() => timerStore.formattedRemaining);
 const stopwatchFormatted = computed(() => timerStore.formattedStopwatch);
 const stopwatchVisible = computed(() => stopwatchRunning.value || stopwatchElapsedSeconds.value > 0);
 const stopTimerAlarm = () => timerStore.stopAlarm();
+
+// 在线状态 & 全局消息
+const chatStore = useChatStore();
+const totalUnread = computed(() => chatStore.getTotalUnreadCount());
+
+// 初始化全局 WebSocket 并处理消息
+function initGlobalChat() {
+  if (!username.value) return
+  chatSocket.connect(username.value)
+  chatStore.bindSocketEvents()
+  chatStore.fetchOnlineUsers()
+
+  // 监听新消息
+  chatSocket.on('message', (msg) => {
+    const me = username.value
+    const sender = msg.sendUsername
+    if (sender === me) return // 自己的消息不通知
+
+    // 判断是否需要通知（不在聊天页或不在和这人聊天）
+    const isNew = chatStore.addMessage(msg)
+    if (isNew) {
+      playMessageSound()
+      sendNotification(`${sender} 发来消息`, msg.data || '')
+    }
+  })
+}
+
+// 监听登录态变化：用户登录后立即连接 WebSocket
+watch(username, (newVal) => {
+  if (newVal) initGlobalChat()
+}, { immediate: true })
 
 const logout = () => {
   router.push("/");
@@ -288,6 +328,7 @@ onMounted(() => {
   updateIsMobile()
   window.addEventListener('resize', updateIsMobile)
   timerStore.hydrate()
+  requestNotificationPermission()
   audioRef.value = document.getElementById("globalAudio") as HTMLAudioElement | null;
   if (!audioRef.value) return;
   audioRef.value.volume = volume.value / 100;
@@ -561,6 +602,37 @@ const updateIsMobile = () => {
 }
 .timer-stop {
   border-radius: 8px;
+}
+
+.chat-menu-label {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.unread-badge {
+  position: relative;
+  top: -1px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 20px;
+  height: 20px;
+  padding: 0 6px;
+  border-radius: 10px;
+  font-size: 11px;
+  font-weight: 700;
+  line-height: 1;
+  color: #fff;
+  background: linear-gradient(135deg, #ff00cc, #ff4455);
+  box-shadow: 0 0 10px rgba(255, 0, 204, 0.5);
+  animation: pulse-badge 1.5s ease-in-out infinite;
+}
+
+@keyframes pulse-badge {
+  0%, 100% { box-shadow: 0 0 6px rgba(255, 0, 204, 0.4); }
+  50% { box-shadow: 0 0 14px rgba(255, 0, 204, 0.8); }
 }
 
 .content-main {

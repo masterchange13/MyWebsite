@@ -8,6 +8,7 @@ const wsBase = `${wsProtocol}://${window.location.host}/chat/ws`
 export const chatApi = {
   getUsers: () => request.get('/chat/getUsers'),
   getHistory: (params) => request.get('/chat/getHistory', { params }),
+  getOnlineUsers: () => request.get('/chat/onlineUsers'),
   createSocket: (username, peer) => {
     const u = encodeURIComponent(username || '')
     const p = peer ? `&peer=${encodeURIComponent(peer)}` : ''

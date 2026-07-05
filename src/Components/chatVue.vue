@@ -13,7 +13,10 @@
           @click="chooseUser(u)"
         >
           <img class="avatar clickable" :src="getAvatar(u.username)" @click.stop="toProfile(u.id)" />
-          <div class="uname">{{ u.username }}</div>
+          <div class="uname">
+            <span class="online-dot" :class="chatStore.isOnline(u.username) ? 'online' : 'offline'"></span>
+            {{ u.username }}
+          </div>
         </div>
       </el-scrollbar>
     </el-card>
@@ -72,15 +75,18 @@
 import { ref, onMounted, onUnmounted, nextTick, computed } from "vue";
 import { useRouter } from "vue-router";
 import { useUserStore } from "@/stores/userStore";
+import { useChatStore } from "@/stores/chatStore";
 import { chatApi } from "@/api/chatApi";
+import * as chatSocket from "@/websocket/chatSocket";
+import { playMessageSound } from "@/utils/notify";
 
-const socket = ref(null);
 const message = ref("");
 const messages = ref([]);
 const users = ref([]);
 const selectedUser = ref("");
 const selectedUserId = ref("");
 const userStore = useUserStore();
+const chatStore = useChatStore();
 const router = useRouter();
 const scrollRef = ref(null);
 let loadingHistory = false;
@@ -88,7 +94,6 @@ const filter = ref('');
 const showSymbolPanel = ref(false);
 const symbolToolsRef = ref(null);
 const quickSymbols = ['😀', '😂', '😍', '🥳', '👍', '👏', '🙏', '❤️', '✨', '🔥', '🌸', '🍀', '(＾▽＾)', 'QAQ', 'OTZ', '→', '←', '✓', '★', '※'];
-let audioContext = null;
 
 const insertSymbol = (symbol) => {
   message.value = `${message.value || ''}${symbol}`
@@ -109,6 +114,7 @@ const getAvatar = (name) => `https://api.dicebear.com/7.x/identicon/svg?seed=${e
 const chooseUser = async (user) => {
   selectedUser.value = user?.username || ''
   selectedUserId.value = String(user?.id ?? user?.user_id ?? '')
+  chatStore.setCurrentPeer(selectedUser.value)
   await getHistory()
 }
 
@@ -119,61 +125,52 @@ const toProfile = (id) => {
 }
 
 const closeSocket = () => {
-  if (socket.value) {
-    try { socket.value.close() } catch {}
-    socket.value = null
-  }
+  // WebSocket 现在是全局单例，不在 chat 组件中关闭
+  // 只清理本组件的监听
 }
 
 const connectWebSocket = () => {
-  const username = userStore.getUsername();
-  closeSocket()
-  socket.value = chatApi.createSocket(username);
-  
-  socket.value.onopen = () => console.log("WebSocket 连接成功");
-  socket.value.onmessage = async (event) => {
-    const msgData = JSON.parse(event.data);
+  const name = userStore.getUsername();
+  // 使用全局 WebSocket，这里只确保已连接
+  chatSocket.connect(name);
+
+  // 监听新消息（全局 WebSocket 的消息回调）
+  chatSocket.on('message', async (msgData) => {
     const normalized = normalizeMessage(msgData);
-    // 只显示当前对话相关的消息，过滤掉不属于当前会话的消息
     if (!isRelevantMessage(normalized)) return;
-    // 避免重复：如果本地已有乐观更新的相同消息（内容+发送者匹配），替换掉它
     const idx = messages.value.findLastIndex(
       m => m._pending && m.sendUsername === normalized.sendUsername && m.data === normalized.data
     );
     if (idx >= 0) {
-      messages.value[idx] = normalized; // 用服务器消息替换（含正确的 created_time）
+      messages.value[idx] = normalized;
     } else {
       messages.value.push(normalized);
     }
     if (!isMyMessage(normalized)) {
-      playNotificationSound();
+      playMessageSound();
     }
     await scrollToBottom();
-  };
-  socket.value.onclose = () => console.log("WebSocket 连接关闭");
-  socket.value.onerror = (error) => console.error("WebSocket 错误:", error);
+  });
 };
 
 const sendMessage = () => {
   const text = (message.value || '').trim()
-  if (socket.value && selectedUser.value && text) {
+  if (selectedUser.value && text) {
     const now = new Date().toISOString()
     const me = userStore.getUsername()
-    // 乐观更新：立即在本地显示消息，无需等待 WebSocket 回显
     messages.value.push({
       sendUsername: me,
       receiveUsername: selectedUser.value,
       data: text,
       time: now,
-      _pending: true,  // 标记为待确认
+      _pending: true,
     })
-    const data = {
+    chatSocket.send({
       type: "message",
       data: text,
       receiveUsername: selectedUser.value,
       sendUsername: me
-    };
-    chatApi.sendMessage(socket.value, data);
+    });
     message.value = "";
     scrollToBottom();
   }
@@ -254,46 +251,6 @@ const isRelevantMessage = (msg) => {
   return (sender === me && receiver === peer) || (sender === peer && receiver === me);
 };
 
-const unlockNotificationSound = () => {
-  try {
-    const AudioCtx = window.AudioContext || window.webkitAudioContext;
-    if (!AudioCtx) return;
-    if (!audioContext) audioContext = new AudioCtx();
-    if (audioContext.state === 'suspended') audioContext.resume();
-  } catch (e) {
-    // 浏览器拒绝音频初始化时忽略，避免影响聊天。
-  }
-};
-
-const playNotificationSound = () => {
-  try {
-    const AudioCtx = window.AudioContext || window.webkitAudioContext;
-    if (!AudioCtx) return;
-    if (!audioContext) audioContext = new AudioCtx();
-    if (audioContext.state === 'suspended') {
-      audioContext.resume().catch(() => {});
-    }
-
-    const now = audioContext.currentTime;
-    const oscillator = audioContext.createOscillator();
-    const gain = audioContext.createGain();
-
-    oscillator.type = 'sine';
-    oscillator.frequency.setValueAtTime(880, now);
-    oscillator.frequency.setValueAtTime(1175, now + 0.08);
-    gain.gain.setValueAtTime(0.0001, now);
-    gain.gain.exponentialRampToValueAtTime(0.18, now + 0.01);
-    gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.22);
-
-    oscillator.connect(gain);
-    gain.connect(audioContext.destination);
-    oscillator.start(now);
-    oscillator.stop(now + 0.24);
-  } catch (e) {
-    // 提示音失败不影响消息展示。
-  }
-};
-
 const scrollToBottom = async () => {
   await nextTick();
   const wrap = scrollRef.value?.wrapRef;
@@ -301,19 +258,20 @@ const scrollToBottom = async () => {
 };
 
 onMounted(async () => {
+  chatStore.setOnChatPage(true)
   connectWebSocket();
   await getUsers();
-  if (selectedUser.value) await getHistory()
+  if (selectedUser.value) {
+    chatStore.setCurrentPeer(selectedUser.value)
+    await getHistory()
+  }
   document.addEventListener('mousedown', handleOutsideClick)
-  document.addEventListener('click', unlockNotificationSound, { once: true })
-  document.addEventListener('keydown', unlockNotificationSound, { once: true })
 });
 
 onUnmounted(() => {
-  if (socket.value) socket.value.close();
+  chatStore.setOnChatPage(false)
+  chatStore.setCurrentPeer('')
   document.removeEventListener('mousedown', handleOutsideClick)
-  document.removeEventListener('click', unlockNotificationSound)
-  document.removeEventListener('keydown', unlockNotificationSound)
 });
 </script>
 
@@ -373,6 +331,33 @@ onUnmounted(() => {
 }
 .uname {
   color: #d7f8ff;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.online-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  transition: all 0.3s ease;
+}
+
+.online-dot.online {
+  background: #00ff88;
+  box-shadow: 0 0 8px rgba(0, 255, 136, 0.7), 0 0 16px rgba(0, 255, 136, 0.3);
+  animation: online-glow 2s ease-in-out infinite;
+}
+
+.online-dot.offline {
+  background: #3a4a5a;
+  box-shadow: none;
+}
+
+@keyframes online-glow {
+  0%, 100% { box-shadow: 0 0 6px rgba(0, 255, 136, 0.5), 0 0 12px rgba(0, 255, 136, 0.2); }
+  50% { box-shadow: 0 0 12px rgba(0, 255, 136, 0.9), 0 0 24px rgba(0, 255, 136, 0.4); }
 }
 .chat-window {
   display: flex;
