@@ -20,6 +20,7 @@ let socket = null
 let reconnectTimer = null
 let username = ''
 let reconnectAttempts = 0
+let _closing = false  // 手动关闭标志，防止 onclose 触发自动重连
 const MAX_RECONNECT_DELAY = 30000
 
 export const isConnected = ref(false)
@@ -45,7 +46,15 @@ function emit(event, data) {
 }
 
 export function connect(name) {
-  if (name) username = name
+  if (name && username && username !== name) {
+    // 用户名变化：关闭旧连接（SREM 旧用户名），用新用户名重连（SADD 新用户名）
+    _closing = true
+    close()
+    _closing = false
+    username = name
+  } else if (name) {
+    username = name
+  }
   if (!username) {
     console.warn('[chatSocket] 无法连接：没有用户名')
     return
@@ -56,6 +65,7 @@ export function connect(name) {
 
   close()
 
+  _closing = false  // 重置标志，允许新连接断线后自动重连
   const url = `${WS_URL}?username=${encodeURIComponent(username)}`
   socket = new WebSocket(url)
 
@@ -93,7 +103,7 @@ export function connect(name) {
 }
 
 function scheduleReconnect() {
-  if (reconnectTimer) return
+  if (_closing || reconnectTimer) return
   const delay = Math.min(1000 * Math.pow(2, reconnectAttempts), MAX_RECONNECT_DELAY)
   reconnectAttempts++
   console.log(`[chatSocket] ${delay / 1000}s 后重连 (第 ${reconnectAttempts} 次)`)
@@ -104,6 +114,7 @@ function scheduleReconnect() {
 }
 
 export function close() {
+  _closing = true
   if (reconnectTimer) {
     clearTimeout(reconnectTimer)
     reconnectTimer = null

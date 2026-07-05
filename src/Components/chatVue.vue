@@ -259,6 +259,8 @@ const scrollToBottom = async () => {
 
 onMounted(async () => {
   chatStore.setOnChatPage(true)
+  chatStore.bindSocketEvents()
+  await chatStore.fetchOnlineUsers()
   connectWebSocket();
   await getUsers();
   if (selectedUser.value) {

@@ -74,8 +74,12 @@ export const useChatStore = defineStore('chat', () => {
     }
   }
 
+  let _socketBound = false
+
   // ---- 绑定 WebSocket 事件 ----
   function bindSocketEvents() {
+    if (_socketBound) return
+    _socketBound = true
     chatSocket.on('online_status', (data) => {
       const next = new Set(onlineUsers.value)
       if (data.online) {

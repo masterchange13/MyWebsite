@@ -258,7 +258,14 @@ watch(username, (newVal) => {
   if (newVal) initGlobalChat()
 }, { immediate: true })
 
-const logout = () => {
+const logout = async () => {
+  // 关闭 WebSocket，触发服务端 SREM 从在线集合移除
+  chatSocket.close();
+  // 清除服务端 session
+  try { await userApi.logout(); } catch (e) { /* ignore */ }
+  // 清除前端用户状态
+  userStore.setUsername('');
+  userStore.setUser('', 0);
   router.push("/");
 };
 
