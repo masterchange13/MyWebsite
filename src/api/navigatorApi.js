@@ -6,4 +6,6 @@ export const navigatorApi = {
   updateNavigator: (data) => request.post('users/update_icon/', data),
   removeNavigator: (data) => request.delete('users/remove_icon/', { data }),
   updateNavigatorOrder: (data) => request.post('users/update_navigator_order/', data),
+  insertNavigatorOrder: (data) => request.post('users/insert_navigator_order/', data),
+  swapNavigatorOrder: (data) => request.post('users/swap_navigator_order/', data),
 }

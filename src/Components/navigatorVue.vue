@@ -27,6 +27,14 @@
       <p class="subtitle">常用网站快捷入口</p>
     </div>
 
+    <div class="order-toolbar">
+      <span class="toolbar-label">拖拽模式</span>
+      <el-radio-group v-model="dragMode" size="small">
+        <el-radio-button label="insert">插入</el-radio-button>
+        <el-radio-button label="swap">交换</el-radio-button>
+      </el-radio-group>
+    </div>
+
     <el-row :gutter="16" class="grid">
       <el-col :xs="12" :sm="8" :md="6" :lg="4" v-for="(icon, index) in icons" :key="icon.id">
         <div
@@ -50,7 +58,6 @@
       </el-col>
     </el-row>
 
-    <!-- 悬浮添加按钮（固定在右下角） -->
     <div class="floating-add" @click="addIcon" title="添加导航">
       <img :src="add" alt="添加" />
     </div>
@@ -58,21 +65,17 @@
 </template>
 
 <script setup>
-import { onMounted, ref, computed } from 'vue';
+import { onMounted, ref } from 'vue';
 import addIconVue from './addIcon.vue';
 import { navigatorApi } from '@/api/navigatorApi'
 import { ElMessage } from 'element-plus'
-import { useUserStore } from '@/stores/userStore'
 
-// 数据
-const icons = ref([]);
-const userStore = useUserStore()
-const username = computed(() => userStore.getUsername())
+const icons = ref([])
+const dragMode = ref('insert')
 
-// 打开链接
 const openLink = (url) => {
-  window.open(url, '_blank');
-};
+  window.open(url, '_blank')
+}
 
 const getSiteFavicon = (url) => {
   if (!url) return ''
@@ -89,21 +92,19 @@ const displayImg = (icon) => {
   return getSiteFavicon(icon?.url) || '/favicon.ico'
 }
 
-// 添加入口
-const showAddIcon = ref(false);
-const add = ref('/icon/add.png');
+const showAddIcon = ref(false)
+const add = ref('/icon/add.png')
 const addIcon = () => {
-  showAddIcon.value = true;
-};
+  showAddIcon.value = true
+}
 
-// 获取导航数据
 const getIcons = async () => {
   const response = await navigatorApi.getAllNavigators()
-  icons.value = response.data || [];
+  icons.value = response.data || []
 }
 
 onMounted(() => {
-  getIcons();
+  getIcons()
 })
 
 const onAdded = async () => {
@@ -165,13 +166,24 @@ const saveEdit = async () => {
 
 const dragFromIndex = ref(null)
 const dragOverIndex = ref(null)
-const reordered = ref(false)
-// Counter to fix dragleave firing on child elements
+const dragFromId = ref(null)
+const dropTargetId = ref(null)
+const pendingAction = ref(null)
 const dragEnterCounter = ref(0)
+
+const resetDragState = () => {
+  dragFromIndex.value = null
+  dragOverIndex.value = null
+  dragFromId.value = null
+  dropTargetId.value = null
+  pendingAction.value = null
+  dragEnterCounter.value = 0
+}
 
 const onDragStart = (index) => {
   dragFromIndex.value = index
-  reordered.value = false
+  dragFromId.value = icons.value[index]?.id ?? null
+  pendingAction.value = null
 }
 
 const onDragEnter = (index) => {
@@ -196,25 +208,53 @@ const onDrop = (toIndex) => {
   if (fromIndex === null || fromIndex === undefined) return
   if (toIndex === fromIndex) return
 
-  // Pure swap: exchange the two items, other cards unaffected
-  const draggedItem = icons.value[fromIndex]
-  icons.value.splice(fromIndex, 1, icons.value[toIndex])
-  icons.value.splice(toIndex, 1, draggedItem)
+  const fromIcon = icons.value[fromIndex]
+  const toIcon = icons.value[toIndex]
+  if (!fromIcon || !toIcon) return
 
-  dragFromIndex.value = toIndex
-  reordered.value = true
+  if (dragMode.value === 'swap') {
+    const draggedItem = fromIcon
+    icons.value.splice(fromIndex, 1, toIcon)
+    icons.value.splice(toIndex, 1, draggedItem)
+    pendingAction.value = 'swap'
+    dragFromId.value = draggedItem.id
+    dropTargetId.value = toIcon.id
+  } else {
+    const [draggedItem] = icons.value.splice(fromIndex, 1)
+    icons.value.splice(toIndex, 0, draggedItem)
+    pendingAction.value = 'insert'
+    dragFromId.value = draggedItem.id
+    dropTargetId.value = draggedItem.id
+    dragFromIndex.value = toIndex
+  }
+
   dragEnterCounter.value = 0
+  dragOverIndex.value = null
 }
 
 const onDragEnd = async () => {
-  dragOverIndex.value = null
-  dragEnterCounter.value = 0
-  if (!reordered.value) return
+  if (!pendingAction.value) {
+    resetDragState()
+    return
+  }
+
   try {
-    const orderedIds = icons.value.map(i => i.id)
-    const res = await navigatorApi.updateNavigatorOrder({ ordered_ids: orderedIds })
+    let res
+    if (pendingAction.value === 'swap') {
+      res = await navigatorApi.swapNavigatorOrder({
+        source_id: dragFromId.value,
+        target_id: dropTargetId.value,
+      })
+    } else {
+      const targetIndex = icons.value.findIndex(item => item.id === dragFromId.value)
+      res = await navigatorApi.insertNavigatorOrder({
+        id: dragFromId.value,
+        target_index: targetIndex,
+      })
+    }
+
     if (res.code === 200) {
-      ElMessage.success('已更新顺序')
+      ElMessage.success(dragMode.value === 'swap' ? '已交换顺序' : '已插入排序')
     } else {
       ElMessage.error(res.msg || '更新顺序失败')
       await getIcons()
@@ -223,8 +263,7 @@ const onDragEnd = async () => {
     ElMessage.error('更新顺序失败')
     await getIcons()
   } finally {
-    dragFromIndex.value = null
-    reordered.value = false
+    resetDragState()
   }
 }
 </script>
@@ -268,6 +307,16 @@ const onDragEnd = async () => {
   margin: 4px 0 0;
   color: #88a7bf;
   font-size: 12px;
+}
+.order-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 12px 0 16px;
+}
+.toolbar-label {
+  color: #88a7bf;
+  font-size: 13px;
 }
 .grid {
   margin-top: 8px;
