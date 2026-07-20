@@ -103,7 +103,6 @@
             const res = await documentApi.getAll()
             if(res.code === 200){
                 files.value = res.data
-                ElMessage.success(res.message)
             }else{
                 ElMessage.error(res.message)
             }
