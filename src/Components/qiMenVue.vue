@@ -1,93 +1,100 @@
 <template>
   <div class="qimen-page">
-    <el-card class="qimen-form" shadow="always">
-      <div class="title">奇门遁甲推盘</div>
-      <el-form :model="form" label-width="90px" class="form-grid" @submit.prevent="calc">
-        <el-form-item label="时间">
-          <el-date-picker v-model="form.datetime" type="datetime" value-format="YYYY-MM-DD HH:mm:ss" />
-        </el-form-item>
-        <el-form-item label="地点">
-          <el-input v-model="form.location" placeholder="请输入地点或经纬度" />
-        </el-form-item>
-        <el-form-item label="主题">
-          <el-input v-model="form.topic" placeholder="例如：求财/姻缘/考试/出行" />
-        </el-form-item>
-        <el-form-item label="阳历">
-          <el-switch v-model="form.solar" />
-        </el-form-item>
-        <el-form-item label="AI分析">
-          <el-switch v-model="form.analyze" />
-        </el-form-item>
-        <div class="form-actions">
-          <el-button type="primary" native-type="submit" :loading="submitting">推盘</el-button>
-          <el-button native-type="button" @click="reset">重置</el-button>
+    <div class="qimen-column qimen-left">
+      <el-card class="qimen-panel qimen-form-panel" shadow="always">
+        <div class="panel-head">
+          <div class="title">奇门遁甲推盘</div>
         </div>
-      </el-form>
+        <el-form :model="form" label-width="90px" class="form-grid" @submit.prevent="calc">
+          <el-form-item label="时间">
+            <el-date-picker v-model="form.datetime" type="datetime" value-format="YYYY-MM-DD HH:mm:ss" />
+          </el-form-item>
+          <el-form-item label="地点">
+            <el-input v-model="form.location" placeholder="请输入地点或经纬度" />
+          </el-form-item>
+          <el-form-item label="主题">
+            <el-input v-model="form.topic" placeholder="例如：求财/姻缘/考试/出行" />
+          </el-form-item>
+          <el-form-item label="阳历">
+            <el-switch v-model="form.solar" />
+          </el-form-item>
+          <el-form-item label="AI分析">
+            <el-switch v-model="form.analyze" />
+          </el-form-item>
+          <div class="form-actions">
+            <el-button type="primary" native-type="submit" :loading="submitting">推盘</el-button>
+            <el-button native-type="button" @click="reset">重置</el-button>
+          </div>
+        </el-form>
+      </el-card>
 
-      <div class="history-panel">
-        <div class="history-header">
-          <span>历史推盘</span>
+      <el-card class="qimen-panel qimen-history-panel" shadow="always">
+        <div class="panel-head history-header">
+          <div>
+            <span>历史推盘</span>
+          </div>
           <el-button size="small" link :loading="historyLoading" @click="loadHistory">刷新</el-button>
         </div>
-        <el-scrollbar class="history-list" height="280px">
-          <button
-            v-for="item in historyRecords"
-            :key="item.id"
-            type="button"
-            class="history-item"
-            :class="{ active: currentCalcId === item.id }"
-            @click="openHistory(item.id)"
-          >
-            <span class="history-main">{{ item.topic || '未填写主题' }}</span>
-            <span class="history-sub">{{ item.datetime || formatHistoryTime(item.created_time) }}</span>
-            <span class="history-sub">{{ item.location || '未填写地点' }} · {{ historyStatusText(item.analysis_status) }}</span>
-          </button>
-          <div v-if="!historyLoading && historyRecords.length === 0" class="history-empty">暂无历史推盘</div>
-        </el-scrollbar>
-      </div>
-    </el-card>
+        <div class="history-list panel-body">
+            <button
+              v-for="item in historyRecords"
+              :key="item.id"
+              type="button"
+              class="history-item"
+              :class="{ active: currentCalcId === item.id }"
+              @click="openHistory(item.id)"
+            >
+              <span class="history-main">{{ item.topic || '未填写主题' }}</span>
+              <span class="history-sub">{{ item.datetime || formatHistoryTime(item.created_time) }}</span>
+              <span class="history-sub">{{ item.location || '未填写地点' }} · {{ historyStatusText(item.analysis_status) }}</span>
+            </button>
+            <div v-if="!historyLoading && historyRecords.length === 0" class="history-empty">暂无历史推盘</div>
+        </div>
+      </el-card>
+    </div>
 
-    <el-card class="qimen-result" shadow="always">
-      <div class="result-header">
-        <div class="meta">
-          <div>时间：{{ displayDatetime }}</div>
-          <div>地点：{{ form.location || '未填写' }}</div>
-          <div>主题：{{ form.topic || '未填写' }}</div>
-          <div v-if="currentCalcId">记录：#{{ currentCalcId }} <span v-if="analysisStatusText">AI：{{ analysisStatusText }}</span></div>
-        </div>
-        <div class="legend">
-          <span class="lg gate">八门</span>
-          <span class="lg star">九星</span>
-          <span class="lg god">八神</span>
-        </div>
-      </div>
-      <div class="palace-grid">
-        <div v-for="(p, idx) in palaces" :key="idx" class="palace">
-          <div class="p-head">
-            <div class="p-name">{{ p.name }}</div>
-            <div class="p-pos">{{ p.position }}</div>
+    <div class="qimen-column qimen-right">
+      <el-card class="qimen-panel qimen-result" shadow="always">
+        <div class="panel-body result-body">
+        <div class="result-header">
+          <div class="legend">
+            <span class="lg gate">八门</span>
+            <span class="lg star">九星</span>
+            <span class="lg god">八神</span>
           </div>
-          <div class="p-body">
-            <div class="row">
-              <span class="tag gate">{{ p.gate }}</span>
-              <span class="tag star">{{ p.star }}</span>
-              <span class="tag god">{{ p.god }}</span>
+        </div>
+        <div class="palace-grid">
+          <div v-for="(p, idx) in palaces" :key="idx" class="palace">
+            <div class="p-head">
+              <div class="p-name">{{ p.name }}</div>
+              <div class="p-pos">{{ p.position }}</div>
             </div>
-            <div class="row tips">{{ p.tip }}</div>
+            <div class="p-body">
+              <div class="row">
+                <span class="tag gate">{{ p.gate }}</span>
+                <span class="tag star">{{ p.star }}</span>
+                <span class="tag god">{{ p.god }}</span>
+              </div>
+              <div class="row tips">{{ p.tip }}</div>
+            </div>
           </div>
         </div>
-      </div>
-    </el-card>
-    <el-card class="qimen-analysis" shadow="always" v-if="analysis || analyzing || analysisStatus === 'failed'">
-      <div class="a-title" :data-status="analyzing ? '分析中…' : ''">分析结果</div>
-      <div class="a-meta">
-        <span class="provider">{{ analysis?.provider || '未知来源' }}</span>
-        <span class="model">{{ analysis?.model || '' }}</span>
-      </div>
-      <el-scrollbar class="a-text">
-        <div class="md" v-html="analysisHtml"></div>
-      </el-scrollbar>
-    </el-card>
+        </div>
+      </el-card>
+
+      <el-card class="qimen-panel qimen-analysis" shadow="always" v-if="analysis || analyzing || analysisStatus === 'failed'">
+        <div class="panel-body analysis-body">
+        <div class="a-title" :data-status="analyzing ? '分析中…' : ''">分析结果</div>
+        <div class="a-meta">
+          <span class="provider">{{ analysis?.provider || '未知来源' }}</span>
+          <span class="model">{{ analysis?.model || '' }}</span>
+        </div>
+        <div class="a-text">
+          <div class="md" v-html="analysisHtml"></div>
+        </div>
+        </div>
+      </el-card>
+    </div>
   </div>
   </template>
 
@@ -494,21 +501,85 @@ onBeforeUnmount(() => {
 <style scoped>
 .qimen-page {
   display: grid;
-  grid-template-columns: 360px 1fr;
+  grid-template-columns: minmax(320px, 360px) minmax(0, 1fr);
   gap: 12px;
   padding: 14px;
   height: 100%;
   box-sizing: border-box;
+  overflow: auto;
 }
-.qimen-form { grid-column: 1; }
-.qimen-result { grid-column: 2; }
-.qimen-analysis { grid-column: 1 / -1; }
-.qimen-form .title {
+.qimen-column {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.qimen-left {
+  align-self: start;
+}
+.qimen-right {
+  min-height: 0;
+}
+.qimen-panel {
+  position: relative;
+  min-width: 0;
+  min-height: 260px;
+  overflow: hidden;
+  box-sizing: border-box;
+}
+.qimen-panel :deep(.el-card__body) {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  box-sizing: border-box;
+}
+.qimen-panel::after {
+  content: '';
+  position: absolute;
+  right: 10px;
+  bottom: 10px;
+  width: 12px;
+  height: 12px;
+  background:
+    linear-gradient(135deg, transparent 0 42%, rgba(0, 245, 255, 0.18) 42% 58%, transparent 58% 100%);
+  pointer-events: none;
+}
+.qimen-form-panel {
+  min-height: 0;
+  overflow: visible;
+}
+.qimen-history-panel {
+  height: 300px;
+  resize: vertical;
+  overflow: auto;
+}
+.qimen-result {
+  height: 540px;
+  resize: vertical;
+  overflow: auto;
+}
+.qimen-analysis {
+  height: 392px;
+  resize: vertical;
+  overflow: auto;
+}
+.panel-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 12px;
+  margin-bottom: 10px;
+}
+.panel-body {
+  flex: 1;
+  min-height: 0;
+}
+.title {
   font-weight: 700;
   font-size: 20px;
   color: #a6f9ff;
   text-shadow: 0 0 10px rgba(0, 245, 255, 0.4);
-  margin-bottom: 8px;
 }
 .form-grid {
   display: grid;
@@ -520,20 +591,13 @@ onBeforeUnmount(() => {
   gap: 8px;
   justify-content: flex-end;
 }
-.history-panel {
-  margin-top: 14px;
-  border-top: 1px solid rgba(0, 255, 255, 0.16);
-  padding-top: 12px;
-}
 .history-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
   color: #b8f8ff;
   font-weight: 700;
-  margin-bottom: 8px;
 }
-.history-list { height: 280px; }
+.history-list {
+  overflow: auto;
+}
 .history-item {
   width: 100%;
   border: 1px solid rgba(0, 255, 255, 0.16);
@@ -547,6 +611,9 @@ onBeforeUnmount(() => {
   padding: 8px 10px;
   margin-bottom: 8px;
   cursor: pointer;
+}
+.history-item:last-child {
+  margin-bottom: 0;
 }
 .history-item:hover,
 .history-item.active {
@@ -569,13 +636,24 @@ onBeforeUnmount(() => {
 .qimen-result {
   display: flex;
   flex-direction: column;
-  gap: 10px;
   min-height: 0;
+}
+.result-body {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  overflow: auto;
 }
 .qimen-analysis {
   display: flex;
   flex-direction: column;
+  min-height: 0;
+}
+.analysis-body {
+  display: flex;
+  flex-direction: column;
   gap: 8px;
+  overflow: auto;
 }
 .a-title {
   font-weight: 700;
@@ -596,7 +674,9 @@ onBeforeUnmount(() => {
   color: #f5a6eb;
 }
 .a-text {
-  max-height: 70vh;
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
   border: 1px solid rgba(0, 255, 255, 0.18);
   border-radius: 10px;
   background: rgba(10, 16, 35, 0.7);
@@ -651,12 +731,8 @@ onBeforeUnmount(() => {
 .result-header {
   display: flex;
   align-items: center;
-  justify-content: space-between;
+  justify-content: flex-end;
   gap: 10px;
-}
-.meta {
-  color: #b8f8ff;
-  line-height: 1.7;
 }
 .legend .lg {
   display: inline-block;
@@ -674,6 +750,7 @@ onBeforeUnmount(() => {
   grid-template-columns: repeat(3, 1fr);
   grid-template-rows: repeat(3, 1fr);
   gap: 8px;
+  flex: 1;
   min-height: 0;
 }
 .palace {
@@ -716,8 +793,8 @@ onBeforeUnmount(() => {
   .qimen-page {
     grid-template-columns: 1fr;
   }
-  .qimen-form, .qimen-result {
-    grid-column: 1;
+  .qimen-panel {
+    resize: vertical;
   }
   .palace-grid {
     grid-template-columns: repeat(2, 1fr);
