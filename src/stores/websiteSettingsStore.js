@@ -1,4 +1,5 @@
 import { defineStore } from 'pinia'
+import { websiteSettingsApi } from '@/api/websiteSettingsApi'
 import {
   defaultSubmenuOrders,
   defaultTopLevelOrder,
@@ -37,11 +38,67 @@ export const useWebsiteSettingsStore = defineStore('websiteSettings', {
     submenuOrders: {
       media: [...defaultSubmenuOrders.media],
       tools: [...defaultSubmenuOrders.tools]
-    }
+    },
+    loaded: false,
+    saving: false
   }),
   actions: {
+    applyPayload(payload = {}) {
+      this.siteTitle = payload.site_title || payload.siteTitle || defaultWebsiteSettings.siteTitle
+      this.loginTitle = payload.login_title || payload.loginTitle || defaultWebsiteSettings.loginTitle
+      this.loginSlogan = payload.login_slogan || payload.loginSlogan || defaultWebsiteSettings.loginSlogan
+      this.theme = payload.theme || defaultWebsiteSettings.theme
+      this.showPetals = typeof payload.show_petals === 'boolean'
+        ? payload.show_petals
+        : (typeof payload.showPetals === 'boolean' ? payload.showPetals : defaultWebsiteSettings.showPetals)
+      this.topLevelOrder = Array.isArray(payload.top_level_order)
+        ? payload.top_level_order
+        : (Array.isArray(payload.topLevelOrder) ? payload.topLevelOrder : [...defaultTopLevelOrder])
+      const submenuOrders = payload.submenu_orders || payload.submenuOrders || {}
+      this.submenuOrders = {
+        media: Array.isArray(submenuOrders.media) ? submenuOrders.media : [...defaultSubmenuOrders.media],
+        tools: Array.isArray(submenuOrders.tools) ? submenuOrders.tools : [...defaultSubmenuOrders.tools]
+      }
+      this.normalizeOrders()
+      this.applyTheme()
+    },
     applyTheme() {
       applyThemeVars(this.theme)
+    },
+    async loadSettings() {
+      try {
+        const res = await websiteSettingsApi.getSettings()
+        if (res?.code === 200 && res?.data) {
+          this.applyPayload(res.data)
+        } else {
+          this.applyTheme()
+        }
+      } catch (_error) {
+        this.applyTheme()
+      } finally {
+        this.loaded = true
+      }
+    },
+    async saveSettings() {
+      this.saving = true
+      try {
+        const payload = {
+          site_title: this.siteTitle,
+          login_title: this.loginTitle,
+          login_slogan: this.loginSlogan,
+          theme: this.theme,
+          show_petals: this.showPetals,
+          top_level_order: this.topLevelOrder,
+          submenu_orders: this.submenuOrders
+        }
+        const res = await websiteSettingsApi.saveSettings(payload)
+        if (res?.code === 200 && res?.data) {
+          this.applyPayload(res.data)
+        }
+        return res
+      } finally {
+        this.saving = false
+      }
     },
     setTheme(themeId) {
       this.theme = themeMap[themeId] ? themeId : defaultWebsiteSettings.theme
@@ -77,6 +134,5 @@ export const useWebsiteSettingsStore = defineStore('websiteSettings', {
       }
       this.applyTheme()
     }
-  },
-  persist: true
+  }
 })

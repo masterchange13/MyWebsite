@@ -8,6 +8,7 @@ import * as ElementPlusIconsVue from '@element-plus/icons-vue';
 import { createPinia } from 'pinia'; // 导入 createPinia
 import piniaPersist from 'pinia-plugin-persistedstate'
 import request from '@/utils/request'
+import { useWebsiteSettingsStore } from '@/stores/websiteSettingsStore'
 
 
 const app = createApp(App);
@@ -33,5 +34,7 @@ for (const [key, component] of Object.entries(ElementPlusIconsVue)) {
   try {
     await request.get('/csrf/', { showLoading: false, silentError: true })
   } catch {}
+  const websiteSettingsStore = useWebsiteSettingsStore(pinia)
+  await websiteSettingsStore.loadSettings()
   app.mount('#app')
 })()

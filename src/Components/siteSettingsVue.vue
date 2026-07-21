@@ -5,6 +5,7 @@
         <div class="eyebrow">Website Config</div>
         <h1>网站基本配置</h1>
         <p>统一登录页和主界面的视觉风格，并调整顶部功能顺序。</p>
+        <div class="save-status">{{ saveStatus }}</div>
       </div>
       <el-button type="primary" @click="resetDefaults">恢复默认</el-button>
     </section>
@@ -122,8 +123,9 @@
 </template>
 
 <script setup>
-import { computed } from 'vue'
+import { computed, onBeforeUnmount, ref, watch } from 'vue'
 import { ArrowDown, ArrowUp } from '@element-plus/icons-vue'
+import { ElMessage } from 'element-plus'
 import { useWebsiteSettingsStore } from '@/stores/websiteSettingsStore'
 import {
   getOrderedSubmenuItems,
@@ -132,16 +134,68 @@ import {
 } from '@/utils/siteSettings'
 
 const websiteSettings = useWebsiteSettingsStore()
+const saveTimer = ref(null)
+const saveStatus = ref('已从数据库加载配置')
+const suspendAutoSave = ref(false)
 
 const orderedTopLevelItems = computed(() =>
   getOrderedTopLevelMenu(websiteSettings.topLevelOrder, websiteSettings.submenuOrders).map(({ items, ...rest }) => rest)
 )
 const orderedMediaItems = computed(() => getOrderedSubmenuItems('media', websiteSettings.submenuOrders.media))
 const orderedToolItems = computed(() => getOrderedSubmenuItems('tools', websiteSettings.submenuOrders.tools))
+const settingsSignature = computed(() => JSON.stringify({
+  siteTitle: websiteSettings.siteTitle,
+  loginTitle: websiteSettings.loginTitle,
+  loginSlogan: websiteSettings.loginSlogan,
+  theme: websiteSettings.theme,
+  showPetals: websiteSettings.showPetals,
+  topLevelOrder: websiteSettings.topLevelOrder,
+  submenuOrders: websiteSettings.submenuOrders
+}))
 
-const resetDefaults = () => {
-  websiteSettings.resetDefaults()
+const persistSettings = async () => {
+  saveStatus.value = '正在保存到数据库...'
+  suspendAutoSave.value = true
+  try {
+    const res = await websiteSettings.saveSettings()
+    if (res?.code === 200) {
+      saveStatus.value = '已保存到数据库'
+      return
+    }
+    saveStatus.value = '保存失败'
+  } catch (_error) {
+    saveStatus.value = '保存失败'
+    ElMessage.error('网站配置保存失败')
+  } finally {
+    suspendAutoSave.value = false
+  }
 }
+
+const scheduleSave = () => {
+  if (saveTimer.value) clearTimeout(saveTimer.value)
+  saveStatus.value = '等待保存...'
+  saveTimer.value = setTimeout(() => {
+    persistSettings()
+  }, 500)
+}
+
+watch(
+  settingsSignature,
+  () => {
+    if (!websiteSettings.loaded || suspendAutoSave.value || websiteSettings.saving) return
+    scheduleSave()
+  }
+)
+
+const resetDefaults = async () => {
+  suspendAutoSave.value = true
+  websiteSettings.resetDefaults()
+  await persistSettings()
+}
+
+onBeforeUnmount(() => {
+  if (saveTimer.value) clearTimeout(saveTimer.value)
+})
 </script>
 
 <style scoped>
@@ -182,6 +236,12 @@ const resetDefaults = () => {
 .hero p {
   margin: 8px 0 0;
   color: var(--app-text-soft);
+}
+
+.save-status {
+  margin-top: 10px;
+  font-size: 13px;
+  color: var(--app-text-muted);
 }
 
 .settings-grid {
