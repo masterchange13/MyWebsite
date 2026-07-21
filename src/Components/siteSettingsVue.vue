@@ -53,6 +53,81 @@
         </div>
       </el-card>
 
+      <el-card class="settings-card" shadow="always">
+        <template #header>
+          <div class="card-title">样式细节</div>
+        </template>
+        <div class="style-groups">
+          <div class="style-group">
+            <div class="style-label">布局密度</div>
+            <div class="option-list">
+              <button
+                v-for="item in densityOptions"
+                :key="item.id"
+                type="button"
+                class="option-chip"
+                :class="{ active: websiteSettings.density === item.id }"
+                @click="websiteSettings.density = item.id"
+              >
+                <span class="option-chip-name">{{ item.name }}</span>
+                <span class="option-chip-desc">{{ item.description }}</span>
+              </button>
+            </div>
+          </div>
+
+          <div class="style-group">
+            <div class="style-label">面板质感</div>
+            <div class="option-list">
+              <button
+                v-for="item in surfaceStyleOptions"
+                :key="item.id"
+                type="button"
+                class="option-chip"
+                :class="{ active: websiteSettings.surfaceStyle === item.id }"
+                @click="websiteSettings.surfaceStyle = item.id"
+              >
+                <span class="option-chip-name">{{ item.name }}</span>
+                <span class="option-chip-desc">{{ item.description }}</span>
+              </button>
+            </div>
+          </div>
+
+          <div class="style-group">
+            <div class="style-label">圆角风格</div>
+            <div class="option-list">
+              <button
+                v-for="item in cornerStyleOptions"
+                :key="item.id"
+                type="button"
+                class="option-chip"
+                :class="{ active: websiteSettings.cornerStyle === item.id }"
+                @click="websiteSettings.cornerStyle = item.id"
+              >
+                <span class="option-chip-name">{{ item.name }}</span>
+                <span class="option-chip-desc">{{ item.description }}</span>
+              </button>
+            </div>
+          </div>
+
+          <div class="style-group">
+            <div class="style-label">字体比例</div>
+            <div class="option-list">
+              <button
+                v-for="item in fontScaleOptions"
+                :key="item.id"
+                type="button"
+                class="option-chip"
+                :class="{ active: websiteSettings.fontScale === item.id }"
+                @click="websiteSettings.fontScale = item.id"
+              >
+                <span class="option-chip-name">{{ item.name }}</span>
+                <span class="option-chip-desc">{{ item.description }}</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      </el-card>
+
       <el-card class="settings-card nav-card" shadow="always">
         <template #header>
           <div class="card-title">顶部功能顺序</div>
@@ -128,8 +203,12 @@ import { ArrowDown, ArrowUp } from '@element-plus/icons-vue'
 import { ElMessage } from 'element-plus'
 import { useWebsiteSettingsStore } from '@/stores/websiteSettingsStore'
 import {
+  cornerStyleOptions,
+  densityOptions,
+  fontScaleOptions,
   getOrderedSubmenuItems,
   getOrderedTopLevelMenu,
+  surfaceStyleOptions,
   themeOptions
 } from '@/utils/siteSettings'
 
@@ -148,6 +227,10 @@ const settingsSignature = computed(() => JSON.stringify({
   loginTitle: websiteSettings.loginTitle,
   loginSlogan: websiteSettings.loginSlogan,
   theme: websiteSettings.theme,
+  density: websiteSettings.density,
+  surfaceStyle: websiteSettings.surfaceStyle,
+  cornerStyle: websiteSettings.cornerStyle,
+  fontScale: websiteSettings.fontScale,
   showPetals: websiteSettings.showPetals,
   topLevelOrder: websiteSettings.topLevelOrder,
   submenuOrders: websiteSettings.submenuOrders
@@ -200,20 +283,20 @@ onBeforeUnmount(() => {
 
 <style scoped>
 .site-settings-page {
-  padding: 24px;
+  padding: var(--app-page-padding);
   display: flex;
   flex-direction: column;
-  gap: 20px;
+  gap: var(--app-page-gap);
 }
 
 .hero {
   display: flex;
   justify-content: space-between;
   align-items: flex-end;
-  gap: 20px;
-  padding: 24px 28px;
+  gap: var(--app-page-gap);
+  padding: var(--app-card-padding);
   border: 1px solid var(--cyber-border);
-  border-radius: 22px;
+  border-radius: var(--app-radius-lg);
   background:
     linear-gradient(135deg, var(--app-surface-soft) 0%, transparent 55%),
     linear-gradient(160deg, var(--app-surface-strong) 0%, var(--app-surface) 100%);
@@ -247,7 +330,7 @@ onBeforeUnmount(() => {
 .settings-grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 18px;
+  gap: var(--app-page-gap);
 }
 
 .settings-card {
@@ -268,6 +351,63 @@ onBeforeUnmount(() => {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 14px;
+}
+
+.style-groups {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+}
+
+.style-group {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.style-label {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--app-text-strong);
+}
+
+.option-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.option-chip {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  align-items: flex-start;
+  border: 1px solid var(--cyber-border);
+  border-radius: var(--app-radius-md);
+  padding: 12px 14px;
+  background: linear-gradient(180deg, var(--app-surface) 0%, var(--app-surface-strong) 100%);
+  color: var(--app-text-main);
+  cursor: pointer;
+  transition: border-color 0.16s ease, transform 0.16s ease, box-shadow 0.16s ease;
+}
+
+.option-chip:hover,
+.option-chip.active {
+  border-color: var(--app-accent);
+  transform: translateY(-1px);
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.14);
+}
+
+.option-chip-name {
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.option-chip-desc {
+  font-size: 12px;
+  line-height: 1.5;
+  color: var(--app-text-soft);
 }
 
 .theme-card {
@@ -360,11 +500,15 @@ onBeforeUnmount(() => {
   .theme-list {
     grid-template-columns: 1fr;
   }
+
+  .style-groups {
+    grid-template-columns: 1fr;
+  }
 }
 
 @media (max-width: 720px) {
   .site-settings-page {
-    padding: 16px;
+    padding: var(--app-page-padding);
   }
 
   .hero {

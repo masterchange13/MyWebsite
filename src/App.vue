@@ -13,7 +13,7 @@
 </template>
 
 <script setup>
-import { watch } from 'vue'
+import { computed, watch } from 'vue'
 import { useWebsiteSettingsStore } from '@/stores/websiteSettingsStore'
 
 const websiteSettings = useWebsiteSettingsStore()
@@ -37,9 +37,16 @@ const getPetalStyle = (i) => {
 }
 
 websiteSettings.normalizeOrders()
+const appearanceSignature = computed(() => [
+  websiteSettings.theme,
+  websiteSettings.density,
+  websiteSettings.surfaceStyle,
+  websiteSettings.cornerStyle,
+  websiteSettings.fontScale
+].join('|'))
 watch(
-  () => websiteSettings.theme,
-  () => websiteSettings.applyTheme(),
+  appearanceSignature,
+  () => websiteSettings.applyAppearance(),
   { immediate: true }
 )
 </script>
@@ -127,9 +134,20 @@ html, body {
   --login-character-1: #ff9a9e;
   --login-character-2: #a18cd1;
   --login-character-3: #fad0c4;
+  --app-page-padding: 24px;
+  --app-page-gap: 18px;
+  --app-card-padding: 20px;
+  --app-card-backdrop: blur(14px);
+  --app-card-outline-width: 1px;
+  --app-card-shadow: 0 18px 40px rgba(0, 0, 0, 0.18);
+  --app-radius-sm: 10px;
+  --app-radius-md: 16px;
+  --app-radius-lg: 22px;
+  --app-font-scale: 1;
 }
 
 body {
+  font-size: calc(16px * var(--app-font-scale));
   color: var(--cyber-text);
   background:
     radial-gradient(1100px 500px at -260px -240px, var(--app-bg-glow-left) 0%, rgba(0, 245, 255, 0) 60%),
@@ -140,7 +158,10 @@ body {
 .el-card {
   border-color: var(--cyber-border) !important;
   background: var(--cyber-panel) !important;
-  box-shadow: var(--app-shadow-soft) !important;
+  border-width: var(--app-card-outline-width) !important;
+  border-radius: var(--app-radius-lg) !important;
+  box-shadow: var(--app-card-shadow) !important;
+  backdrop-filter: var(--app-card-backdrop);
 }
 
 .el-card__header {
@@ -153,6 +174,7 @@ body {
   background: rgba(11, 17, 35, 0.9) !important;
   box-shadow: inset 0 0 0 1px rgba(0, 255, 255, 0.24) !important;
   color: var(--cyber-text) !important;
+  border-radius: var(--app-radius-md) !important;
 }
 
 .el-input__inner,
@@ -161,7 +183,7 @@ body {
 }
 
 .el-button:not(.is-text):not(.is-link) {
-  border-radius: 10px !important;
+  border-radius: var(--app-radius-md) !important;
 }
 
 /* Global dropdown tone down */

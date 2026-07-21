@@ -1,20 +1,30 @@
 import { defineStore } from 'pinia'
 import { websiteSettingsApi } from '@/api/websiteSettingsApi'
 import {
+  cornerStyleMap,
   defaultSubmenuOrders,
   defaultTopLevelOrder,
   defaultWebsiteSettings,
+  densityMap,
+  fontScaleMap,
   normalizeOrder,
+  surfaceStyleMap,
   themeMap
 } from '@/utils/siteSettings'
+
+const applyVars = (vars = {}) => {
+  if (typeof document === 'undefined') return
+  const root = document.documentElement
+  Object.entries(vars).forEach(([key, value]) => {
+    root.style.setProperty(key, value)
+  })
+}
 
 const applyThemeVars = (themeId) => {
   if (typeof document === 'undefined') return
   const theme = themeMap[themeId] || themeMap[defaultWebsiteSettings.theme]
   const root = document.documentElement
-  Object.entries(theme.vars).forEach(([key, value]) => {
-    root.style.setProperty(key, value)
-  })
+  applyVars(theme.vars)
   root.dataset.theme = theme.id
 }
 
@@ -33,6 +43,10 @@ export const useWebsiteSettingsStore = defineStore('websiteSettings', {
     loginTitle: defaultWebsiteSettings.loginTitle,
     loginSlogan: defaultWebsiteSettings.loginSlogan,
     theme: defaultWebsiteSettings.theme,
+    density: defaultWebsiteSettings.density,
+    surfaceStyle: defaultWebsiteSettings.surfaceStyle,
+    cornerStyle: defaultWebsiteSettings.cornerStyle,
+    fontScale: defaultWebsiteSettings.fontScale,
     showPetals: defaultWebsiteSettings.showPetals,
     topLevelOrder: [...defaultTopLevelOrder],
     submenuOrders: {
@@ -48,6 +62,10 @@ export const useWebsiteSettingsStore = defineStore('websiteSettings', {
       this.loginTitle = payload.login_title || payload.loginTitle || defaultWebsiteSettings.loginTitle
       this.loginSlogan = payload.login_slogan || payload.loginSlogan || defaultWebsiteSettings.loginSlogan
       this.theme = payload.theme || defaultWebsiteSettings.theme
+      this.density = payload.density || defaultWebsiteSettings.density
+      this.surfaceStyle = payload.surface_style || payload.surfaceStyle || defaultWebsiteSettings.surfaceStyle
+      this.cornerStyle = payload.corner_style || payload.cornerStyle || defaultWebsiteSettings.cornerStyle
+      this.fontScale = payload.font_scale || payload.fontScale || defaultWebsiteSettings.fontScale
       this.showPetals = typeof payload.show_petals === 'boolean'
         ? payload.show_petals
         : (typeof payload.showPetals === 'boolean' ? payload.showPetals : defaultWebsiteSettings.showPetals)
@@ -60,10 +78,17 @@ export const useWebsiteSettingsStore = defineStore('websiteSettings', {
         tools: Array.isArray(submenuOrders.tools) ? submenuOrders.tools : [...defaultSubmenuOrders.tools]
       }
       this.normalizeOrders()
-      this.applyTheme()
+      this.applyAppearance()
+    },
+    applyAppearance() {
+      applyThemeVars(this.theme)
+      applyVars((densityMap[this.density] || densityMap[defaultWebsiteSettings.density]).vars)
+      applyVars((surfaceStyleMap[this.surfaceStyle] || surfaceStyleMap[defaultWebsiteSettings.surfaceStyle]).vars)
+      applyVars((cornerStyleMap[this.cornerStyle] || cornerStyleMap[defaultWebsiteSettings.cornerStyle]).vars)
+      applyVars((fontScaleMap[this.fontScale] || fontScaleMap[defaultWebsiteSettings.fontScale]).vars)
     },
     applyTheme() {
-      applyThemeVars(this.theme)
+      this.applyAppearance()
     },
     async loadSettings() {
       try {
@@ -71,10 +96,10 @@ export const useWebsiteSettingsStore = defineStore('websiteSettings', {
         if (res?.code === 200 && res?.data) {
           this.applyPayload(res.data)
         } else {
-          this.applyTheme()
+          this.applyAppearance()
         }
       } catch (_error) {
-        this.applyTheme()
+        this.applyAppearance()
       } finally {
         this.loaded = true
       }
@@ -87,6 +112,10 @@ export const useWebsiteSettingsStore = defineStore('websiteSettings', {
           login_title: this.loginTitle,
           login_slogan: this.loginSlogan,
           theme: this.theme,
+          density: this.density,
+          surface_style: this.surfaceStyle,
+          corner_style: this.cornerStyle,
+          font_scale: this.fontScale,
           show_petals: this.showPetals,
           top_level_order: this.topLevelOrder,
           submenu_orders: this.submenuOrders
@@ -126,13 +155,17 @@ export const useWebsiteSettingsStore = defineStore('websiteSettings', {
       this.loginTitle = defaultWebsiteSettings.loginTitle
       this.loginSlogan = defaultWebsiteSettings.loginSlogan
       this.theme = defaultWebsiteSettings.theme
+      this.density = defaultWebsiteSettings.density
+      this.surfaceStyle = defaultWebsiteSettings.surfaceStyle
+      this.cornerStyle = defaultWebsiteSettings.cornerStyle
+      this.fontScale = defaultWebsiteSettings.fontScale
       this.showPetals = defaultWebsiteSettings.showPetals
       this.topLevelOrder = [...defaultTopLevelOrder]
       this.submenuOrders = {
         media: [...defaultSubmenuOrders.media],
         tools: [...defaultSubmenuOrders.tools]
       }
-      this.applyTheme()
+      this.applyAppearance()
     }
   }
 })

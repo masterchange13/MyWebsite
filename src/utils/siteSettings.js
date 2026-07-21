@@ -129,6 +129,137 @@ export const themeOptions = [
 
 export const themeMap = Object.fromEntries(themeOptions.map((theme) => [theme.id, theme]))
 
+export const densityOptions = [
+  {
+    id: 'compact',
+    name: '紧凑',
+    description: '更节省空间，适合信息密度高的布局。',
+    vars: {
+      '--app-page-padding': '16px',
+      '--app-page-gap': '12px',
+      '--app-card-padding': '16px'
+    }
+  },
+  {
+    id: 'balanced',
+    name: '均衡',
+    description: '默认布局密度。',
+    vars: {
+      '--app-page-padding': '24px',
+      '--app-page-gap': '18px',
+      '--app-card-padding': '20px'
+    }
+  },
+  {
+    id: 'spacious',
+    name: '舒展',
+    description: '留白更多，阅读压力更低。',
+    vars: {
+      '--app-page-padding': '32px',
+      '--app-page-gap': '24px',
+      '--app-card-padding': '24px'
+    }
+  }
+]
+
+export const surfaceStyleOptions = [
+  {
+    id: 'glass',
+    name: '玻璃',
+    description: '柔和发光和半透明面板。',
+    vars: {
+      '--app-card-backdrop': 'blur(14px)',
+      '--app-card-outline-width': '1px',
+      '--app-card-shadow': '0 18px 40px rgba(0, 0, 0, 0.18)'
+    }
+  },
+  {
+    id: 'solid',
+    name: '实体',
+    description: '更厚重、更稳定的块面风格。',
+    vars: {
+      '--app-card-backdrop': 'blur(0px)',
+      '--app-card-outline-width': '1px',
+      '--app-card-shadow': '0 12px 28px rgba(0, 0, 0, 0.14)'
+    }
+  },
+  {
+    id: 'outline',
+    name: '线框',
+    description: '更轻的阴影，更强调边框轮廓。',
+    vars: {
+      '--app-card-backdrop': 'blur(6px)',
+      '--app-card-outline-width': '2px',
+      '--app-card-shadow': '0 0 0 rgba(0, 0, 0, 0)'
+    }
+  }
+]
+
+export const cornerStyleOptions = [
+  {
+    id: 'sharp',
+    name: '利落',
+    description: '较小圆角，视觉更硬朗。',
+    vars: {
+      '--app-radius-sm': '6px',
+      '--app-radius-md': '10px',
+      '--app-radius-lg': '14px'
+    }
+  },
+  {
+    id: 'soft',
+    name: '柔和',
+    description: '中等圆角，兼顾稳重和亲和。',
+    vars: {
+      '--app-radius-sm': '10px',
+      '--app-radius-md': '16px',
+      '--app-radius-lg': '22px'
+    }
+  },
+  {
+    id: 'rounded',
+    name: '圆润',
+    description: '更明显的圆角，组件感更强。',
+    vars: {
+      '--app-radius-sm': '14px',
+      '--app-radius-md': '20px',
+      '--app-radius-lg': '28px'
+    }
+  }
+]
+
+export const fontScaleOptions = [
+  {
+    id: 'compact',
+    name: '小',
+    description: '更紧凑的文字比例。',
+    vars: {
+      '--app-font-scale': '0.94'
+    }
+  },
+  {
+    id: 'normal',
+    name: '中',
+    description: '默认字号比例。',
+    vars: {
+      '--app-font-scale': '1'
+    }
+  },
+  {
+    id: 'large',
+    name: '大',
+    description: '更适合远距离或大屏展示。',
+    vars: {
+      '--app-font-scale': '1.08'
+    }
+  }
+]
+
+export const densityMap = Object.fromEntries(densityOptions.map((item) => [item.id, item]))
+export const surfaceStyleMap = Object.fromEntries(surfaceStyleOptions.map((item) => [item.id, item]))
+export const cornerStyleMap = Object.fromEntries(cornerStyleOptions.map((item) => [item.id, item]))
+export const fontScaleMap = Object.fromEntries(fontScaleOptions.map((item) => [item.id, item]))
+
 export const topLevelMenuDefinitions = {
   media: { id: 'media', type: 'submenu', label: 'Media Hub', icon: 'Location' },
   tools: { id: 'tools', type: 'submenu', label: 'Tools', icon: 'IconMenu' },
@@ -169,6 +300,10 @@ export const defaultWebsiteSettings = {
   loginTitle: '欢迎回来',
   loginSlogan: '快速进入你的个人聚合空间',
   theme: 'cyber',
+  density: 'balanced',
+  surfaceStyle: 'glass',
+  cornerStyle: 'soft',
+  fontScale: 'normal',
   showPetals: true,
   topLevelOrder: defaultTopLevelOrder,
   submenuOrders: defaultSubmenuOrders

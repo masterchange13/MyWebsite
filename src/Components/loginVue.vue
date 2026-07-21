@@ -345,7 +345,7 @@ onUnmounted(() => {
   align-items: center;
   justify-content: center;
   background: transparent;
-  padding: 24px;
+  padding: var(--app-page-padding);
 }
 .login-container {
   width: 960px;
@@ -357,8 +357,8 @@ onUnmounted(() => {
   background:
     linear-gradient(180deg, var(--app-surface) 0%, var(--app-surface-strong) 100%);
   border: 1px solid var(--cyber-border);
-  border-radius: 20px;
-  padding: 28px;
+  border-radius: var(--app-radius-lg);
+  padding: var(--app-card-padding);
   box-shadow: var(--app-shadow-strong);
 }
 .site-tag {
@@ -387,7 +387,7 @@ onUnmounted(() => {
   margin-top: 16px;
 }
 .benefit {
-  border-radius: 14px;
+  border-radius: var(--app-radius-md);
   border: 1px solid var(--cyber-border);
   background: linear-gradient(180deg, var(--app-surface-soft) 0%, transparent 100%);
 }
@@ -401,7 +401,7 @@ onUnmounted(() => {
   margin-top: 4px;
 }
 .right-panel {
-  border-radius: 20px;
+  border-radius: var(--app-radius-lg);
   box-shadow: var(--app-shadow-strong);
 }
 .panel-title {
