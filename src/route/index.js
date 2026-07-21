@@ -104,6 +104,11 @@ const routes = [
                 path: '/author',
                 name: 'author',
                 component: () => import('@/Components/authorVue.vue')
+            },
+            {
+                path: '/siteSettings',
+                name: 'siteSettings',
+                component: () => import('@/Components/siteSettingsVue.vue')
             }
         ]
     },

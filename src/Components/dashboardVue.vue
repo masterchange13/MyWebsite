@@ -6,7 +6,7 @@
           <el-button class="menu-btn" text @click="showMenuDrawer = true">
             <el-icon><icon-menu /></el-icon>
           </el-button>
-          <h1 class="brand-title">Raspberrypi Console</h1>
+          <h1 class="brand-title">{{ brandTitle }}</h1>
         </div>
         <div class="user-info">
           <el-avatar class="avatar clickable" :size="40" src="https://api.dicebear.com/7.x/identicon/svg?seed=vue" @click="toProfile" />
@@ -25,54 +25,41 @@
         class="cyber-menu"
         :ellipsis="false"
       >
-        <el-sub-menu index="1" popper-class="cyber-menu-popper" :class="{ 'is-active': isMenuActive('1') }">
-          <template #title>
-            <el-icon><location /></el-icon>
-            <span>Media Hub</span>
-          </template>
-          <el-menu-item index="1-1" :class="{ 'is-active': isMenuActive('1-1') }" @click="toVideo()">video</el-menu-item>
-          <el-menu-item index="1-2" :class="{ 'is-active': isMenuActive('1-2') }" @click="toDocument()">document</el-menu-item>
-          <el-menu-item index="1-3" :class="{ 'is-active': isMenuActive('1-3') }" @click="toMusic()">music</el-menu-item>
-          <el-menu-item index="1-4" :class="{ 'is-active': isMenuActive('1-4') }" @click="toTransfer()">transfer</el-menu-item>
-          <el-menu-item index="1-5" :class="{ 'is-active': isMenuActive('1-5') }" @click="toDoList()">to do list</el-menu-item>
-        </el-sub-menu>
-        <el-sub-menu index="2" popper-class="cyber-menu-popper" :class="{ 'is-active': isMenuActive('2') }">
-          <template #title>
-            <el-icon><icon-menu /></el-icon>
-            <span>Tools</span>
-          </template>
-          <el-menu-item index="2-1" :class="{ 'is-active': isMenuActive('2-1') }" @click="toAgent()">agent</el-menu-item>
-          <el-menu-item index="2-2" :class="{ 'is-active': isMenuActive('2-2') }" @click="toQiMen()">QiMenDunJia</el-menu-item>
-          <el-menu-item index="2-3" :class="{ 'is-active': isMenuActive('2-3') }" @click="toTimer()">Timer</el-menu-item>
-          <el-menu-item index="2-4" :class="{ 'is-active': isMenuActive('2-4') }" @click="toCalculator()">Calculator</el-menu-item>
-        </el-sub-menu>
-        <el-menu-item index="3" :class="{ 'is-active': isMenuActive('3') }" @click="toChat()">
-          <el-icon><document /></el-icon>
-          <span class="chat-menu-label">
-            Chat
-            <span v-if="totalUnread > 0" class="unread-badge">{{ totalUnread > 99 ? '99+' : totalUnread }}</span>
-          </span>
-        </el-menu-item>
-        <el-menu-item index="4" :class="{ 'is-active': isMenuActive('4') }" @click="toNavigator()">
-          <el-icon><setting /></el-icon>
-          <span>Navigator</span>
-        </el-menu-item>
-        <el-menu-item index="5" :class="{ 'is-active': isMenuActive('5') }" @click="getDocument()">
-          <el-icon><document /></el-icon>
-          <span>blog</span>
-        </el-menu-item>
-        <el-menu-item index="6" :class="{ 'is-active': isMenuActive('6') }" @click="toGuide()">
-          <el-icon><setting /></el-icon>
-          <span>Guide</span>
-        </el-menu-item>
-        <el-menu-item index="7" :class="{ 'is-active': isMenuActive('7') }" @click="toFeedback()">
-          <el-icon><document /></el-icon>
-          <span>Feedback</span>
-        </el-menu-item>
-        <el-menu-item index="8" @click="toAuthor()">
-          <el-icon><User /></el-icon>
-          <span>Author</span>
-        </el-menu-item>
+        <template v-for="entry in menuEntries" :key="entry.id">
+          <el-sub-menu
+            v-if="entry.type === 'submenu'"
+            :index="entry.id"
+            popper-class="cyber-menu-popper"
+            :class="{ 'is-active': isMenuActive(entry.id) }"
+          >
+            <template #title>
+              <el-icon><component :is="resolveIcon(entry.icon)" /></el-icon>
+              <span>{{ entry.label }}</span>
+            </template>
+            <el-menu-item
+              v-for="child in entry.items"
+              :key="child.id"
+              :index="child.id"
+              :class="{ 'is-active': isMenuActive(child.id) }"
+              @click="navigateTo(child.path)"
+            >
+              {{ child.label }}
+            </el-menu-item>
+          </el-sub-menu>
+          <el-menu-item
+            v-else
+            :index="entry.id"
+            :class="{ 'is-active': isMenuActive(entry.id) }"
+            @click="navigateTo(entry.path)"
+          >
+            <el-icon><component :is="resolveIcon(entry.icon)" /></el-icon>
+            <span v-if="entry.id === 'chat'" class="chat-menu-label">
+              {{ entry.label }}
+              <span v-if="totalUnread > 0" class="unread-badge">{{ totalUnread > 99 ? '99+' : totalUnread }}</span>
+            </span>
+            <span v-else>{{ entry.label }}</span>
+          </el-menu-item>
+        </template>
       </el-menu>
     </el-header>
 
@@ -82,70 +69,36 @@
 
     <el-drawer v-model="showMenuDrawer" :with-header="false" size="240px">
       <el-menu class="el-menu-vertical-demo" @open="handleOpen" @close="handleClose" style="height: 100%;">
-        <el-sub-menu index="1" :class="{ 'is-active': isMenuActive('1') }">
-          <template #title>
-            <el-icon><location /></el-icon>
-            <span>Navigator One</span>
-          </template>
-          <el-menu-item-group title="Group One">
-            <el-menu-item index="1-1" :class="{ 'is-active': isMenuActive('1-1') }" @click="toVideo(); showMenuDrawer=false">video</el-menu-item>
-            <el-menu-item index="1-2" :class="{ 'is-active': isMenuActive('1-2') }" @click="toDocument(); showMenuDrawer=false">document</el-menu-item>
-            <el-menu-item index="1-3" :class="{ 'is-active': isMenuActive('1-3') }" @click="toMusic(); showMenuDrawer=false">music</el-menu-item>
-          </el-menu-item-group>
-          <el-menu-item-group title="Group Two">
-            <el-menu-item index="1-4" :class="{ 'is-active': isMenuActive('1-4') }" @click="toTransfer(); showMenuDrawer=false">transfer</el-menu-item>
-            <el-menu-item index="1-5" :class="{ 'is-active': isMenuActive('1-5') }" @click="toDoList(); showMenuDrawer=false">to do list</el-menu-item>
-          </el-menu-item-group>
-        </el-sub-menu>
-        <el-sub-menu index="2" :class="{ 'is-active': isMenuActive('2') }">
-          <template #title>
-            <el-icon><icon-menu /></el-icon>
-            <span>Navigator Two</span>
-          </template>
-          <el-menu-item index="2-1" :class="{ 'is-active': isMenuActive('2-1') }" @click="toAgent(); showMenuDrawer=false">
-            <el-icon><icon-menu /></el-icon>
-            <span>agent</span>
+        <template v-for="entry in menuEntries" :key="entry.id">
+          <el-sub-menu v-if="entry.type === 'submenu'" :index="entry.id" :class="{ 'is-active': isMenuActive(entry.id) }">
+            <template #title>
+              <el-icon><component :is="resolveIcon(entry.icon)" /></el-icon>
+              <span>{{ entry.label }}</span>
+            </template>
+            <el-menu-item
+              v-for="child in entry.items"
+              :key="child.id"
+              :index="child.id"
+              :class="{ 'is-active': isMenuActive(child.id) }"
+              @click="navigateTo(child.path); showMenuDrawer = false"
+            >
+              {{ child.label }}
+            </el-menu-item>
+          </el-sub-menu>
+          <el-menu-item
+            v-else
+            :index="entry.id"
+            :class="{ 'is-active': isMenuActive(entry.id) }"
+            @click="navigateTo(entry.path); showMenuDrawer = false"
+          >
+            <el-icon><component :is="resolveIcon(entry.icon)" /></el-icon>
+            <span class="chat-menu-label" v-if="entry.id === 'chat'">
+              {{ entry.label }}
+              <span v-if="totalUnread > 0" class="unread-badge">{{ totalUnread > 99 ? '99+' : totalUnread }}</span>
+            </span>
+            <span v-else>{{ entry.label }}</span>
           </el-menu-item>
-          <el-menu-item index="2-2" :class="{ 'is-active': isMenuActive('2-2') }" @click="toQiMen(); showMenuDrawer=false">
-            <el-icon><icon-menu /></el-icon>
-            <span>QiMenDunJia</span>
-          </el-menu-item>
-          <el-menu-item index="2-3" :class="{ 'is-active': isMenuActive('2-3') }" @click="toTimer(); showMenuDrawer=false">
-            <el-icon><icon-menu /></el-icon>
-            <span>Timer</span>
-          </el-menu-item>
-          <el-menu-item index="2-4" :class="{ 'is-active': isMenuActive('2-4') }" @click="toCalculator(); showMenuDrawer=false">
-            <el-icon><icon-menu /></el-icon>
-            <span>Calculator</span>
-          </el-menu-item>
-        </el-sub-menu>
-        <el-menu-item index="3" :class="{ 'is-active': isMenuActive('3') }" @click="toChat(); showMenuDrawer=false">
-          <el-icon><document /></el-icon>
-          <span class="chat-menu-label">
-            Chat
-            <span v-if="totalUnread > 0" class="unread-badge">{{ totalUnread > 99 ? '99+' : totalUnread }}</span>
-          </span>
-        </el-menu-item>
-        <el-menu-item index="4" :class="{ 'is-active': isMenuActive('4') }" @click="toNavigator(); showMenuDrawer=false">
-          <el-icon><setting /></el-icon>
-          <span>Navigator Four</span>
-        </el-menu-item>
-        <el-menu-item index="5" :class="{ 'is-active': isMenuActive('5') }" @click="getDocument(); showMenuDrawer=false">
-          <el-icon><document /></el-icon>
-          <span>blog</span>
-        </el-menu-item>
-        <el-menu-item index="6" :class="{ 'is-active': isMenuActive('6') }" @click="toGuide(); showMenuDrawer=false">
-          <el-icon><setting /></el-icon>
-          <span>Guide</span>
-        </el-menu-item>
-        <el-menu-item index="7" :class="{ 'is-active': isMenuActive('7') }" @click="toFeedback(); showMenuDrawer=false">
-          <el-icon><document /></el-icon>
-          <span>Feedback</span>
-        </el-menu-item>
-        <el-menu-item index="8" :class="{ 'is-active': isMenuActive('8') }" @click="toAuthor(); showMenuDrawer=false">
-          <el-icon><document /></el-icon>
-          <span>Author</span>
-        </el-menu-item>
+        </template>
       </el-menu>
     </el-drawer>
 
@@ -182,36 +135,51 @@ import { computed, ref, onMounted, onUnmounted, watch } from "vue";
 import { storeToRefs } from "pinia";
 import { useRouter, useRoute } from "vue-router";
 import { useUserStore } from "@/stores/userStore";
+import { useWebsiteSettingsStore } from "@/stores/websiteSettingsStore";
 import { useTimerStore } from "@/stores/timerStore";
 import { useChatStore } from "@/stores/chatStore";
 import { userApi } from "@/api/userApi";
 import * as chatSocket from "@/websocket/chatSocket";
 import { playMessageSound, sendNotification, requestNotificationPermission } from "@/utils/notify";
+import { getOrderedTopLevelMenu } from "@/utils/siteSettings";
+import { Document, Menu as IconMenu, Location, Setting, User } from "@element-plus/icons-vue";
 
 const userStore = useUserStore();
+const websiteSettings = useWebsiteSettingsStore();
+websiteSettings.normalizeOrders()
 const username = computed(() => userStore.getUsername());
 const router = useRouter();
 const route = useRoute();
+const brandTitle = computed(() => websiteSettings.siteTitle || 'Raspberrypi Console')
 
-// Match current route to menu indices (manually controlled, not via el-menu state)
+const iconMap = {
+  Document,
+  IconMenu,
+  Location,
+  Setting,
+  User
+}
+
+const resolveIcon = (iconName: string) => iconMap[iconName as keyof typeof iconMap] || Setting
+const menuEntries = computed(() => getOrderedTopLevelMenu(websiteSettings.topLevelOrder, websiteSettings.submenuOrders))
+
+const isPathActive = (activePaths: string[] = []) => activePaths.some((target) => route.path.startsWith(target))
+
 const menuActiveSet = computed(() => {
-  const p = route.path
   const active = new Set<string>()
-  if (p.startsWith('/video'))        { active.add('1-1'); active.add('1') }
-  else if (p.startsWith('/document')){ active.add('1-2'); active.add('1') }
-  else if (p.startsWith('/music'))   { active.add('1-3'); active.add('1') }
-  else if (p.startsWith('/transfer')){ active.add('1-4'); active.add('1') }
-  else if (p.startsWith('/todoList')){ active.add('1-5'); active.add('1') }
-  else if (p.startsWith('/agent'))   { active.add('2-1'); active.add('2') }
-  else if (p.startsWith('/qiMen'))   { active.add('2-2'); active.add('2') }
-  else if (p.startsWith('/timer'))   { active.add('2-3'); active.add('2') }
-  else if (p.startsWith('/calculator')){ active.add('2-4'); active.add('2') }
-  else if (p.startsWith('/chat'))    { active.add('3') }
-  else if (p.startsWith('/navigator')){ active.add('4') }
-  else if (p.startsWith('/getDocument') || p.startsWith('/documentDetail')){ active.add('5') }
-  else if (p.startsWith('/guide'))   { active.add('6') }
-  else if (p.startsWith('/feedback')){ active.add('7') }
-  else if (p.startsWith('/author'))   { active.add('8') }
+  for (const entry of menuEntries.value) {
+    if (entry.type === 'submenu') {
+      const current = entry.items.find((item) => isPathActive(item.activePaths))
+      if (current) {
+        active.add(entry.id)
+        active.add(current.id)
+      }
+      continue
+    }
+    if (isPathActive(entry.activePaths)) {
+      active.add(entry.id)
+    }
+  }
   return active
 })
 const isMenuActive = (index: string) => menuActiveSet.value.has(index)
@@ -269,23 +237,10 @@ const logout = async () => {
   router.push("/");
 };
 
-import { Document, Menu as IconMenu, Location, Setting, User } from "@element-plus/icons-vue";
-const handleOpen = (key: string, keyPath: string[]) => {
-  console.log(key, keyPath);
-};
-const handleClose = (key: string, keyPath: string[]) => {
-  console.log(key, keyPath);
-};
+const handleOpen = () => {};
+const handleClose = () => {};
 
-const toVideo = () => router.push("/video");
-const toDocument = () => router.push("/document");
-const toNavigator = () => router.push("/navigator");
-const toAgent = () => router.push("/agent");
-const toTransfer = () => router.push("/transfer");
-const getDocument = () => router.push("/getDocument");
-const toChat = () => router.push("/chat");
-const toDoList = () => router.push("/todoList");
-const toMusic = () => router.push("/music");
+const navigateTo = (path: string) => router.push(path)
 const toProfile = async () => {
   try {
     const res = await userApi.getCurrentUser()
@@ -299,12 +254,7 @@ const toProfile = async () => {
   const fallback = username.value ? encodeURIComponent(username.value) : 'me'
   router.push(`/profile/${fallback}`)
 };
-const toQiMen = () => router.push("/qiMen");
 const toTimer = () => router.push("/timer");
-const toCalculator = () => router.push("/calculator");
-const toGuide = () => router.push("/guide");
-const toFeedback = () => router.push("/feedback");
-const toAuthor = () => router.push("/author");
 
 const audioRef = ref<HTMLAudioElement | null>(null);
 const trackRef = ref<HTMLElement | null>(null);
@@ -406,17 +356,17 @@ const updateIsMobile = () => {
   flex-direction: column;
   overflow: hidden;
   background:
-    radial-gradient(1000px 420px at -10% -20%, rgba(0, 255, 255, 0.12) 0%, rgba(0, 255, 255, 0) 65%),
-    radial-gradient(860px 420px at 110% 0%, rgba(255, 0, 204, 0.10) 0%, rgba(255, 0, 204, 0) 60%),
-    linear-gradient(180deg, #060710 0%, #090a1a 100%);
+    radial-gradient(1000px 420px at -10% -20%, var(--app-bg-glow-left) 0%, rgba(0, 255, 255, 0) 65%),
+    radial-gradient(860px 420px at 110% 0%, var(--app-bg-glow-right) 0%, rgba(255, 0, 204, 0) 60%),
+    linear-gradient(180deg, var(--cyber-bg-1) 0%, var(--cyber-bg-2) 100%);
 }
 
 .header {
   height: auto;
   padding: 12px 18px 0;
-  background: rgba(6, 8, 20, 0.9);
-  border-bottom: 1px solid rgba(0, 220, 230, 0.16);
-  box-shadow: 0 10px 24px rgba(0, 220, 230, 0.05), inset 0 -1px 0 rgba(180, 0, 145, 0.12);
+  background: var(--app-header-bg);
+  border-bottom: 1px solid var(--app-header-border);
+  box-shadow: var(--app-shadow-strong), inset 0 -1px 0 var(--app-surface-soft-alt);
   backdrop-filter: blur(10px);
   position: relative;
   overflow: hidden;
@@ -426,8 +376,8 @@ const updateIsMobile = () => {
   position: absolute;
   inset: 0;
   background:
-    radial-gradient(520px 220px at -5% -25%, rgba(0, 210, 220, 0.09) 0%, rgba(0, 210, 220, 0) 70%),
-    radial-gradient(480px 220px at 105% -20%, rgba(170, 0, 135, 0.08) 0%, rgba(170, 0, 135, 0) 70%);
+    radial-gradient(520px 220px at -5% -25%, var(--app-bg-glow-left) 0%, rgba(0, 210, 220, 0) 70%),
+    radial-gradient(480px 220px at 105% -20%, var(--app-bg-glow-right) 0%, rgba(170, 0, 135, 0) 70%);
   pointer-events: none;
 }
 
@@ -446,7 +396,7 @@ const updateIsMobile = () => {
 }
 .menu-btn {
   display: none;
-  color: #70f6ff;
+  color: var(--app-accent-strong);
 }
 
 .brand-title {
@@ -454,8 +404,8 @@ const updateIsMobile = () => {
   font-size: 24px;
   font-weight: 800;
   letter-spacing: 1px;
-  color: #8ed9de;
-  text-shadow: 0 0 8px rgba(0, 220, 230, 0.3);
+  color: var(--app-text-strong);
+  text-shadow: 0 0 8px var(--app-accent-soft);
 }
 
 .cyber-menu {
@@ -465,63 +415,63 @@ const updateIsMobile = () => {
   border-bottom: none;
   background: transparent;
   --el-menu-bg-color: transparent;
-  --el-menu-text-color: #8dbec8;
-  --el-menu-hover-text-color: #cc79be;
-  --el-menu-active-color: #65d5dc;
+  --el-menu-text-color: var(--app-text-muted);
+  --el-menu-hover-text-color: var(--app-accent-alt-strong);
+  --el-menu-active-color: var(--app-accent-strong);
 }
 :deep(.cyber-menu.el-menu--horizontal > .el-menu-item),
 :deep(.cyber-menu.el-menu--horizontal > .el-sub-menu .el-sub-menu__title) {
   height: 46px;
   line-height: 46px;
   border-bottom: none !important;
-  color: #8dbec8;
+  color: var(--app-text-muted);
   transition: all 0.15s ease;
 }
 :deep(.cyber-menu.el-menu--horizontal > .el-menu-item.is-active),
 :deep(.cyber-menu.el-menu--horizontal > .el-sub-menu.is-active .el-sub-menu__title) {
-  color: #65d5dc;
-  text-shadow: 0 0 6px rgba(101, 213, 220, 0.35);
+  color: var(--app-accent-strong);
+  text-shadow: 0 0 6px var(--app-accent-soft);
 }
 :deep(.cyber-menu.el-menu--horizontal > .el-menu-item:hover),
 :deep(.cyber-menu.el-menu--horizontal > .el-sub-menu .el-sub-menu__title:hover) {
-  color: #cc79be;
-  text-shadow: 0 0 6px rgba(204, 121, 190, 0.35);
+  color: var(--app-accent-alt-strong);
+  text-shadow: 0 0 6px var(--app-accent-alt-soft);
 }
 
 :deep(.el-menu--popup) {
-  background: rgba(7, 9, 22, 0.96);
-  border: 1px solid rgba(0, 220, 230, 0.2);
-  box-shadow: 0 0 12px rgba(0, 220, 230, 0.1), 0 0 20px rgba(170, 0, 135, 0.08);
+  background: var(--app-surface-strong);
+  border: 1px solid var(--cyber-border);
+  box-shadow: 0 0 12px var(--app-accent-soft), 0 0 20px var(--app-accent-alt-soft);
 }
 :deep(.el-menu--popup .el-menu-item) {
-  color: #8dbec8;
+  color: var(--app-text-muted);
 }
 :deep(.el-menu--popup .el-menu-item:hover) {
-  background: rgba(170, 0, 135, 0.1);
-  color: #cc79be;
+  background: var(--app-accent-alt-soft);
+  color: var(--app-accent-alt-strong);
 }
 :global(.cyber-menu-popper) {
-  background: rgba(7, 9, 22, 0.97) !important;
-  border: 1px solid rgba(0, 220, 230, 0.24) !important;
-  box-shadow: 0 0 8px rgba(0, 220, 230, 0.08), 0 0 14px rgba(170, 0, 135, 0.07) !important;
+  background: var(--app-surface-strong) !important;
+  border: 1px solid var(--cyber-border) !important;
+  box-shadow: 0 0 8px var(--app-accent-soft), 0 0 14px var(--app-accent-alt-soft) !important;
 }
 :global(.cyber-menu-popper .el-menu) {
   background: transparent !important;
 }
 :global(.cyber-menu-popper .el-menu-item) {
-  color: #8dbec8 !important;
+  color: var(--app-text-muted) !important;
 }
 :global(.cyber-menu-popper .el-menu-item:hover) {
-  background: rgba(170, 0, 135, 0.09) !important;
-  color: #cc79be !important;
+  background: var(--app-accent-alt-soft) !important;
+  color: var(--app-accent-alt-strong) !important;
 }
 :global(.cyber-menu-popper .el-menu-item.is-active) {
-  background: rgba(0, 220, 230, 0.1) !important;
-  color: #65d5dc !important;
+  background: var(--app-accent-soft) !important;
+  color: var(--app-accent-strong) !important;
 }
 :deep(.el-menu-vertical-demo) {
-  background: linear-gradient(180deg, #0a0f20 0%, #10162b 100%);
-  border-right: 1px solid rgba(0, 255, 255, 0.2);
+  background: linear-gradient(180deg, var(--app-surface-strong) 0%, var(--app-surface) 100%);
+  border-right: 1px solid var(--cyber-border);
   padding: 8px;
 }
 :deep(.el-menu-vertical-demo .el-sub-menu__title),
@@ -533,25 +483,25 @@ const updateIsMobile = () => {
 }
 :deep(.el-menu-vertical-demo .el-sub-menu__title:hover),
 :deep(.el-menu-vertical-demo .el-menu-item:hover) {
-  background: rgba(255, 0, 204, 0.16);
-  color: #ff7de7;
+  background: var(--app-accent-alt-soft);
+  color: var(--app-accent-alt-strong);
   transform: translateX(2px);
 }
 :deep(.el-menu-vertical-demo .el-menu-item.is-active) {
-  background: rgba(0, 255, 255, 0.16);
-  color: #00f5ff;
+  background: var(--app-accent-soft);
+  color: var(--app-accent);
   font-weight: 600;
-  box-shadow: inset 0 0 0 1px rgba(0, 255, 255, 0.35);
+  box-shadow: inset 0 0 0 1px var(--cyber-border);
 }
 :deep(.el-menu-vertical-demo .el-sub-menu.is-active > .el-sub-menu__title) {
-  color: #65d5dc;
-  text-shadow: 0 0 6px rgba(101, 213, 220, 0.35);
+  color: var(--app-accent-strong);
+  text-shadow: 0 0 6px var(--app-accent-soft);
 }
 :deep(.el-menu-vertical-demo .el-icon) {
-  color: #80f8ff;
+  color: var(--app-accent-strong);
 }
 :deep(.el-menu-vertical-demo .el-sub-menu.is-opened > .el-sub-menu__title) {
-  background: rgba(0, 255, 255, 0.08);
+  background: var(--app-accent-soft);
 }
 
 .user-info {
@@ -571,17 +521,17 @@ const updateIsMobile = () => {
 .username {
   font-size: 15px;
   font-weight: 600;
-  color: #cbf7ff;
+  color: var(--app-text-main);
 }
 
 .logout-button {
-  background: linear-gradient(90deg, #ff007f 0%, #6f00ff 100%);
-  color: #fff;
+  background: var(--app-button-primary);
+  color: var(--app-button-text);
   border-radius: 8px;
   padding: 8px 16px;
   font-size: 14px;
   border: none;
-  box-shadow: 0 0 14px rgba(255, 0, 127, 0.45);
+  box-shadow: 0 0 14px var(--app-accent-alt-soft);
 }
 
 .logout-button:hover {
@@ -592,20 +542,20 @@ const updateIsMobile = () => {
   border-radius: 999px;
   padding: 8px 12px;
   font-size: 13px;
-  background: rgba(0, 255, 255, 0.12);
-  color: #8ff5ff;
-  border: 1px solid rgba(0, 255, 255, 0.45);
+  background: var(--app-accent-soft);
+  color: var(--app-accent-strong);
+  border: 1px solid var(--cyber-border);
 }
 .timer-pill:hover {
-  background: rgba(0, 255, 255, 0.2);
+  background: var(--app-surface-soft);
 }
 .stopwatch-pill {
-  background: rgba(62, 224, 151, 0.12);
-  color: #8ef8cb;
-  border-color: rgba(62, 224, 151, 0.45);
+  background: var(--app-accent-alt-soft);
+  color: var(--app-accent-alt-strong);
+  border-color: var(--app-accent-alt-soft);
 }
 .stopwatch-pill:hover {
-  background: rgba(62, 224, 151, 0.2);
+  background: var(--app-accent-alt-soft);
 }
 .timer-stop {
   border-radius: 8px;
@@ -631,9 +581,9 @@ const updateIsMobile = () => {
   font-size: 11px;
   font-weight: 700;
   line-height: 1;
-  color: #fff;
-  background: linear-gradient(135deg, #ff00cc, #ff4455);
-  box-shadow: 0 0 10px rgba(255, 0, 204, 0.5);
+  color: var(--app-button-text);
+  background: linear-gradient(135deg, var(--app-accent-alt), var(--app-accent));
+  box-shadow: 0 0 10px var(--app-accent-alt-soft);
   animation: pulse-badge 1.5s ease-in-out infinite;
 }
 
@@ -651,10 +601,10 @@ const updateIsMobile = () => {
 
 .footer {
   text-align: center;
-  background: rgba(8, 10, 25, 0.86);
-  color: #9ee8ff;
+  background: var(--app-surface-strong);
+  color: var(--app-text-main);
   padding: 20px 0;
-  border-top: 1px solid rgba(0, 255, 255, 0.25);
+  border-top: 1px solid var(--cyber-border);
   flex-shrink: 0;
 }
 
@@ -681,18 +631,18 @@ const updateIsMobile = () => {
 }
 .time {
   font-size: 12px;
-  color: #8dbad1;
+  color: var(--app-text-soft);
 }
 .track .bar {
   width: 280px;
   height: 4px;
-  background: rgba(110, 160, 220, 0.35);
+  background: var(--app-surface-soft-alt);
   border-radius: 4px;
   position: relative;
 }
 .track .bar-progress {
   height: 100%;
-  background: linear-gradient(90deg, #00f5ff 0%, #ff00cc 100%);
+  background: linear-gradient(90deg, var(--app-accent) 0%, var(--app-accent-alt) 100%);
   border-radius: 4px;
 }
 .controls {

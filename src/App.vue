@@ -1,6 +1,6 @@
 <template>
   <div class="app-shell">
-    <div class="global-petal-layer">
+    <div v-if="websiteSettings.showPetals" class="global-petal-layer">
       <span
         v-for="i in petals"
         :key="i"
@@ -13,6 +13,10 @@
 </template>
 
 <script setup>
+import { watch } from 'vue'
+import { useWebsiteSettingsStore } from '@/stores/websiteSettingsStore'
+
+const websiteSettings = useWebsiteSettingsStore()
 const petals = Array.from({ length: 14 }, (_, i) => i + 1)
 
 const getPetalStyle = (i) => {
@@ -31,6 +35,13 @@ const getPetalStyle = (i) => {
     '--opa': `${Math.min(opacity, 0.56)}`
   }
 }
+
+websiteSettings.normalizeOrders()
+watch(
+  () => websiteSettings.theme,
+  () => websiteSettings.applyTheme(),
+  { immediate: true }
+)
 </script>
 
 <style>
@@ -90,19 +101,46 @@ html, body {
   --cyber-subtext: #88a7bf;
   --cyber-cyan: #00f5ff;
   --cyber-pink: #ff00cc;
+  --app-bg-glow-left: rgba(0, 245, 255, 0.07);
+  --app-bg-glow-right: rgba(255, 0, 204, 0.06);
+  --app-shell-bg: linear-gradient(180deg, #090a1a 0%, #0d1022 100%);
+  --app-header-bg: rgba(6, 8, 20, 0.9);
+  --app-header-border: rgba(0, 220, 230, 0.16);
+  --app-surface: rgba(8, 12, 28, 0.82);
+  --app-surface-strong: rgba(6, 8, 20, 0.92);
+  --app-surface-soft: rgba(0, 245, 255, 0.08);
+  --app-surface-soft-alt: rgba(255, 0, 204, 0.12);
+  --app-text-main: #d4f7ff;
+  --app-text-strong: #f0feff;
+  --app-text-muted: #8dbec8;
+  --app-text-soft: #88a7bf;
+  --app-accent: #00f5ff;
+  --app-accent-strong: #65d5dc;
+  --app-accent-soft: rgba(0, 245, 255, 0.12);
+  --app-accent-alt: #ff00cc;
+  --app-accent-alt-strong: #cc79be;
+  --app-accent-alt-soft: rgba(255, 0, 204, 0.12);
+  --app-shadow-soft: 0 0 10px rgba(0, 245, 255, 0.06);
+  --app-shadow-strong: 0 10px 24px rgba(0, 220, 230, 0.05);
+  --app-button-primary: linear-gradient(90deg, #ff007f 0%, #6f00ff 100%);
+  --app-button-text: #ffffff;
+  --login-character-1: #ff9a9e;
+  --login-character-2: #a18cd1;
+  --login-character-3: #fad0c4;
 }
 
 body {
   color: var(--cyber-text);
   background:
-    radial-gradient(1100px 500px at -260px -240px, rgba(0, 245, 255, 0.07) 0%, rgba(0, 245, 255, 0) 60%),
-    linear-gradient(180deg, var(--cyber-bg-1) 0%, var(--cyber-bg-2) 100%);
+    radial-gradient(1100px 500px at -260px -240px, var(--app-bg-glow-left) 0%, rgba(0, 245, 255, 0) 60%),
+    radial-gradient(900px 440px at 120% -10%, var(--app-bg-glow-right) 0%, rgba(255, 0, 204, 0) 60%),
+    var(--app-shell-bg);
 }
 
 .el-card {
   border-color: var(--cyber-border) !important;
   background: var(--cyber-panel) !important;
-  box-shadow: 0 0 10px rgba(0, 245, 255, 0.06) !important;
+  box-shadow: var(--app-shadow-soft) !important;
 }
 
 .el-card__header {

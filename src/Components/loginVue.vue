@@ -2,8 +2,9 @@
   <div class="login-page">
     <div class="login-container">
       <div class="left-panel">
-        <div class="brand">欢迎回来</div>
-        <div class="slogan">快速进入你的个人聚合空间</div>
+        <div class="site-tag">{{ websiteSettings.siteTitle }}</div>
+        <div class="brand">{{ websiteSettings.loginTitle }}</div>
+        <div class="slogan">{{ websiteSettings.loginSlogan }}</div>
         <div class="benefits">
           <el-row :gutter="12">
             <el-col :span="12">
@@ -96,7 +97,7 @@
                 <el-select v-model="form.region" placeholder="可选">
                   <el-option label="中国大陆" value="cn" />
                   <el-option label="中国香港" value="hk" />
-                  <el-option label="其他" vloginalue="other" />
+                  <el-option label="其他" value="other" />
                 </el-select>
               </el-form-item>
             </el-col>
@@ -121,11 +122,13 @@
 import { ref, onMounted, onUnmounted, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import { useUserStore } from '@/stores/userStore'
+import { useWebsiteSettingsStore } from '@/stores/websiteSettingsStore'
 import { userApi } from '@/api/userApi'
 import { ElMessage } from 'element-plus'
 
 const router = useRouter()
 const userStore = useUserStore()
+const websiteSettings = useWebsiteSettingsStore()
 
 const formRef = ref()
 const characterRefs = ref([])
@@ -267,12 +270,12 @@ onUnmounted(() => {
   align-items: center;
   justify-content: center;
   transition: all 0.3s ease;
-  box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+  box-shadow: 0 10px 22px rgba(0,0,0,0.18);
   animation: float 3s ease-in-out infinite;
 }
-.c1 { background-color: #ff9a9e; animation-delay: 0s; }
-.c2 { background-color: #a18cd1; animation-delay: 0.5s; }
-.c3 { background-color: #fad0c4; animation-delay: 1s; }
+.c1 { background-color: var(--login-character-1); animation-delay: 0s; }
+.c2 { background-color: var(--login-character-2); animation-delay: 0.5s; }
+.c3 { background-color: var(--login-character-3); animation-delay: 1s; }
 
 @keyframes float {
   0%, 100% { transform: translateY(0); }
@@ -341,7 +344,7 @@ onUnmounted(() => {
   display: flex;
   align-items: center;
   justify-content: center;
-  background: linear-gradient(180deg, #eef5ff 0%, #f8fbff 100%);
+  background: transparent;
   padding: 24px;
 }
 .login-container {
@@ -351,41 +354,62 @@ onUnmounted(() => {
   gap: 20px;
 }
 .left-panel {
-  background: #ffffff;
-  border-radius: 12px;
-  padding: 24px;
-  box-shadow: 0 6px 20px rgba(0,0,0,0.06);
+  background:
+    linear-gradient(180deg, var(--app-surface) 0%, var(--app-surface-strong) 100%);
+  border: 1px solid var(--cyber-border);
+  border-radius: 20px;
+  padding: 28px;
+  box-shadow: var(--app-shadow-strong);
+}
+.site-tag {
+  display: inline-flex;
+  align-items: center;
+  height: 30px;
+  padding: 0 12px;
+  border-radius: 999px;
+  background: var(--app-accent-soft);
+  color: var(--app-accent-strong);
+  font-size: 12px;
+  letter-spacing: 0.08em;
+  margin-bottom: 14px;
 }
 .brand {
-  font-size: 22px;
-  font-weight: 700;
+  font-size: 30px;
+  font-weight: 800;
+  color: var(--app-text-strong);
 }
 .slogan {
   margin-top: 8px;
-  color: #666;
+  color: var(--app-text-soft);
+  line-height: 1.7;
 }
 .benefits {
   margin-top: 16px;
 }
 .benefit {
-  border-radius: 10px;
+  border-radius: 14px;
+  border: 1px solid var(--cyber-border);
+  background: linear-gradient(180deg, var(--app-surface-soft) 0%, transparent 100%);
 }
 .b-title {
   font-weight: 600;
+  color: var(--app-text-main);
 }
 .b-sub {
   font-size: 12px;
-  color: #888;
+  color: var(--app-text-soft);
   margin-top: 4px;
 }
 .right-panel {
-  border-radius: 12px;
+  border-radius: 20px;
+  box-shadow: var(--app-shadow-strong);
 }
 .panel-title {
   font-size: 20px;
   font-weight: 600;
   margin-bottom: 12px;
   text-align: center;
+  color: var(--app-text-strong);
 }
 .login-form .actions {
   display: flex;
@@ -397,7 +421,7 @@ onUnmounted(() => {
 }
 .s-text {
   font-size: 12px;
-  color: #888;
+  color: var(--app-text-soft);
   margin-bottom: 4px;
 }
 .links {
@@ -405,6 +429,18 @@ onUnmounted(() => {
   justify-content: flex-end;
   align-items: center;
   height: 100%;
+}
+
+.login-form :deep(.el-form-item__label),
+.login-form :deep(.el-checkbox__label) {
+  color: var(--app-text-muted);
+}
+
+@media (max-width: 900px) {
+  .login-container {
+    width: min(100%, 560px);
+    grid-template-columns: 1fr;
+  }
 }
 </style>
   
