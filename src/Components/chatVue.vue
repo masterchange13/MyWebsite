@@ -132,6 +132,7 @@ const closeSocket = () => {
 const connectWebSocket = () => {
   const name = userStore.getUsername();
   // 使用全局 WebSocket，这里只确保已连接
+  chatStore.bindSocketEvents();
   chatSocket.connect(name);
 
   // 监听新消息（全局 WebSocket 的消息回调）

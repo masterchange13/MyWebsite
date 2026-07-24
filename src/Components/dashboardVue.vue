@@ -202,9 +202,9 @@ const totalUnread = computed(() => chatStore.getTotalUnreadCount());
 // 初始化全局 WebSocket 并处理消息
 function initGlobalChat() {
   if (!username.value) return
-  chatSocket.connect(username.value)
   chatStore.bindSocketEvents()
-  chatStore.fetchOnlineUsers()
+  chatSocket.connect(username.value)
+  chatStore.startOnlineSync()
 
   // 监听新消息
   chatSocket.on('message', (msg) => {
@@ -229,6 +229,7 @@ watch(username, (newVal) => {
 const logout = async () => {
   // 关闭 WebSocket，触发服务端 SREM 从在线集合移除
   chatSocket.close();
+  chatStore.stopOnlineSync();
   // 清除服务端 session
   try { await userApi.logout(); } catch (e) { /* ignore */ }
   // 清除前端用户状态
@@ -281,6 +282,32 @@ const progress = computed(() =>
   duration.value ? (currentTime.value / duration.value) * 100 : 0
 );
 
+const syncAudioProgress = () => {
+  if (!audioRef.value) return
+  currentTime.value = audioRef.value.currentTime
+  duration.value = audioRef.value.duration || 0
+}
+
+const syncLoadedMetadata = () => {
+  if (!audioRef.value) return
+  duration.value = audioRef.value.duration || 0
+  audioRef.value.volume = volume.value / 100
+}
+
+const handleAudioPlay = () => {
+  isPlaying.value = true
+}
+
+const handleAudioPause = () => {
+  isPlaying.value = false
+}
+
+const handleGlobalPlayerSong = (e: Event) => {
+  const detail = (e as CustomEvent).detail || {}
+  title.value = detail.title || ""
+  cover.value = detail.cover || ""
+}
+
 onMounted(() => {
   updateIsMobile()
   window.addEventListener('resize', updateIsMobile)
@@ -289,29 +316,21 @@ onMounted(() => {
   audioRef.value = document.getElementById("globalAudio") as HTMLAudioElement | null;
   if (!audioRef.value) return;
   audioRef.value.volume = volume.value / 100;
-  audioRef.value.addEventListener("timeupdate", () => {
-    currentTime.value = audioRef.value!.currentTime;
-    duration.value = audioRef.value!.duration || 0;
-  });
-  audioRef.value.addEventListener("loadedmetadata", () => {
-    duration.value = audioRef.value!.duration || 0;
-    audioRef.value!.volume = volume.value / 100;
-  });
-  audioRef.value.addEventListener("play", () => {
-    isPlaying.value = true;
-  });
-  audioRef.value.addEventListener("pause", () => {
-    isPlaying.value = false;
-  });
-  window.addEventListener("global-player-song", (e: Event) => {
-    const detail = (e as CustomEvent).detail || {};
-    title.value = detail.title || "";
-    cover.value = detail.cover || "";
-  });
+  audioRef.value.addEventListener("timeupdate", syncAudioProgress);
+  audioRef.value.addEventListener("loadedmetadata", syncLoadedMetadata);
+  audioRef.value.addEventListener("play", handleAudioPlay);
+  audioRef.value.addEventListener("pause", handleAudioPause);
+  window.addEventListener("global-player-song", handleGlobalPlayerSong);
 });
 
 onUnmounted(() => {
   window.removeEventListener('resize', updateIsMobile)
+  window.removeEventListener("global-player-song", handleGlobalPlayerSong)
+  if (!audioRef.value) return
+  audioRef.value.removeEventListener("timeupdate", syncAudioProgress)
+  audioRef.value.removeEventListener("loadedmetadata", syncLoadedMetadata)
+  audioRef.value.removeEventListener("play", handleAudioPlay)
+  audioRef.value.removeEventListener("pause", handleAudioPause)
 })
 
 watch(volume, (val) => {

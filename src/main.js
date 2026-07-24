@@ -1,10 +1,8 @@
 import { createApp } from 'vue';
 import App from './App.vue';
-import { createRouter, createWebHistory } from 'vue-router'; // 引入 vue-router
 import router from '@/route/index'; // 确保这是你的路由配置文件
 import elementPlus from 'element-plus';
 import 'element-plus/dist/index.css';
-import * as ElementPlusIconsVue from '@element-plus/icons-vue';
 import { createPinia } from 'pinia'; // 导入 createPinia
 import piniaPersist from 'pinia-plugin-persistedstate'
 import request from '@/utils/request'
@@ -24,17 +22,12 @@ app.use(router);
 // 使用 element-plus
 app.use(elementPlus);
 
-// 注册 Element Plus 图标
-for (const [key, component] of Object.entries(ElementPlusIconsVue)) {
-    app.component(key, component);
-}
+app.mount('#app')
 
-// 挂载应用
 (async () => {
   try {
     await request.get('/csrf/', { showLoading: false, silentError: true })
   } catch {}
   const websiteSettingsStore = useWebsiteSettingsStore(pinia)
   await websiteSettingsStore.loadSettings()
-  app.mount('#app')
 })()

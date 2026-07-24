@@ -43,8 +43,8 @@
                 :class="['c' + i, { 'eyes-closed': isPasswordFocused, 'staring': isUsernameFocused }]"
            >
             <div class="face">
-              <div class="eye left" :style="getEyeStyle(i-1)"></div>
-              <div class="eye right" :style="getEyeStyle(i-1)"></div>
+              <div class="eye left"></div>
+              <div class="eye right"></div>
               <div class="mouth"></div>
             </div>
           </div>
@@ -135,43 +135,36 @@ const characterRefs = ref([])
 const loading = ref(false)
 const isPasswordFocused = ref(false)
 const isUsernameFocused = ref(false)
-const eyeOffsets = ref([
-  { x: 0, y: 0 },
-  { x: 0, y: 0 },
-  { x: 0, y: 0 }
-])
+let latestPointerEvent = null
+let eyeAnimationFrame = 0
 
-const handleMouseMove = (e) => {
+const updateEyes = (e) => {
   if (isPasswordFocused.value) return
-  
-  characterRefs.value.forEach((el, index) => {
+
+  characterRefs.value.forEach((el) => {
     if (!el) return
     const rect = el.getBoundingClientRect()
     const centerX = rect.left + rect.width / 2
     const centerY = rect.top + rect.height / 2
-    
+
     const dx = e.clientX - centerX
     const dy = e.clientY - centerY
     const angle = Math.atan2(dy, dx)
-    
-    // Max movement distance
     const distance = Math.min(6, Math.sqrt(dx * dx + dy * dy) / 15)
-    
-    eyeOffsets.value[index] = {
-      x: Math.cos(angle) * distance,
-      y: Math.sin(angle) * distance
-    }
+
+    el.style.setProperty('--eye-x', `${Math.cos(angle) * distance}px`)
+    el.style.setProperty('--eye-y', `${Math.sin(angle) * distance}px`)
   })
 }
 
-const getEyeStyle = (index) => {
-  if (isPasswordFocused.value) return {}
-  const offset = eyeOffsets.value[index]
-  const baseScale = isUsernameFocused.value ? 1.2 : 1
-  const baseY = isUsernameFocused.value ? 4 : 0
-  return {
-    transform: `translate(${offset.x}px, ${offset.y + baseY}px) scale(${baseScale})`
-  }
+const handleMouseMove = (e) => {
+  if (isPasswordFocused.value) return
+  latestPointerEvent = e
+  if (eyeAnimationFrame) return
+  eyeAnimationFrame = window.requestAnimationFrame(() => {
+    eyeAnimationFrame = 0
+    if (latestPointerEvent) updateEyes(latestPointerEvent)
+  })
 }
 
 const form = ref({
@@ -242,7 +235,7 @@ const submitLogin = () => {
 const toRegister = () => router.push('/register')
 
 onMounted(() => {
-  window.addEventListener('mousemove', handleMouseMove)
+  window.addEventListener('mousemove', handleMouseMove, { passive: true })
   try {
     const saved = localStorage.getItem('remember_username')
     if (saved) form.value.username = saved
@@ -251,6 +244,10 @@ onMounted(() => {
 
 onUnmounted(() => {
   window.removeEventListener('mousemove', handleMouseMove)
+  if (eyeAnimationFrame) {
+    window.cancelAnimationFrame(eyeAnimationFrame)
+    eyeAnimationFrame = 0
+  }
 })
 </script>
 
@@ -272,6 +269,8 @@ onUnmounted(() => {
   transition: all 0.3s ease;
   box-shadow: 0 10px 22px rgba(0,0,0,0.18);
   animation: float 3s ease-in-out infinite;
+  --eye-x: 0px;
+  --eye-y: 0px;
 }
 .c1 { background-color: var(--login-character-1); animation-delay: 0s; }
 .c2 { background-color: var(--login-character-2); animation-delay: 0.5s; }
@@ -294,7 +293,8 @@ onUnmounted(() => {
   height: 10px;
   background-color: #333;
   border-radius: 50%;
-  transition: all 0.3s ease;
+  transform: translate(var(--eye-x), var(--eye-y));
+  transition: transform 0.08s linear, background-color 0.3s ease, height 0.3s ease, width 0.3s ease, top 0.3s ease, border-radius 0.3s ease;
 }
 .eye.left { left: 25%; }
 .eye.right { right: 25%; }
@@ -317,6 +317,7 @@ onUnmounted(() => {
   width: 12px;
   border-radius: 0;
   top: 45%;
+  transform: none;
 }
 .eyes-closed .mouth {
   width: 8px;
@@ -330,6 +331,7 @@ onUnmounted(() => {
 /* Staring state */
 .staring .eye {
   background-color: #000;
+  transform: translate(var(--eye-x), calc(var(--eye-y) + 4px)) scale(1.2);
 }
 .staring .mouth {
   width: 14px;

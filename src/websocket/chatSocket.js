@@ -11,6 +11,7 @@ const WS_URL = `${wsProtocol}://${window.location.host}/chat/ws`
 const listeners = {
   message: [],
   online_status: [],
+  online_snapshot: [],
   open: [],
   close: [],
   error: [],
@@ -22,6 +23,8 @@ let username = ''
 let reconnectAttempts = 0
 let _closing = false  // 手动关闭标志，防止 onclose 触发自动重连
 const MAX_RECONNECT_DELAY = 30000
+const HEARTBEAT_INTERVAL = 30000
+let heartbeatTimer = null
 
 export const isConnected = ref(false)
 
@@ -43,6 +46,22 @@ function emit(event, data) {
   listeners[event].forEach(cb => {
     try { cb(data) } catch (e) { console.error(`[chatSocket] ${event} handler error:`, e) }
   })
+}
+
+function stopHeartbeat() {
+  if (heartbeatTimer) {
+    clearInterval(heartbeatTimer)
+    heartbeatTimer = null
+  }
+}
+
+function startHeartbeat() {
+  stopHeartbeat()
+  heartbeatTimer = setInterval(() => {
+    if (socket && socket.readyState === WebSocket.OPEN) {
+      socket.send(JSON.stringify({ type: 'heartbeat' }))
+    }
+  }, HEARTBEAT_INTERVAL)
 }
 
 export function connect(name) {
@@ -73,6 +92,7 @@ export function connect(name) {
     console.log('[chatSocket] WebSocket 已连接')
     isConnected.value = true
     reconnectAttempts = 0
+    startHeartbeat()
     emit('open')
   }
 
@@ -81,6 +101,10 @@ export function connect(name) {
       const data = JSON.parse(event.data)
       if (data.type === 'online_status') {
         emit('online_status', data)
+      } else if (data.type === 'online_snapshot') {
+        emit('online_snapshot', data)
+      } else if (data.type === 'pong') {
+        return
       } else {
         emit('message', data)
       }
@@ -92,6 +116,7 @@ export function connect(name) {
   socket.onclose = () => {
     console.log('[chatSocket] WebSocket 已断开')
     isConnected.value = false
+    stopHeartbeat()
     emit('close')
     scheduleReconnect()
   }
@@ -115,6 +140,7 @@ function scheduleReconnect() {
 
 export function close() {
   _closing = true
+  stopHeartbeat()
   if (reconnectTimer) {
     clearTimeout(reconnectTimer)
     reconnectTimer = null

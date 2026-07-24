@@ -4,11 +4,13 @@ import * as chatSocket from '@/websocket/chatSocket'
 import { chatApi } from '@/api/chatApi'
 
 export const useChatStore = defineStore('chat', () => {
+  const ONLINE_SYNC_INTERVAL = 5000
   // ---- 状态 ----
   const onlineUsers = ref(new Set())
   const unreadMessages = ref({})  // { senderUsername: [{ sendUsername, receiveUsername, data, created_time }, ...] }
   const currentPeer = ref('')     // 当前正在聊天的对象
   const isOnChatPage = ref(false)
+  let _onlineSyncTimer = null
 
   // ---- 计算 ----
   function getUnreadCount(username) {
@@ -74,12 +76,34 @@ export const useChatStore = defineStore('chat', () => {
     }
   }
 
+  function startOnlineSync() {
+    if (_onlineSyncTimer) return
+    fetchOnlineUsers()
+    _onlineSyncTimer = window.setInterval(() => {
+      fetchOnlineUsers()
+    }, ONLINE_SYNC_INTERVAL)
+  }
+
+  function stopOnlineSync() {
+    if (_onlineSyncTimer) {
+      window.clearInterval(_onlineSyncTimer)
+      _onlineSyncTimer = null
+    }
+  }
+
   let _socketBound = false
 
   // ---- 绑定 WebSocket 事件 ----
   function bindSocketEvents() {
     if (_socketBound) return
     _socketBound = true
+    chatSocket.on('open', () => {
+      fetchOnlineUsers()
+    })
+    chatSocket.on('online_snapshot', (data) => {
+      const next = new Set(Array.isArray(data?.users) ? data.users : [])
+      onlineUsers.value = next
+    })
     chatSocket.on('online_status', (data) => {
       const next = new Set(onlineUsers.value)
       if (data.online) {
@@ -104,6 +128,8 @@ export const useChatStore = defineStore('chat', () => {
     addMessage,
     clearUnread,
     fetchOnlineUsers,
+    startOnlineSync,
+    stopOnlineSync,
     bindSocketEvents,
   }
 })

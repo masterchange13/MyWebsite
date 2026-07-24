@@ -1,24 +1,20 @@
 import  { createRouter, createWebHashHistory} from 'vue-router'
 
-import LoginVue from '@/Components/loginVue.vue'
-import Dashboard from '@/Components/dashboardVue.vue'
-import RegisterVue from '@/Components/registerVue.vue'
-
 const routes = [
     {
         path: '/',
         name: 'login',
-        component: LoginVue
+        component: () => import('@/Components/loginVue.vue')
     },
     {
         path: '/register',
         name: 'register',
-        component: RegisterVue
+        component: () => import('@/Components/registerVue.vue')
     },
     {
         path: '/dashboard',
         name: 'Dashboard',
-        component: Dashboard,
+        component: () => import('@/Components/dashboardVue.vue'),
         children:[
             {
                 path: "/video",
