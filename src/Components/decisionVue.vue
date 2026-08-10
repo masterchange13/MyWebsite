@@ -100,11 +100,76 @@
         </el-card>
       </el-col>
     </el-row>
+
+    <!-- 历史记录 -->
+    <el-card shadow="hover" class="history-card" v-if="showHistory">
+      <template #header>
+        <div class="history-header">
+          <span>📜 决策记录</span>
+          <el-button size="small" type="danger" text @click="clearHistory">清空</el-button>
+        </div>
+      </template>
+      <div class="history-list" v-if="history.length > 0">
+        <div class="history-item" v-for="h in history.slice(0, 20)" :key="h.id">
+          <span class="h-type">{{ typeLabel[h.type] || h.type }}</span>
+          <span class="h-result">{{ h.result }}</span>
+          <span class="h-detail" v-if="h.detail">{{ h.detail }}</span>
+          <span class="h-time">{{ new Date(h.created_at).toLocaleTimeString() }}</span>
+        </div>
+      </div>
+      <div class="history-empty" v-else>暂无记录，开始做决策吧 🎯</div>
+    </el-card>
+    <div class="history-toggle" @click="showHistory = !showHistory">
+      {{ showHistory ? '隐藏记录 ▲' : '查看记录 ▼' }}
+    </div>
   </div>
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { ref, onMounted } from 'vue'
+import { decisionApi } from '@/api/decisionApi'
+
+// --- 历史记录 ---
+const history = ref([])
+const showHistory = ref(false)
+
+const loadHistory = async () => {
+  try {
+    const res = await decisionApi.getHistory({ limit: 20 })
+    history.value = res.data || []
+  } catch {}
+}
+
+const saveDecision = (type, result, detail = '') => {
+  decisionApi.record({ type, result, detail }).catch(() => {})
+  // 同时插入本地列表顶部
+  history.value.unshift({
+    id: Date.now(),
+    type,
+    result: String(result),
+    detail,
+    created_at: new Date().toISOString(),
+  })
+}
+
+const clearHistory = async () => {
+  try {
+    await decisionApi.clearHistory()
+    history.value = []
+  } catch {}
+}
+
+const typeLabel = {
+  coin: '🪙抛硬币',
+  dice: '🎲掷骰子',
+  yesno: '✅Yes/No',
+  random: '🔢随机数',
+  pick: '📋多选一',
+}
+
+onMounted(() => {
+  loadHistory()
+})
 
 // --- 抛硬币 ---
 const coinFlipping = ref(false)
@@ -120,6 +185,7 @@ const flipCoin = () => {
     coinResult.value = Math.random() < 0.5 ? 'heads' : 'tails'
     coinDone.value = true
     coinFlipping.value = false
+    saveDecision('coin', coinResult.value === 'heads' ? '正面' : '反面')
   }, 600)
 }
 
@@ -143,6 +209,7 @@ const rollDice = () => {
       diceValue.value = Math.floor(Math.random() * diceSides.value) + 1
       diceDone.value = true
       diceRolling.value = false
+      saveDecision('dice', String(diceValue.value), `D${diceSides.value}`)
     }
   }, 60)
 }
@@ -161,6 +228,7 @@ const askYesNo = () => {
     ynAnswer.value = Math.random() < 0.5 ? 'YES' : 'NO'
     ynDone.value = true
     ynBouncing.value = false
+    saveDecision('yesno', ynAnswer.value)
   }, 700)
 }
 
@@ -186,6 +254,7 @@ const generateRandom = () => {
       randValue.value = Math.floor(Math.random() * (max - min + 1)) + min
       randDone.value = true
       randPopping.value = false
+      saveDecision('random', String(randValue.value), `${min}~${max}`)
     }
   }, 50)
 }
@@ -219,6 +288,7 @@ const pickOne = () => {
       pickResult.value = items[Math.floor(Math.random() * items.length)]
       pickDone.value = true
       pickPopping.value = false
+      saveDecision('pick', pickResult.value, `${items.length}个选项中抽取`)
     }
   }, 50)
 }
@@ -465,5 +535,71 @@ const pickOne = () => {
   color: #6b8090;
   font-weight: 400;
   font-size: 12px;
+}
+
+/* --- History --- */
+.history-card {
+  margin-top: 8px;
+  max-height: 300px;
+  overflow: auto;
+}
+.history-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 14px;
+  font-weight: 700;
+  color: #d6fbff;
+}
+.history-list {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.history-item {
+  display: grid;
+  grid-template-columns: 1.2fr 1fr 1.8fr 0.8fr;
+  gap: 8px;
+  padding: 6px 8px;
+  font-size: 12px;
+  border-radius: 4px;
+  align-items: center;
+  color: #b8d4df;
+}
+.history-item:nth-child(even) {
+  background: rgba(0, 245, 255, 0.04);
+}
+.h-type {
+  color: #88a7bf;
+}
+.h-result {
+  font-weight: 700;
+  color: #65d5dc;
+}
+.h-detail {
+  color: #6b8090;
+  font-size: 11px;
+}
+.h-time {
+  color: #6b8090;
+  text-align: right;
+  font-size: 11px;
+}
+.history-empty {
+  text-align: center;
+  padding: 16px;
+  color: #6b8090;
+  font-size: 13px;
+}
+.history-toggle {
+  text-align: center;
+  margin-top: 8px;
+  font-size: 12px;
+  color: #65d5dc;
+  cursor: pointer;
+  user-select: none;
+}
+.history-toggle:hover {
+  color: #9ef7ff;
 }
 </style>
