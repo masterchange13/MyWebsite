@@ -433,6 +433,7 @@ export const topLevelMenuDefinitions = {
   tools: { id: 'tools', type: 'submenu', label: 'Tools', icon: 'IconMenu' },
   chat: { id: 'chat', type: 'item', label: 'Chat', icon: 'Document', path: '/chat', activePaths: ['/chat'] },
   navigator: { id: 'navigator', type: 'item', label: 'Navigator', icon: 'Setting', path: '/navigator', activePaths: ['/navigator'] },
+  appLauncher: { id: 'appLauncher', type: 'item', label: 'App Launcher', icon: 'Setting', path: '/appLauncher', activePaths: ['/appLauncher'] },
   blog: { id: 'blog', type: 'item', label: 'Blog', icon: 'Document', path: '/getDocument', activePaths: ['/getDocument', '/documentDetail'] },
   guide: { id: 'guide', type: 'item', label: 'Guide', icon: 'Setting', path: '/guide', activePaths: ['/guide'] },
   feedback: { id: 'feedback', type: 'item', label: 'Feedback', icon: 'Document', path: '/feedback', activePaths: ['/feedback'] },
@@ -452,15 +453,16 @@ export const submenuDefinitions = {
     agent: { id: 'agent', label: 'Agent', path: '/agent', activePaths: ['/agent'] },
     qiMen: { id: 'qiMen', label: 'QiMenDunJia', path: '/qiMen', activePaths: ['/qiMen'] },
     timer: { id: 'timer', label: 'Timer', path: '/timer', activePaths: ['/timer'] },
-    calculator: { id: 'calculator', label: 'Calculator', path: '/calculator', activePaths: ['/calculator'] }
+    calculator: { id: 'calculator', label: 'Calculator', path: '/calculator', activePaths: ['/calculator'] },
+    decision: { id: 'decision', label: 'Decision Helper', path: '/decision', activePaths: ['/decision'] }
   }
 }
 
-export const defaultTopLevelOrder = ['media', 'tools', 'chat', 'navigator', 'blog', 'guide', 'feedback', 'author', 'siteSettings']
+export const defaultTopLevelOrder = ['media', 'tools', 'chat', 'navigator', 'appLauncher', 'blog', 'guide', 'feedback', 'author', 'siteSettings']
 
 export const defaultSubmenuOrders = {
   media: ['video', 'document', 'music', 'transfer', 'todoList'],
-  tools: ['agent', 'qiMen', 'timer', 'calculator']
+  tools: ['agent', 'qiMen', 'timer', 'calculator', 'decision']
 }
 
 export const defaultWebsiteSettings = {

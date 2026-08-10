@@ -32,6 +32,11 @@ const routes = [
                 component: () => import('@/Components/navigatorVue.vue')
             },
             {
+                path: '/appLauncher',
+                name: 'appLauncher',
+                component: () => import('@/Components/appLauncherVue.vue')
+            },
+            {
                 path: '/transfer',
                 name: 'transfer',
                 component: () => import('@/Components/transferVue.vue')
@@ -85,6 +90,11 @@ const routes = [
                 path: '/calculator',
                 name: 'calculator',
                 component: () => import('@/Components/calculatorVue.vue')
+            },
+            {
+                path: '/decision',
+                name: 'decision',
+                component: () => import('@/Components/decisionVue.vue')
             },
             {
                 path: '/guide',
