@@ -602,4 +602,63 @@ const pickOne = () => {
 .history-toggle:hover {
   color: #9ef7ff;
 }
+
+@media (max-width: 768px) {
+  .decision-page {
+    padding: 10px;
+  }
+  .title {
+    font-size: 18px;
+  }
+  .widget {
+    margin-bottom: 10px;
+    min-height: 180px;
+  }
+  .widget-title {
+    font-size: 14px;
+  }
+  .coin,
+  .coin-face {
+    width: 64px;
+    height: 64px;
+  }
+  .coin-face {
+    font-size: 36px;
+  }
+  .dice-display {
+    width: 64px;
+    height: 64px;
+    font-size: 28px;
+  }
+  .dice-result {
+    font-size: 34px;
+  }
+  .yn-ball {
+    width: 64px;
+    height: 64px;
+    font-size: 26px;
+  }
+  .rand-display {
+    width: 64px;
+    height: 64px;
+    font-size: 28px;
+  }
+  .pick-display {
+    min-width: 64px;
+    min-height: 44px;
+    font-size: 20px;
+    padding: 6px 12px;
+  }
+  .pick-input {
+    font-size: 12px;
+  }
+  .history-item {
+    grid-template-columns: 1fr 0.8fr 1fr 0.7fr;
+    font-size: 10px;
+    gap: 4px;
+  }
+  .range-inputs {
+    flex-wrap: wrap;
+  }
+}
 </style>

@@ -18,13 +18,17 @@ export default defineConfig(() => {
         '@': fileURLToPath(new URL('./src', import.meta.url))
       },
     },
+    base: './',
+    base: './',
     build: {
       rollupOptions: {
         output: {
-          manualChunks: {
-            vue: ['vue', 'vue-router', 'pinia', 'pinia-plugin-persistedstate'],
-            elementPlus: ['element-plus'],
-            editor: ['@wangeditor/editor', '@wangeditor/editor-for-vue', 'marked']
+          manualChunks(id) {
+            if (id.includes('node_modules')) {
+              if (id.includes('element-plus')) return 'elementPlus'
+              if (id.includes('wangeditor') || id.includes('marked')) return 'editor'
+              return 'vendor'
+            }
           }
         }
       }

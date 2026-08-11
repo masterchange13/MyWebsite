@@ -67,7 +67,7 @@
       <router-view></router-view>
     </el-main>
 
-    <el-drawer v-model="showMenuDrawer" :with-header="false" size="240px">
+    <el-drawer v-model="showMenuDrawer" :with-header="false" :size="isMobile ? '280px' : '240px'">
       <el-menu class="el-menu-vertical-demo" @open="handleOpen" @close="handleClose" style="height: 100%;">
         <template v-for="entry in menuEntries" :key="entry.id">
           <el-sub-menu v-if="entry.type === 'submenu'" :index="entry.id" :class="{ 'is-active': isMenuActive(entry.id) }">
@@ -676,38 +676,123 @@ const updateIsMobile = () => {
 @media (max-width: 768px) {
   .menu-btn {
     display: inline-flex;
-    color: #8ff5ff;
+    font-size: 22px;
+    padding: 6px;
   }
   .brand-title {
-    font-size: 20px;
+    font-size: 17px;
   }
   .header {
-    padding: 10px 12px 0;
+    padding: 8px 10px 0;
+  }
+  .top-bar {
+    gap: 8px;
+  }
+  .left {
+    gap: 6px;
+  }
+  .user-info {
+    gap: 6px;
   }
   .username {
     display: none;
+  }
+  .avatar {
+    height: 32px !important;
+    width: 32px !important;
+  }
+  .logout-button {
+    padding: 6px 10px;
+    font-size: 12px;
+    border-radius: 6px;
   }
   .timer-pill {
     display: none;
   }
   .stopwatch-pill {
     display: inline-flex;
-    padding: 6px 9px;
-    font-size: 12px;
+    padding: 4px 8px;
+    font-size: 11px;
+  }
+  .timer-stop {
+    padding: 4px 8px;
+    font-size: 11px;
+  }
+  .cyber-menu {
+    margin-top: 6px;
+  }
+  :deep(.cyber-menu.el-menu--horizontal > .el-menu-item),
+  :deep(.cyber-menu.el-menu--horizontal > .el-sub-menu .el-sub-menu__title) {
+    height: 38px;
+    line-height: 38px;
+    padding: 0 10px;
+    font-size: 13px;
+  }
+  .content-main {
+    -webkit-overflow-scrolling: touch;
+  }
+  .footer {
+    padding: 10px 8px;
   }
   .mini-player {
     flex-wrap: wrap;
-    gap: 10px;
+    justify-content: center;
+    gap: 8px;
+  }
+  .cover img {
+    width: 34px;
+    height: 34px;
   }
   .info {
-    min-width: 180px;
+    min-width: 0;
+    flex: 1 1 auto;
+    max-width: 180px;
+  }
+  .title {
+    font-size: 12px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .time {
+    font-size: 11px;
+  }
+  .track {
+    cursor: pointer;
   }
   .track .bar {
-    width: 60vw;
-    max-width: none;
+    width: 100%;
+    height: 6px;
+  }
+  .controls {
+    gap: 4px;
+  }
+  .controls .el-button {
+    padding: 6px 8px;
+    font-size: 16px;
   }
   .volume {
-    width: 120px;
+    width: 80px;
+  }
+  .el-menu-vertical-demo .el-sub-menu__title,
+  .el-menu-vertical-demo .el-menu-item {
+    min-height: 44px;
+    display: flex;
+    align-items: center;
+  }
+}
+@media (max-width: 480px) {
+  .brand-title {
+    font-size: 15px;
+  }
+  .mini-player {
+    gap: 4px;
+  }
+  .info {
+    max-width: 130px;
+  }
+  .volume {
+    display: none;
   }
 }
 </style>

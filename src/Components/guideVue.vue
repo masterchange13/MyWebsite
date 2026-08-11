@@ -266,17 +266,60 @@ p {
   margin-top: 4px;
 }
 
-@media (max-width: 900px) {
+@media (max-width: 768px) {
+  .guide-page {
+    padding: 8px;
+  }
   .guide-hero {
     align-items: flex-start;
     flex-direction: column;
+    padding: 12px;
+  }
+  h1 {
+    font-size: 20px;
+  }
+  p {
+    font-size: 13px;
+    line-height: 1.5;
   }
   .quick-actions {
     justify-content: flex-start;
   }
-  .guide-grid,
+  .quick-actions .el-button {
+    font-size: 12px;
+    padding: 6px 12px;
+  }
+  .guide-grid {
+    grid-template-columns: 1fr;
+    gap: 8px;
+    margin-top: 8px;
+  }
+  .guide-card,
+  .workflow {
+    padding: 10px;
+  }
+  .card-title,
+  .section-title {
+    font-size: 15px;
+  }
+  .link-title {
+    font-size: 13px;
+  }
+  .link-desc {
+    font-size: 11px;
+  }
   .steps {
     grid-template-columns: 1fr;
+    gap: 8px;
+  }
+  .step {
+    padding: 10px;
+  }
+  .step-title {
+    font-size: 13px;
+  }
+  .step-text {
+    font-size: 11px;
   }
 }
 </style>

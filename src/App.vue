@@ -57,6 +57,7 @@ html, body {
   margin: 0;
   padding: 0;
   overflow: hidden;
+  -webkit-tap-highlight-color: transparent;
 }
 
 #app {
@@ -211,6 +212,28 @@ body {
 @media (max-width: 900px) {
   .global-petal:nth-child(n+9) {
     display: none;
+  }
+}
+
+/* 移动端触摸优化 */
+button, .el-button, .el-card, .el-menu-item, .el-radio-button, .guide-link {
+  touch-action: manipulation;
+}
+
+@media (max-width: 768px) {
+  .el-dialog {
+    width: 92% !important;
+    max-width: 92vw !important;
+  }
+  .el-drawer {
+    width: 85% !important;
+    max-width: 300px !important;
+  }
+  .el-message {
+    min-width: auto !important;
+    max-width: 85vw;
+    padding: 10px 16px;
+    font-size: 13px;
   }
 }
 </style>

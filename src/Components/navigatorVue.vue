@@ -398,4 +398,48 @@ const onDragEnd = async () => {
   transform: translateY(-1px);
   transition: transform 0.15s ease;
 }
+
+@media (max-width: 768px) {
+  .navigator {
+    padding: 10px;
+  }
+  .title {
+    font-size: 18px;
+  }
+  .card-img {
+    width: 48px;
+    height: 48px;
+  }
+  .card-name {
+    font-size: 12px;
+  }
+  .card-remove {
+    width: 24px;
+    height: 24px;
+    font-size: 18px;
+    top: 4px;
+    right: 4px;
+  }
+  .card-edit {
+    width: 24px;
+    height: 24px;
+    font-size: 16px;
+    top: 4px;
+    right: 30px;
+  }
+  .floating-add {
+    right: 16px;
+    bottom: 24px;
+    width: 52px;
+    height: 52px;
+  }
+  .floating-add img {
+    width: 28px;
+    height: 28px;
+  }
+  .order-toolbar {
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+}
 </style>
