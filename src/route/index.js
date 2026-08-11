@@ -97,6 +97,11 @@ const routes = [
                 component: () => import('@/Components/decisionVue.vue')
             },
             {
+                path: '/email',
+                name: 'email',
+                component: () => import('@/Components/emailVue.vue')
+            },
+            {
                 path: '/guide',
                 name: 'guide',
                 component: () => import('@/Components/guideVue.vue')

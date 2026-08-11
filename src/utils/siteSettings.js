@@ -454,7 +454,8 @@ export const submenuDefinitions = {
     qiMen: { id: 'qiMen', label: 'QiMenDunJia', path: '/qiMen', activePaths: ['/qiMen'] },
     timer: { id: 'timer', label: 'Timer', path: '/timer', activePaths: ['/timer'] },
     calculator: { id: 'calculator', label: 'Calculator', path: '/calculator', activePaths: ['/calculator'] },
-    decision: { id: 'decision', label: 'Decision Helper', path: '/decision', activePaths: ['/decision'] }
+    decision: { id: 'decision', label: 'Decision Helper', path: '/decision', activePaths: ['/decision'] },
+    email: { id: 'email', label: 'Email', path: '/email', activePaths: ['/email'] }
   }
 }
 
@@ -462,7 +463,7 @@ export const defaultTopLevelOrder = ['media', 'tools', 'chat', 'navigator', 'app
 
 export const defaultSubmenuOrders = {
   media: ['video', 'document', 'music', 'transfer', 'todoList'],
-  tools: ['agent', 'qiMen', 'timer', 'calculator', 'decision']
+  tools: ['agent', 'qiMen', 'timer', 'calculator', 'decision', 'email']
 }
 
 export const defaultWebsiteSettings = {
