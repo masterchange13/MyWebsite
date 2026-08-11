@@ -1,0 +1,1 @@
+scp -r /home/mao/code/MyWebsite/MyWebsite/dist/* mao@192.168.1.7:/home/mao/code/web/MyWebsite/dist/
