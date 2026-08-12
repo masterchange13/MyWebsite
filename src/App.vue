@@ -13,10 +13,15 @@
 </template>
 
 <script setup>
-import { computed, watch } from 'vue'
+import { computed, watch, onMounted } from 'vue'
 import { useWebsiteSettingsStore } from '@/stores/websiteSettingsStore'
 
 const websiteSettings = useWebsiteSettingsStore()
+
+onMounted(async () => {
+  await websiteSettings.loadSettings()
+})
+
 const petals = Array.from({ length: 14 }, (_, i) => i + 1)
 
 const getPetalStyle = (i) => {
