@@ -480,14 +480,29 @@ export const defaultWebsiteSettings = {
   submenuOrders: defaultSubmenuOrders
 }
 
-export const normalizeOrder = (order, availableIds) => {
+export const normalizeOrder = (order, availableIds, defaultOrder = null) => {
   const input = Array.isArray(order) ? order : []
   const clean = []
   for (const id of input) {
     if (availableIds.includes(id) && !clean.includes(id)) clean.push(id)
   }
-  for (const id of availableIds) {
-    if (!clean.includes(id)) clean.push(id)
+  // 新增的 ID 按默认顺序插入到最接近的位置，而不是全部放末尾
+  const missing = availableIds.filter(id => !clean.includes(id))
+  if (missing.length) {
+    const ref = defaultOrder || availableIds
+    const sortedMissing = missing.sort((a, b) => ref.indexOf(a) - ref.indexOf(b))
+    for (const id of sortedMissing) {
+      const idealIdx = ref.indexOf(id)
+      // 找到 clean 中第一个在 ref 中位置大于 idealIdx 的项，插入到它前面
+      let pos = clean.length
+      for (let i = 0; i < clean.length; i++) {
+        if (ref.indexOf(clean[i]) > idealIdx) {
+          pos = i
+          break
+        }
+      }
+      clean.splice(pos, 0, id)
+    }
   }
   return clean
 }
