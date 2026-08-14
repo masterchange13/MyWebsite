@@ -20,3 +20,12 @@ app.mount('#app');
 
 // 预取 CSRF cookie（不影响渲染）
 request.get('/csrf/', { showLoading: false, silentError: true }).catch(() => {});
+
+// PWA：注册 Service Worker（仅生产环境）
+if ('serviceWorker' in navigator && import.meta.env.PROD) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('/sw.js').catch((e) => {
+      console.warn('[PWA] Service Worker 注册失败:', e);
+    });
+  });
+}

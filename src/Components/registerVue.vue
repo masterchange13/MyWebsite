@@ -222,12 +222,15 @@ const toLogin = () => router.push('/')
 
 <style scoped>
 .register-page {
-  min-height: 100vh;
+  height: 100vh;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
   display: flex;
   align-items: center;
   justify-content: center;
   background: linear-gradient(180deg, #eef5ff 0%, #f8fbff 100%);
   padding: 24px;
+  box-sizing: border-box;
 }
 .register-container {
   width: 960px;
@@ -296,5 +299,33 @@ const toLogin = () => router.push('/')
 .avatar img {
   width: 48px;
   height: 48px;
+}
+@media (max-width: 900px) {
+  .register-page {
+    align-items: flex-start;
+    padding: 12px;
+  }
+  .register-container {
+    width: min(100%, 560px);
+    grid-template-columns: 1fr;
+  }
+  .left-panel {
+    display: none;   /* 手机端隐藏宣传面板 */
+  }
+  .panel-title {
+    font-size: 17px;
+    margin-bottom: 8px;
+  }
+  .register-form :deep(.el-form-item) {
+    margin-bottom: 12px;
+  }
+  .register-form :deep(.el-form-item__label) {
+    font-size: 13px;
+  }
+  .actions .el-button {
+    width: 100%;
+    padding: 12px;
+    font-size: 16px;
+  }
 }
 </style>

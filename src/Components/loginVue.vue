@@ -342,12 +342,15 @@ onUnmounted(() => {
 }
 
 .login-page {
-  min-height: 100vh;
+  height: 100vh;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
   display: flex;
   align-items: center;
   justify-content: center;
   background: transparent;
   padding: var(--app-page-padding);
+  box-sizing: border-box;
 }
 .login-container {
   width: 960px;
@@ -439,9 +442,50 @@ onUnmounted(() => {
 }
 
 @media (max-width: 900px) {
+  .login-page {
+    align-items: flex-start;
+    padding: 12px;
+  }
   .login-container {
     width: min(100%, 560px);
     grid-template-columns: 1fr;
+  }
+  .left-panel {
+    display: none;   /* 手机端隐藏宣传面板，直接进登录表单 */
+  }
+  .characters-container {
+    gap: 12px;
+    margin-bottom: 12px;
+  }
+  .character {
+    width: 44px;
+    height: 44px;
+  }
+  .eye {
+    width: 7px;
+    height: 7px;
+  }
+  .mouth {
+    width: 9px;
+    height: 4px;
+  }
+  .panel-title {
+    font-size: 17px;
+    margin-bottom: 8px;
+  }
+  .login-form :deep(.el-form-item) {
+    margin-bottom: 12px;
+  }
+  .login-form :deep(.el-form-item__label) {
+    font-size: 13px;
+  }
+  .strength {
+    margin: 0 0 8px;
+  }
+  .actions .el-button {
+    width: 100%;
+    padding: 12px;
+    font-size: 16px;
   }
 }
 </style>
