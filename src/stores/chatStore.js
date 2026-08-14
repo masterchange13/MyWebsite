@@ -4,13 +4,11 @@ import * as chatSocket from '@/websocket/chatSocket'
 import { chatApi } from '@/api/chatApi'
 
 export const useChatStore = defineStore('chat', () => {
-  const ONLINE_SYNC_INTERVAL = 5000
   // ---- 状态 ----
   const onlineUsers = ref(new Set())
   const unreadMessages = ref({})  // { senderUsername: [{ sendUsername, receiveUsername, data, created_time }, ...] }
   const currentPeer = ref('')     // 当前正在聊天的对象
   const isOnChatPage = ref(false)
-  let _onlineSyncTimer = null
 
   // ---- 计算 ----
   function getUnreadCount(username) {
@@ -76,19 +74,13 @@ export const useChatStore = defineStore('chat', () => {
     }
   }
 
+  // 不再使用 HTTP 轮询 —— WebSocket 会实时推送 online_snapshot / online_status 事件
   function startOnlineSync() {
-    if (_onlineSyncTimer) return
     fetchOnlineUsers()
-    _onlineSyncTimer = window.setInterval(() => {
-      fetchOnlineUsers()
-    }, ONLINE_SYNC_INTERVAL)
   }
 
   function stopOnlineSync() {
-    if (_onlineSyncTimer) {
-      window.clearInterval(_onlineSyncTimer)
-      _onlineSyncTimer = null
-    }
+    // 保留接口兼容，无轮询可清理
   }
 
   let _socketBound = false
