@@ -223,6 +223,7 @@ const toLogin = () => router.push('/')
 <style scoped>
 .register-page {
   height: 100vh;
+  height: 100dvh;
   overflow-y: auto;
   -webkit-overflow-scrolling: touch;
   display: flex;
@@ -303,7 +304,7 @@ const toLogin = () => router.push('/')
 @media (max-width: 900px) {
   .register-page {
     align-items: flex-start;
-    padding: 12px;
+    padding: 12px 12px calc(12px + env(safe-area-inset-bottom));
   }
   .register-container {
     width: min(100%, 560px);

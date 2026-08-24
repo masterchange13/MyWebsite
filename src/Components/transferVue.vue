@@ -77,7 +77,7 @@
       </div>
     </el-card>
 
-    <el-dialog v-model="showPreview" :title="previewTitle" width="860px">
+    <el-dialog v-model="showPreview" :title="previewTitle" width="min(860px, 92vw)">
       <div class="preview-body">
         <img v-if="previewType === 'image'" :src="previewUrl" class="preview-image" />
         <div v-else-if="previewType === 'audio'" class="preview-audio-wrap">

@@ -189,4 +189,24 @@ watch(() => route.params.id, () => {
   justify-content: center;
   gap: 12px;
 }
+
+/* 移动端：表单 label 顶部布局 */
+@media (max-width: 768px) {
+  .profile-page {
+    padding: 10px;
+  }
+  .header,
+  .body {
+    max-width: 100%;
+  }
+  .form :deep(.el-form-item) {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .form :deep(.el-form-item__label) {
+    width: auto !important;
+    justify-content: flex-start;
+    margin-bottom: 4px;
+  }
+}
 </style>

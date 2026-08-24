@@ -109,4 +109,17 @@ const value = ref(80)
   border-radius: 8px;
   box-shadow: 0 10px 24px rgba(0,0,0,0.25);
 }
+
+/* 移动端：滑块全宽，避免溢出 */
+@media (max-width: 768px) {
+  .video-page {
+    padding: 10px;
+  }
+  .tools {
+    flex-wrap: wrap;
+  }
+  .size-slider {
+    width: 100%;
+  }
+}
 </style>

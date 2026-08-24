@@ -1011,7 +1011,10 @@ const formatCommentTime = (s) => {
   }
   .edit-toggle {
     right: 16px;
-    bottom: 24px;
+    bottom: calc(76px + env(safe-area-inset-bottom)); /* 避开全局 mini-player 底栏 */
+  }
+  .editor-body {
+    height: 320px; /* 520px → 320px，减少移动端滚动距离 */
   }
   .toggle-btn {
     font-size: 13px !important;

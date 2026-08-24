@@ -109,6 +109,31 @@ export default {
             }
         }
     }
+
+    /* ===== 移动端：列表行压缩 ===== */
+    @media (max-width: 768px) {
+        .list-box {
+            padding: 0 12px;
+        }
+    }
+
+    @media (max-width: 480px) {
+        .list {
+            .song-time {
+                display: none;
+            }
+
+            .arties {
+                display: none;
+            }
+
+            .song-name {
+                width: auto;
+                flex: 1;
+                min-width: 0;
+            }
+        }
+    }
 }
 </style>
 <style lang="less">

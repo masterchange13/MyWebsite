@@ -164,4 +164,31 @@ onMounted(() => {
 .favorite-icon:hover {
     transform: scale(1.2);
 }
+
+/* ===== 移动端：列表行压缩 ===== */
+@media (max-width: 768px) {
+    .list-box {
+        padding: 0 12px;
+    }
+
+    .play-icon {
+        display: none; /* 空容器，移动端隐藏 */
+    }
+}
+
+@media (max-width: 480px) {
+    .song-time {
+        display: none;
+    }
+
+    .arties {
+        display: none;
+    }
+
+    .song-name {
+        width: auto;
+        flex: 1;
+        min-width: 0;
+    }
+}
 </style>

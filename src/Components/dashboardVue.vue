@@ -371,6 +371,7 @@ const updateIsMobile = () => {
 <style scoped>
 .el-container {
   height: 100vh;
+  height: 100dvh;
   display: flex;
   flex-direction: column;
   overflow: hidden;
@@ -683,7 +684,7 @@ const updateIsMobile = () => {
     font-size: 17px;
   }
   .header {
-    padding: 8px 10px 0;
+    padding: calc(8px + env(safe-area-inset-top)) 10px 0;
   }
   .top-bar {
     gap: 8px;
@@ -732,7 +733,7 @@ const updateIsMobile = () => {
     -webkit-overflow-scrolling: touch;
   }
   .footer {
-    padding: 10px 8px;
+    padding: 10px 8px calc(10px + env(safe-area-inset-bottom));
   }
   .mini-player {
     flex-wrap: wrap;

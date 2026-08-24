@@ -343,6 +343,7 @@ onUnmounted(() => {
 
 .login-page {
   height: 100vh;
+  height: 100dvh;
   overflow-y: auto;
   -webkit-overflow-scrolling: touch;
   display: flex;
@@ -444,7 +445,7 @@ onUnmounted(() => {
 @media (max-width: 900px) {
   .login-page {
     align-items: flex-start;
-    padding: 12px;
+    padding: 12px 12px calc(12px + env(safe-area-inset-bottom));
   }
   .login-container {
     width: min(100%, 560px);

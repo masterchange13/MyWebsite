@@ -436,10 +436,12 @@ onMounted(async () => {
 @media (max-width: 900px) {
   .layout {
     grid-template-columns: 1fr;
+    grid-template-rows: auto 1fr; /* 侧栏自适应，主区占余下高度 */
   }
   .sidebar {
     border-right: none;
     border-bottom: 1px solid rgba(0, 255, 255, 0.14);
+    max-height: 40vh; /* 移动端限制会话列表高度，内部滚动 */
   }
   .bubble {
     max-width: 90%;

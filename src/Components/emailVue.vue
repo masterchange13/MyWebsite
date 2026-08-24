@@ -130,12 +130,13 @@
 </template>
 
 <script setup>
-import { ref, reactive, onMounted } from 'vue'
+import { ref, reactive, onMounted, onUnmounted } from 'vue'
 import { UploadFilled } from '@element-plus/icons-vue'
 import { emailApi } from '@/api/emailApi'
 import { ElMessage } from 'element-plus'
 
 const isMobile = ref(window.innerWidth < 768)
+const updateIsMobile = () => { isMobile.value = window.innerWidth < 768 }
 const uploadRef = ref(null)
 
 const form = reactive({ to: '', subject: '', body: '' })
@@ -263,8 +264,14 @@ const clearHistory = async () => {
 }
 
 onMounted(() => {
+  updateIsMobile()
+  window.addEventListener('resize', updateIsMobile)
   loadConfig()
   loadHistory()
+})
+
+onUnmounted(() => {
+  window.removeEventListener('resize', updateIsMobile)
 })
 </script>
 

@@ -526,7 +526,7 @@ onUnmounted(() => {
     height: 240px;
   }
   .symbol-panel {
-    width: 280px;
+    width: min(280px, calc(100vw - 24px));
     min-height: 200px;
     grid-template-columns: repeat(5, minmax(0, 1fr));
   }

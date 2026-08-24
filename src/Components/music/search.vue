@@ -197,6 +197,50 @@ export default {
             }
         }
     }
+
+    /* ===== 移动端：列表行压缩 ===== */
+    @media (max-width: 768px) {
+        .search-box {
+            padding: 6px 12px;
+        }
+
+        .list-box {
+            padding: 0 12px;
+        }
+
+        .list {
+            font-size: 14px;
+
+            .song-name {
+                width: 44%;
+            }
+
+            .play-icon {
+                display: none; /* 空容器，移动端隐藏 */
+            }
+        }
+    }
+
+    @media (max-width: 480px) {
+        .list {
+            .song-time {
+                display: none;
+            }
+
+            .arties {
+                display: none;
+            }
+
+            .song-name {
+                width: auto;
+                flex: 1;
+                min-width: 0;
+                overflow: hidden;
+                text-overflow: ellipsis;
+                white-space: nowrap;
+            }
+        }
+    }
 }
 </style>
 <style lang="less">
@@ -228,6 +272,13 @@ export default {
 
     .el-input-focus-border {
         color: #40ce8f;
+    }
+}
+
+/* 移动端：搜索框全宽（必须与 320px 规则同属 unscoped 块才能覆盖） */
+@media (max-width: 768px) {
+    .search-box .search-input {
+        width: 100%;
     }
 }
 </style>

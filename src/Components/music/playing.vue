@@ -188,5 +188,57 @@ export default {
             }
         }
     }
+
+    /* ===== 移动端：唱片 + 歌词上下堆叠 ===== */
+    @media (max-width: 768px) {
+        .song-cover-lyric {
+            flex-direction: column;
+            padding-bottom: 8px;
+
+            .disc-continer {
+                width: 100%;
+                height: auto;
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                padding-top: 10px;
+
+                .poster {
+                    width: 170px;
+                    height: 170px;
+                    top: 0;
+                    left: 0;
+                    margin-left: 0;
+                    margin-bottom: 12px;
+                    box-shadow: 0 0 0 8px rgba(255, 255, 255, 0.4);
+                }
+
+                .song-name {
+                    font-size: 18px;
+                    height: 26px;
+                    line-height: 26px;
+                }
+
+                .song-artistsName {
+                    font-size: 14px;
+                    height: 22px;
+                    line-height: 22px;
+                    margin-top: 4px;
+                }
+            }
+
+            .lyric {
+                width: 100%;
+                height: auto;
+                flex: 1;
+                min-height: 0;
+                padding-top: 20px;
+
+                .music-lyric .music-lyric-items {
+                    font-size: 14px;
+                }
+            }
+        }
+    }
 }
 </style>
