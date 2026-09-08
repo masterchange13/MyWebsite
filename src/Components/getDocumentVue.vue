@@ -30,7 +30,7 @@
         <div class="blog-list" v-if="displayedFiles.length > 0">
           <article
             v-for="(file, index) in displayedFiles"
-            :key="file.create_time"
+            :key="file.id"
             class="blog-card"
             :style="{ animationDelay: `${index * 0.05}s` }"
             @click="showDocument(file.id)"
@@ -48,7 +48,7 @@
                   <span class="author-avatar">{{ (file.author || '?')[0].toUpperCase() }}</span>
                   {{ file.author }}
                 </span>
-                <span class="meta-time">{{ formatTime(file.create_time) }}</span>
+                <span class="meta-time">{{ formatTime(file.update_time || file.created_time) }}</span>
               </div>
               <h2 class="card-title">{{ getTitle(file) }}</h2>
               <p class="card-excerpt">{{ getExcerpt(file.content) }}</p>
@@ -113,6 +113,7 @@
     }
 
     const formatTime = (time) => {
+        if (!time) return ''
         return dayjs(time).format('YYYY-MM-DD')
     }
 
