@@ -330,6 +330,7 @@ const formatTime = (timeStr) => {
 
 .todo-title {
   flex: 1;
+  min-width: 0;
   font-size: 17px;
   font-weight: 500;
   color: #d8f8ff;
@@ -347,6 +348,7 @@ const formatTime = (timeStr) => {
   display: flex;
   gap: 8px;
   flex-wrap: wrap;
+  min-width: 0;
 }
 
 .time {
@@ -462,6 +464,36 @@ const formatTime = (timeStr) => {
   }
   .header h1 {
     font-size: 22px;
+  }
+  .todoapp {
+    border-radius: 10px;
+  }
+  .todo {
+    margin: 6px 8px;
+  }
+  /* 两行布局：第一行 勾选框+标题，第二行 时间+删除按钮 */
+  .view {
+    flex-wrap: wrap;
+    padding: 10px 12px;
+  }
+  .todo-title {
+    flex: 1 1 calc(100% - 42px); /* 与勾选框同行占满剩余宽度，文字正常换行 */
+    font-size: 15px;
+    line-height: 1.5;
+  }
+  .todo-time {
+    order: 3;
+    flex: 1 1 auto;
+    margin: 6px 0 0 32px; /* 与标题左对齐 */
+  }
+  .time {
+    font-size: 11px;
+  }
+  .destroy {
+    order: 4;
+    width: 32px;
+    height: 32px;
+    align-self: flex-end;
   }
 }
 </style>
