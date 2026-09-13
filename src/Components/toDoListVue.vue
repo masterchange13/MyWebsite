@@ -468,8 +468,15 @@ const formatTime = (timeStr) => {
   .todoapp {
     border-radius: 10px;
   }
+  /* 备忘卡片 2 列排布：一行显示多个待办 */
+  .todo-list {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 8px;
+    margin: 10px 8px 0;
+  }
   .todo {
-    margin: 6px 8px;
+    margin: 0;
   }
   /* 两行布局：第一行 勾选框+标题，第二行 时间+删除按钮 */
   .view {
@@ -478,8 +485,8 @@ const formatTime = (timeStr) => {
   }
   .todo-title {
     flex: 1 1 calc(100% - 42px); /* 与勾选框同行占满剩余宽度，文字正常换行 */
-    font-size: 15px;
-    line-height: 1.5;
+    font-size: 14px;
+    line-height: 1.45;
   }
   .todo-time {
     order: 3;
