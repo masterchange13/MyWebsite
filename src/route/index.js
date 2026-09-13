@@ -120,6 +120,11 @@ const routes = [
                 path: '/siteSettings',
                 name: 'siteSettings',
                 component: () => import('@/Components/siteSettingsVue.vue')
+            },
+            {
+                path: '/timetable',
+                name: 'timetable',
+                component: () => import('@/Components/timetableVue.vue')
             }
         ]
     },

@@ -455,7 +455,8 @@ export const submenuDefinitions = {
     timer: { id: 'timer', label: 'Timer', path: '/timer', activePaths: ['/timer'] },
     calculator: { id: 'calculator', label: 'Calculator', path: '/calculator', activePaths: ['/calculator'] },
     decision: { id: 'decision', label: 'Decision Helper', path: '/decision', activePaths: ['/decision'] },
-    email: { id: 'email', label: 'Email', path: '/email', activePaths: ['/email'] }
+    email: { id: 'email', label: 'Email', path: '/email', activePaths: ['/email'] },
+    timetable: { id: 'timetable', label: '课表', path: '/timetable', activePaths: ['/timetable'] }
   }
 }
 
@@ -463,7 +464,7 @@ export const defaultTopLevelOrder = ['media', 'tools', 'chat', 'navigator', 'app
 
 export const defaultSubmenuOrders = {
   media: ['video', 'document', 'music', 'transfer', 'todoList'],
-  tools: ['agent', 'qiMen', 'timer', 'calculator', 'decision', 'email']
+  tools: ['agent', 'qiMen', 'timer', 'calculator', 'decision', 'email', 'timetable']
 }
 
 export const defaultWebsiteSettings = {
