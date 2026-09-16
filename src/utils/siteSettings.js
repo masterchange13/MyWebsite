@@ -438,7 +438,8 @@ export const topLevelMenuDefinitions = {
   guide: { id: 'guide', type: 'item', label: 'Guide', icon: 'Setting', path: '/guide', activePaths: ['/guide'] },
   feedback: { id: 'feedback', type: 'item', label: 'Feedback', icon: 'Document', path: '/feedback', activePaths: ['/feedback'] },
   author: { id: 'author', type: 'item', label: 'Author', icon: 'User', path: '/author', activePaths: ['/author'] },
-  siteSettings: { id: 'siteSettings', type: 'item', label: 'Site Settings', icon: 'Setting', path: '/siteSettings', activePaths: ['/siteSettings'] }
+  siteSettings: { id: 'siteSettings', type: 'item', label: 'Site Settings', icon: 'Setting', path: '/siteSettings', activePaths: ['/siteSettings'] },
+  systemMonitor: { id: 'systemMonitor', type: 'item', label: '系统监控', icon: 'Monitor', path: '/systemMonitor', activePaths: ['/systemMonitor'] }
 }
 
 export const submenuDefinitions = {
@@ -460,7 +461,7 @@ export const submenuDefinitions = {
   }
 }
 
-export const defaultTopLevelOrder = ['media', 'tools', 'chat', 'navigator', 'appLauncher', 'blog', 'guide', 'feedback', 'author', 'siteSettings']
+export const defaultTopLevelOrder = ['media', 'tools', 'chat', 'navigator', 'appLauncher', 'blog', 'guide', 'feedback', 'author', 'siteSettings', 'systemMonitor']
 
 export const defaultSubmenuOrders = {
   media: ['video', 'document', 'music', 'transfer', 'todoList'],

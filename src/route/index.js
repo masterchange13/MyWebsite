@@ -125,6 +125,11 @@ const routes = [
                 path: '/timetable',
                 name: 'timetable',
                 component: () => import('@/Components/timetableVue.vue')
+            },
+            {
+                path: '/systemMonitor',
+                name: 'systemMonitor',
+                component: () => import('@/Components/systemMonitorVue.vue')
             }
         ]
     },

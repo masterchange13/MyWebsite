@@ -142,7 +142,7 @@ import { userApi } from "@/api/userApi";
 import * as chatSocket from "@/websocket/chatSocket";
 import { playMessageSound, sendNotification, requestNotificationPermission } from "@/utils/notify";
 import { getOrderedTopLevelMenu } from "@/utils/siteSettings";
-import { Document, Menu as IconMenu, Location, Setting, User } from "@element-plus/icons-vue";
+import { Document, Menu as IconMenu, Location, Setting, User, Monitor } from "@element-plus/icons-vue";
 
 const userStore = useUserStore();
 const websiteSettings = useWebsiteSettingsStore();
@@ -157,7 +157,8 @@ const iconMap = {
   IconMenu,
   Location,
   Setting,
-  User
+  User,
+  Monitor
 }
 
 const resolveIcon = (iconName: string) => iconMap[iconName as keyof typeof iconMap] || Setting
