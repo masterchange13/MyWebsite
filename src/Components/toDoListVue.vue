@@ -23,7 +23,7 @@
         <li
           v-for="todo in filteredTodos"
           class="todo"
-          :key="todo.time"
+          :key="todo.id"
           :class="{ completed: todo.completed, editing: todo === editedTodo }" 
         >
         <div class="view">
@@ -35,6 +35,7 @@
             <span class="time created">创建 {{ formatTime(todo.created_time) }}</span>
             <span class="time updated">更新 {{ formatTime(todo.updated_time) }}</span>
           </div>
+          <button class="edit-button" type="button" @click="editTodo(todo)">编辑</button>
           <button class="destroy" @click="removeTodo(todo)"></button>
         </div>
 
@@ -42,10 +43,11 @@
             v-if="todo === editedTodo"
             class="edit"
             type="text"
-            v-model="todo.title"
+            v-model="editTitle"
+            :disabled="savingEdit"
             @vue:mounted="({ el }) => el.focus()"
             @blur="doneEdit(todo)"
-            @keyup.enter="doneEdit(todo)"
+            @keyup.enter="!$event.isComposing && doneEdit(todo)"
             @keyup.escape="cancelEdit(todo)"
           >
         </li>
@@ -104,6 +106,8 @@ const filters = {
 const todos = ref(JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]'))
 const visibility = ref('all')
 const editedTodo = ref()
+const editTitle = ref('')
+const savingEdit = ref(false)
 
 toDoApi.getAllTodo().then(response => {
   todos.value = response.data
@@ -128,18 +132,15 @@ function toggleAll(e) {
 function addTodo(e) {
   const value = e.target.value.trim()
     const data = {
-      time: Date.now(),
       title: value,
-      completed: false,
-      created_time: Date.now(),
-      updated_time: Date.now()
+      completed: false
     }
     if (!value) {
       return
     }
     toDoApi.addTodo(data).then(response => {
       if (response.code === 200) {
-        todos.value.push(data)
+        todos.value.push(response.data)
         e.target.value = ''
         console.log(response);
       }else{
@@ -160,29 +161,45 @@ function removeTodo(todo) {
   })
 }
 
-let beforeEditCache = ''
 function editTodo(todo) {
-  beforeEditCache = todo.title
+  if (savingEdit.value) return
+  editTitle.value = todo.title
   editedTodo.value = todo
 }
 
 function cancelEdit(todo) {
+  if (savingEdit.value || editedTodo.value !== todo) return
   editedTodo.value = null
-  todo.title = beforeEditCache
+  editTitle.value = ''
 }
 
-function doneEdit(todo) {
-  if (editedTodo.value) {
-    editedTodo.value = null
-    todo.title = todo.title.trim()
-    toDoApi.doneEdit(todo).then(response => {
-      if (response.code === 200) {
-        ElMessage.success(response.data)
-        console.log(response);
-      }else{
-        ElMessage.error(response.msg)
-      } 
-    })
+async function doneEdit(todo) {
+  if (editedTodo.value !== todo || savingEdit.value) return
+  const title = editTitle.value.trim()
+  if (!title) {
+    ElMessage.warning('待办内容不能为空')
+    return
+  }
+  if (title === todo.title) {
+    cancelEdit(todo)
+    return
+  }
+
+  savingEdit.value = true
+  try {
+    const response = await toDoApi.doneEdit({ id: todo.id, title })
+    if (response.code === 200) {
+      Object.assign(todo, response.data)
+      editedTodo.value = null
+      editTitle.value = ''
+      ElMessage.success('修改成功')
+    } else {
+      ElMessage.error(response.message || response.msg || '修改失败，请重试')
+    }
+  } catch {
+    // 请求层已显示错误；保留草稿，方便重试。
+  } finally {
+    savingEdit.value = false
   }
 }
 
@@ -390,6 +407,17 @@ const formatTime = (timeStr) => {
   line-height: 1;
 }
 
+.edit-button {
+  flex-shrink: 0;
+  min-height: 36px;
+  padding: 0 10px;
+  border: 1px solid rgba(0, 255, 255, 0.25);
+  border-radius: 8px;
+  background: rgba(0, 255, 255, 0.08);
+  color: #9ef7ff;
+  cursor: pointer;
+}
+
 .edit {
   width: calc(100% - 28px);
   margin: 0 14px 12px;
@@ -477,6 +505,11 @@ const formatTime = (timeStr) => {
   }
   .todo {
     margin: 0;
+    min-width: 0;
+  }
+  .edit-button {
+    order: 4;
+    min-height: 44px;
   }
   /* 两行布局：第一行 勾选框+标题，第二行 时间+删除按钮 */
   .view {
