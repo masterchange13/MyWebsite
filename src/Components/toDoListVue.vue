@@ -35,7 +35,6 @@
             <span class="time created">创建 {{ formatTime(todo.created_time) }}</span>
             <span class="time updated">更新 {{ formatTime(todo.updated_time) }}</span>
           </div>
-          <button class="edit-button" type="button" @click="editTodo(todo)">编辑</button>
           <button class="destroy" @click="removeTodo(todo)"></button>
         </div>
 
@@ -407,17 +406,6 @@ const formatTime = (timeStr) => {
   line-height: 1;
 }
 
-.edit-button {
-  flex-shrink: 0;
-  min-height: 36px;
-  padding: 0 10px;
-  border: 1px solid rgba(0, 255, 255, 0.25);
-  border-radius: 8px;
-  background: rgba(0, 255, 255, 0.08);
-  color: #9ef7ff;
-  cursor: pointer;
-}
-
 .edit {
   width: calc(100% - 28px);
   margin: 0 14px 12px;
@@ -506,10 +494,6 @@ const formatTime = (timeStr) => {
   .todo {
     margin: 0;
     min-width: 0;
-  }
-  .edit-button {
-    order: 4;
-    min-height: 44px;
   }
   /* 两行布局：第一行 勾选框+标题，第二行 时间+删除按钮 */
   .view {
