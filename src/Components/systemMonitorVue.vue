@@ -4,11 +4,14 @@
     <div class="sm-header">
       <div class="sm-heading">
         <h2 class="sm-title">系统监控</h2>
-        <p class="sm-subtitle" v-if="status.hostname">{{ status.hostname }} · {{ status.platform }}</p>
+        <p class="sm-subtitle" v-if="status.hostname">{{ status.hostname }} · {{ platformLabel }} · {{ status.platform_info.machine }}</p>
+        <p class="sm-subtitle" v-if="lastUpdate">{{ status.platform_info.mode === 'auto' ? '自动识别服务器平台' : '使用部署时的平台设置' }}<template v-if="status.platform_info.model"> · {{ status.platform_info.model }}</template></p>
       </div>
       <div class="sm-refresh">
-        <span class="sm-dot" :class="{ live: !authError && !loading }"></span>
+        <span class="sm-dot" :class="{ live: !!lastUpdate && !authError && !errorMessage }"></span>
         <span>{{ lastUpdateText }}</span>
+        <span v-if="!authError">· 每 5 秒自动刷新</span>
+        <el-button size="small" :loading="inFlight" @click="loadStatus">刷新</el-button>
       </div>
     </div>
 
@@ -24,8 +27,16 @@
       <p>加载中...</p>
     </div>
 
+    <div v-else-if="errorMessage && !lastUpdate" class="sm-state" role="alert">
+      <div class="sm-state-icon">⚠️</div>
+      <p>{{ errorMessage }}</p>
+      <el-button @click="loadStatus" :loading="inFlight">重试</el-button>
+    </div>
+
     <!-- 内容 -->
     <div v-else class="sm-content">
+      <el-alert v-if="errorMessage" :title="errorMessage + '；当前保留上次成功获取的数据。'" type="warning" :closable="false" show-icon />
+      <el-alert v-for="warning in status.warnings" :key="warning" :title="warning" type="warning" :closable="false" show-icon />
       <!-- 统计卡 -->
       <div class="sm-grid">
         <!-- CPU -->
@@ -55,6 +66,7 @@
           <div class="sm-big">{{ disk.percent != null ? disk.percent.toFixed(1) + '%' : '--' }}</div>
           <el-progress v-if="disk.percent != null" :percentage="Math.round(disk.percent)" :stroke-width="8" :show-text="false" />
           <div class="sm-sub">剩余 {{ formatBytes(disk.free) }} / {{ formatBytes(disk.total) }}</div>
+          <div class="sm-sub">监控分区：{{ disk.mount }}</div>
         </div>
 
         <!-- 温度 -->
@@ -66,7 +78,7 @@
           <span v-if="temperature.cpu_celsius != null" class="sm-temp-badge" :class="tempLevel">
             🌡 {{ tempLevelText }}
           </span>
-          <div class="sm-sub">{{ temperature.source === 'thermal_zone' ? '树莓派热区' : temperature.source === 'psutil' ? '传感器' : '无传感器数据' }}</div>
+          <div class="sm-sub">{{ temperatureText }}</div>
         </div>
 
         <!-- 运行时间 -->
@@ -85,7 +97,7 @@
             <div class="sm-load-row"><span>15 分钟</span><strong>{{ cpu.load[2] }}</strong></div>
           </div>
           <div v-else class="sm-big sm-uptime">--</div>
-          <div class="sm-sub">系统负载（仅 Linux）</div>
+          <div class="sm-sub">{{ status.platform === 'Windows' ? 'Windows 不提供该负载指标' : '系统负载（1 / 5 / 15 分钟）' }}</div>
         </div>
 
         <!-- 网络 -->
@@ -138,6 +150,8 @@ const POLL_MS = 5000
 
 const status = reactive({
   hostname: '', platform: '', boot_time: null, uptime_seconds: null,
+  platform_info: { mode: 'auto', label: '', machine: '', model: '', collector: '' },
+  warnings: [],
   cpu: { percent: null, core_count: null, freq_mhz: null, per_core: null, load: null },
   memory: { total: null, used: null, available: null, percent: null },
   disk: { total: null, used: null, free: null, percent: null, mount: '/' },
@@ -149,14 +163,25 @@ const memHistory = ref([])
 const tempHistory = ref([])
 const loading = ref(true)
 const authError = ref(false)
+const errorMessage = ref('')
 const lastUpdate = ref(null)
 let pollTimer = null
 const inFlight = ref(false)
+let disposed = false
+let requestController = null
 
 const cpu = computed(() => status.cpu)
 const memory = computed(() => status.memory)
 const disk = computed(() => status.disk)
 const temperature = computed(() => status.temperature)
+const platformLabel = computed(() => status.platform_info.label || status.platform)
+const temperatureText = computed(() => {
+  if (temperature.value.source === 'thermal_zone') {
+    return status.platform_info.collector === 'raspberrypi' ? '树莓派 CPU 热区' : 'Linux CPU 热区'
+  }
+  if (temperature.value.source === 'psutil') return 'CPU 温度传感器'
+  return status.platform === 'Windows' ? 'Windows 暂无可用的 CPU 温度传感器' : '未检测到可读取的 CPU 温度传感器'
+})
 
 const tempLevel = computed(() => {
   const t = status.temperature.cpu_celsius
@@ -199,43 +224,83 @@ function pushSample(target, value) {
 }
 
 async function loadStatus() {
-  if (inFlight.value) return
+  if (inFlight.value || disposed) return
   inFlight.value = true
+  requestController = new AbortController()
   try {
-    const res = await systemApi.getStatus()
+    const res = await systemApi.getStatus({ signal: requestController.signal })
+    if (disposed) return
     if (res.code === 200) {
-      const d = res.data || {}
-      Object.assign(status, d)
+      const d = res.data
+      if (!d || !d.cpu || !d.memory || !d.disk || !d.network || !d.temperature) {
+        throw new Error('系统监控返回的数据不完整，请检查后端版本。')
+      }
+      for (const key of ['cpu', 'memory', 'disk', 'temperature', 'network', 'platform_info']) {
+        Object.assign(status[key], d[key] || {})
+      }
+      for (const key of ['hostname', 'platform', 'boot_time', 'uptime_seconds']) {
+        status[key] = d[key] ?? null
+      }
+      status.network.interfaces = d.network.interfaces || []
+      status.warnings = d.warnings || []
+      authError.value = false
+      errorMessage.value = ''
       pushSample(cpuHistory, d.cpu?.percent ?? null)
       pushSample(memHistory, d.memory?.percent ?? null)
       pushSample(tempHistory, d.temperature?.cpu_celsius ?? null)
       lastUpdate.value = new Date()
+    } else if (res.code === 401) {
+      authError.value = true
+    } else {
+      errorMessage.value = res.message || '系统监控暂时不可用，请重试。'
     }
   } catch (err) {
+    if (disposed || err?.code === 'ERR_CANCELED') return
     if (err?.response?.status === 401) {
       authError.value = true
-      stopPolling()
     } else {
-      console.log(err)
+      errorMessage.value = err?.response?.data?.message || (
+        ['ECONNABORTED', 'ETIMEDOUT'].includes(err?.code)
+          ? '获取系统状态超时，请检查后端服务是否正常运行。'
+          : err?.response?.status
+            ? `获取系统状态失败（HTTP ${err.response.status}），请检查后端服务。`
+            : err?.message === 'Network Error'
+              ? '无法连接监控服务，请检查网络和后端地址。'
+              : err?.message || '获取系统状态失败，请重试。'
+      )
     }
   } finally {
     inFlight.value = false
+    loading.value = false
+    requestController = null
+    if (authError.value) stopPolling()
+    else startPolling()
+  }
+}
+
+function startPolling() {
+  if (pollTimer === null && !disposed && !authError.value) {
+    pollTimer = setInterval(loadStatus, POLL_MS)
   }
 }
 
 function stopPolling() {
-  if (pollTimer) {
+  if (pollTimer !== null) {
     clearInterval(pollTimer)
     pollTimer = null
   }
 }
 
 onMounted(() => {
+  startPolling()
   loadStatus()
-  pollTimer = setInterval(loadStatus, POLL_MS)
 })
 
-onBeforeUnmount(stopPolling)
+onBeforeUnmount(() => {
+  disposed = true
+  stopPolling()
+  requestController?.abort()
+})
 
 /* ===== 走势图卡片（内联 SVG，单序列迷你面积图） ===== */
 const SparkCard = defineComponent({
@@ -298,10 +363,10 @@ const SparkCard = defineComponent({
       if (!list.length) return
       const rect = e.currentTarget.getBoundingClientRect()
       const ratio = (e.clientX - rect.left) / rect.width
-      const index = Math.round(ratio * (list.length - 1))
+      const index = Math.max(0, Math.min(list.length - 1, Math.round(ratio * (list.length - 1))))
       const p = list[index]
       const { min, max } = bounds.value
-      const x = (index / (list.length - 1)) * W
+      const x = list.length === 1 ? W / 2 : (index / (list.length - 1)) * W
       const y = H - ((p.v - min) / (max - min)) * H
       hover.value = { x, y, v: p.v, t: p.t }
     }
