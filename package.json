@@ -6,7 +6,8 @@
   "scripts": {
     "dev": "vite",
     "build": "vite build",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "test:audio": "node --test tests/audioSeek.test.js tests/AudioProgress.test.js tests/mediaCache.test.js"
   },
   "dependencies": {
     "@element-plus/icons-vue": "^2.3.1",

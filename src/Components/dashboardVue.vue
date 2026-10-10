@@ -110,10 +110,8 @@
         <div class="info">
           <div class="title">{{ title }}</div>
           <div class="time">{{ currentTimeFormatted }} / {{ durationFormatted }}</div>
-          <div class="track" ref="trackRef" @click="clickProgress">
-            <div class="bar">
-              <div class="bar-progress" :style="{ width: progress + '%' }"></div>
-            </div>
+          <div class="track">
+            <AudioProgress :percent="progress" :disabled="!Number.isFinite(duration) || duration <= 0" label="底部播放器播放进度" @seek="seekProgress" />
           </div>
         </div>
         <div class="controls">
@@ -143,6 +141,8 @@ import * as chatSocket from "@/websocket/chatSocket";
 import { playMessageSound, sendNotification, requestNotificationPermission } from "@/utils/notify";
 import { getOrderedTopLevelMenu } from "@/utils/siteSettings";
 import { Document, Menu as IconMenu, Location, Setting, User, Monitor } from "@element-plus/icons-vue";
+import AudioProgress from '@/Components/music/AudioProgress.vue';
+import { seekAudio } from '@/utils/audioSeek';
 
 const userStore = useUserStore();
 const websiteSettings = useWebsiteSettingsStore();
@@ -259,7 +259,6 @@ const toProfile = async () => {
 const toTimer = () => router.push("/timer");
 
 const audioRef = ref<HTMLAudioElement | null>(null);
-const trackRef = ref<HTMLElement | null>(null);
 const isPlaying = ref(false);
 const title = ref<string>("");
 const cover = ref<string>("");
@@ -352,14 +351,8 @@ const nextSong = () => {
   window.dispatchEvent(new Event("global-player-next"));
 };
 
-const clickProgress = (e: MouseEvent) => {
-  if (!audioRef.value || !trackRef.value || !isFinite(audioRef.value.duration)) return;
-  const rect = trackRef.value.getBoundingClientRect();
-  let percent = (e.clientX - rect.left) / rect.width;
-  percent = Math.max(0, Math.min(1, percent));
-  const target = percent * audioRef.value.duration;
-  if ((audioRef.value as any).fastSeek) (audioRef.value as any).fastSeek(target);
-  else audioRef.value.currentTime = target;
+const seekProgress = (percent: number) => {
+  if (seekAudio(audioRef.value, percent)) syncAudioProgress();
 };
 
 const isMobile = ref(false)
@@ -654,17 +647,8 @@ const updateIsMobile = () => {
   font-size: 12px;
   color: var(--app-text-soft);
 }
-.track .bar {
+.track {
   width: 280px;
-  height: 4px;
-  background: var(--app-surface-soft-alt);
-  border-radius: 4px;
-  position: relative;
-}
-.track .bar-progress {
-  height: 100%;
-  background: linear-gradient(90deg, var(--app-accent) 0%, var(--app-accent-alt) 100%);
-  border-radius: 4px;
 }
 .controls {
   display: flex;
@@ -761,10 +745,7 @@ const updateIsMobile = () => {
   }
   .track {
     cursor: pointer;
-  }
-  .track .bar {
     width: 100%;
-    height: 6px;
   }
   .controls {
     gap: 4px;

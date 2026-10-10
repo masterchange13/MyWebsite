@@ -42,13 +42,7 @@
                     <div>{{ currentTime }}/{{ audioTime }}</div>
                 </div>
                 <div class="process-container">
-                    <div class="process-bar" ref="trackRef" @click="clickProgress">
-                        <div class="progress-box" :style="{ width: audioProgressPercent }">
-                            <div class="play-point" :style="{ transform: 'translateX(' + thumbTranslateX + 'px)' }">
-                                <img src="../assets/dot_01.png" alt="" />
-                            </div>
-                        </div>
-                    </div>
+                    <AudioProgress :percent="audioProgressPercent" :disabled="audioDuration <= 0" label="音乐播放进度" @seek="seekProgress" />
                 </div>
             </div>
             <div class="action-container">
@@ -81,10 +75,11 @@ import { musicApi } from '@/api/musicApi'
 import { watch } from 'vue'
 import { useUserStore } from '@/stores/userStore'
 import { computed as vComputed } from 'vue'
+import AudioProgress from '@/Components/music/AudioProgress.vue'
+import { seekAudio } from '@/utils/audioSeek'
 
 /* refs */
 const audioRef = ref(null);
-const trackRef = ref(null);
 
 /* 状态 */
 const state = reactive({
@@ -94,16 +89,14 @@ const state = reactive({
   playing: false,
   playIndex: 0,
   audioProgress: 0,
-  thumbTranslateX: 0,
   lyricIndex: 0,
   currentTime: "00:00",
   audioTime: "00:00",
-  progressL: 0,
+  audioDuration: 0,
   volume: 15,
   playStatus: false,
   songInfo: {},
   lyricInfo: [],
-  resumeAfterSeek: false,
   songList: [
     {
       name: "辞·九门回忆",
@@ -124,7 +117,7 @@ const {
   lyricIndex,
   currentTime,
   audioTime,
-  thumbTranslateX,
+  audioDuration,
   volume,
   playStatus,
 } = toRefs(state);
@@ -153,17 +146,13 @@ const PlayHistoryMusic = (song) => {
 onMounted(async () => {
   audioRef.value = document.getElementById('globalAudio')
   await getAllMusic();
-  if (trackRef.value) state.progressL = trackRef.value.offsetWidth;
   if (!audioRef.value || !audioRef.value.src) {
     if (state.songList.length > 0) {
       loadSong(state.songList[0]);
     }
   } else {
     state.playing = !audioRef.value.paused;
-    state.audioTime = TimeToString(audioRef.value.duration);
-    state.currentTime = TimeToString(audioRef.value.currentTime);
-    state.audioProgress = audioRef.value.duration ? audioRef.value.currentTime / audioRef.value.duration : 0;
-    state.thumbTranslateX = state.audioProgress * state.progressL;
+    syncProgress();
     const currentSong = state.songList.find(s => s.url === audioRef.value.src);
     if (currentSong) {
       state.songInfo = currentSong;
@@ -179,26 +168,18 @@ watch(() => state.volume, (val) => {
   if (audioRef.value) audioRef.value.volume = val / 100
 }, { immediate: true })
 
-const clickProgress = (e) => {
+const seekProgress = (percent) => {
+  if (seekAudio(audioRef.value, percent)) syncProgress()
+}
+
+const syncProgress = () => {
   const audio = audioRef.value
-  const track = trackRef.value
-  if (!audio || !track || !isFinite(audio.duration)) return
-
-  const rect = track.getBoundingClientRect()
-  let percent = (e.clientX - rect.left) / rect.width
-  percent = Math.max(0, Math.min(1, percent))
-
-  state.resumeAfterSeek = !audio.paused
-
-  const target = percent * audio.duration
-  if (typeof audio.fastSeek === 'function') {
-    audio.fastSeek(target)
-  } else {
-    audio.currentTime = target
-  }
-
-  state.audioProgress = percent
-  state.thumbTranslateX = percent * state.progressL
+  if (!audio) return
+  state.audioDuration = Number.isFinite(audio.duration) ? audio.duration : 0
+  state.audioTime = TimeToString(state.audioDuration)
+  state.currentTime = TimeToString(audio.currentTime)
+  state.audioProgress = state.audioDuration > 0 ? audio.currentTime / state.audioDuration : 0
+  updateLyric(audio.currentTime)
 }
 
 const initAudioEvents = () => {
@@ -208,27 +189,15 @@ const initAudioEvents = () => {
 //     state.audioTime = TimeToString(audio.duration);
 //   };
     audio.onloadedmetadata = () => {
-    state.audioTime = TimeToString(audio.duration);
+    syncProgress();
     audio.volume = state.volume / 100
-    nextTick(() => {
-        state.progressL = trackRef.value.offsetWidth;
-    });
     };
 
-  audio.ontimeupdate = () => {
-    state.currentTime = TimeToString(audio.currentTime);
-    state.audioProgress = audio.currentTime / audio.duration;
-    state.thumbTranslateX = state.audioProgress * state.progressL;
-    updateLyric(audio.currentTime);
-  };
+  audio.ontimeupdate = syncProgress;
 
   audio.onended = () => nextSong();
-  audio.onseeked = () => {
-    if (state.resumeAfterSeek) {
-      audio.play()
-    }
-    state.resumeAfterSeek = false
-  }
+  audio.onseeked = syncProgress;
+  syncProgress();
 };
 
 /* 播放 */
@@ -299,7 +268,7 @@ const TimeToString = s => {
   return `${String(Math.floor(s/60)).padStart(2,"0")}:${String(s%60).padStart(2,"0")}`;
 };
 
-const audioProgressPercent = computed(() => `${state.audioProgress * 100}%`);
+const audioProgressPercent = computed(() => state.audioProgress * 100);
 
 const ChangeActive = i => state.activeIndex = i;
 </script>

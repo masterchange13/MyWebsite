@@ -1,5 +1,5 @@
 // Service Worker — 离线缓存 + 秒开
-const CACHE_NAME = 'pi-console-v1';
+const CACHE_NAME = 'pi-console-v2';
 
 // 需要预缓存的静态资源（首次加载后缓存）
 const PRECACHE_ASSETS = [
@@ -30,6 +30,12 @@ self.addEventListener('activate', (event) => {
 self.addEventListener('fetch', (event) => {
   const { request } = event;
   const url = new URL(request.url);
+
+  // Media seeking must reach the server. A cached 200 response cannot stand in
+  // for a Range/206 response, including media hosted outside /api/.
+  if (request.headers.has('range') || request.destination === 'audio' || request.destination === 'video') {
+    return;
+  }
 
   // API 请求：网络优先，不缓存（保证数据实时）
   if (url.pathname.startsWith('/api/') || url.pathname.startsWith('/chat/')) {
