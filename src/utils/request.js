@@ -215,7 +215,7 @@ request.interceptors.response.use(
         // window.location.href = '/login'
         break
       case 403:
-        showError('权限不足')
+        showError(error.response?.data?.message || '权限不足')
         break
       case 404:
         showError('请求资源不存在')

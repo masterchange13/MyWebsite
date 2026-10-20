@@ -17,6 +17,16 @@ const routes = [
         component: () => import('@/Components/dashboardVue.vue'),
         children:[
             {
+                path: '/terminal',
+                name: 'terminal',
+                component: () => import('@/Components/terminalVue.vue')
+            },
+            {
+                path: '/ebooks',
+                name: 'ebooks',
+                component: () => import('@/Components/ebooksVue.vue')
+            },
+            {
                 path: "/video",
                 name: 'video',
                 component: () => import('@/Components/videoVue.vue')

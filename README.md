@@ -66,7 +66,8 @@ daphne -b 0.0.0.0 -p 8083 MyWebsiteBackend.asgi:application
 
 ## 功能清单
 
-- 🎬 Media Hub — 视频 / 音乐 / 文档 / 文件传输 / 待办清单
+- 🎬 Media Hub — 视频 / 音乐 / 文档 / 电子书（TXT、EPUB 正文、PDF）/ 文件传输 / 待办清单
+- 💻 服务器终端 — Windows / Linux / 树莓派交互式命令行，按账号授权
 - 🧭 Navigator — 常用网站快捷入口
 - 🚀 App Launcher — 桌面软件启动器（协议链接 + 命令行）
 - 💬 Chat — WebSocket 实时聊天（在线状态/未读/通知）

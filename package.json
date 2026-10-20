@@ -7,12 +7,15 @@
     "dev": "vite",
     "build": "vite build",
     "preview": "vite preview",
-    "test:audio": "node --test tests/audioSeek.test.js tests/AudioProgress.test.js tests/mediaCache.test.js"
+    "test:audio": "node --test tests/audioSeek.test.js tests/AudioProgress.test.js tests/mediaCache.test.js",
+    "test": "node --test tests"
   },
   "dependencies": {
     "@element-plus/icons-vue": "^2.3.1",
     "@wangeditor/editor": "^5.1.23",
     "@wangeditor/editor-for-vue": "^5.1.12",
+    "@xterm/addon-fit": "^0.11.0",
+    "@xterm/xterm": "^6.0.0",
     "axios": "^1.7.8",
     "body-parser": "^1.20.3",
     "element-plus": "^2.8.8",
@@ -20,6 +23,7 @@
     "fs": "^0.0.1-security",
     "less": "^4.3.0",
     "marked": "^17.0.5",
+    "pdfjs-dist": "^4.8.69",
     "pinia": "^2.2.8",
     "pinia-plugin-persistedstate": "^4.2.0",
     "todomvc-app-css": "^2.4.3",

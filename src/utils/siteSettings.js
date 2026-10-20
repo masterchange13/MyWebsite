@@ -444,6 +444,7 @@ export const topLevelMenuDefinitions = {
 
 export const submenuDefinitions = {
   media: {
+    ebooks: { id: 'ebooks', label: '电子书', path: '/ebooks', activePaths: ['/ebooks'] },
     video: { id: 'video', label: 'Video', path: '/video', activePaths: ['/video'] },
     document: { id: 'document', label: 'Document', path: '/document', activePaths: ['/document'] },
     music: { id: 'music', label: 'Music', path: '/music', activePaths: ['/music'] },
@@ -451,6 +452,7 @@ export const submenuDefinitions = {
     todoList: { id: 'todoList', label: 'To Do List', path: '/todoList', activePaths: ['/todoList'] }
   },
   tools: {
+    terminal: { id: 'terminal', label: '服务器终端', path: '/terminal', activePaths: ['/terminal'] },
     agent: { id: 'agent', label: 'Agent', path: '/agent', activePaths: ['/agent'] },
     qiMen: { id: 'qiMen', label: 'QiMenDunJia', path: '/qiMen', activePaths: ['/qiMen'] },
     timer: { id: 'timer', label: 'Timer', path: '/timer', activePaths: ['/timer'] },
@@ -464,8 +466,8 @@ export const submenuDefinitions = {
 export const defaultTopLevelOrder = ['media', 'tools', 'chat', 'navigator', 'appLauncher', 'blog', 'guide', 'feedback', 'author', 'siteSettings', 'systemMonitor']
 
 export const defaultSubmenuOrders = {
-  media: ['video', 'document', 'music', 'transfer', 'todoList'],
-  tools: ['agent', 'qiMen', 'timer', 'calculator', 'decision', 'email', 'timetable']
+  media: ['video', 'document', 'music', 'ebooks', 'transfer', 'todoList'],
+  tools: ['agent', 'qiMen', 'timer', 'calculator', 'decision', 'email', 'timetable', 'terminal']
 }
 
 export const defaultWebsiteSettings = {
@@ -511,7 +513,7 @@ export const normalizeOrder = (order, availableIds, defaultOrder = null) => {
 
 export const getOrderedSubmenuItems = (groupId, order) => {
   const defs = submenuDefinitions[groupId] || {}
-  return normalizeOrder(order, Object.keys(defs)).map((id) => defs[id])
+  return normalizeOrder(order, Object.keys(defs), defaultSubmenuOrders[groupId]).map((id) => defs[id])
 }
 
 export const getOrderedTopLevelMenu = (topLevelOrder, submenuOrders) => {
